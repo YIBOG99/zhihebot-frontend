@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>知禾商城｜AI 会员与数字服务</title>
+  <meta name="description" content="知禾商城：AI 会员、充值、数字服务与订单查询。" />
+  <meta name="theme-color" content="#0b1020" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="announcement" id="announcement"><div class="wrap announcement-inner"><span class="pulse"></span><span id="announcementText">知禾商城已上线，支持在线下单与订单查询</span><button id="closeAnnouncement" aria-label="关闭公告">×</button></div></div>
+  <header class="topbar">
+    <div class="nav wrap">
+      <a class="brand" href="#home" aria-label="知禾商城首页"><span class="brand-mark" id="brandMark">知</span><span><strong id="brandName">知禾商城</strong><small id="brandSub">AI MEMBERSHIP & DIGITAL SERVICES</small></span></a>
+      <nav class="desktop-nav" aria-label="主导航">
+        <a href="#products">商城</a>
+        <a href="#redeem">卡密充值</a>
+        <a href="#orders">订单查询</a>
+        <a href="#guide">使用教程</a>
+        <a href="#faq">常见问题</a>
+      </nav>
+      <div class="nav-actions">
+        <button class="icon-btn" id="themeBtn" aria-label="切换主题">☼</button>
+        <button class="ghost" id="langBtn">EN</button>
+        <button class="primary small" id="orderBtn">查订单</button>
+      </div>
+      <button class="mobile-menu" id="menuBtn" aria-label="打开菜单">☰</button>
+    </div>
+    <div class="mobile-nav" id="mobileNav">
+      <a href="#products">商城</a><a href="#redeem">卡密充值</a><a href="#orders">订单查询</a><a href="#guide">教程</a><a href="#faq">FAQ</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero wrap" id="home">
+      <div class="hero-copy">
+        <div class="eyebrow"><span class="dot"></span><span id="heroEyebrow">AI 会员自助充值商城 · 24/7 在线</span></div>
+        <h1 id="heroTitle">把 AI 会员，<br><em>简单买、快速用。</em></h1>
+        <p id="heroSubtitle">精选 AI 会员与数字服务，商品详情、库存、价格与订单状态统一管理。手机打开也能快速完成购买。</p>
+        <div class="hero-buttons">
+          <a class="primary" href="#products">查看商品 <span>→</span></a>
+          <button class="secondary" id="heroOrder">查询订单</button>
+        </div>
+        <div class="trust"><span>✓ 商品信息透明</span><span>✓ 订单可追踪</span><span>✓ 售后规则清晰</span></div>
+        <div class="hero-links"><a href="#guide">购买说明</a><span>·</span><a href="#faq">售后 FAQ</a><span>·</span><a href="#redeem">已有卡密？直接充值</a></div>
+      </div>
+      <div class="hero-visual" aria-hidden="true">
+        <div class="visual-noise"></div><div class="glow glow-a"></div><div class="glow glow-b"></div>
+        <div class="dashboard-card">
+          <div class="dash-top"><span>PRODUCT HUB</span><i></i></div>
+          <div class="dash-main"><div class="ai-sigil">✦</div><div><strong>AI MEMBERSHIP</strong><small>ChatGPT · Claude · Gemini · Grok</small></div></div>
+          <div class="dash-row"><span>今日可售商品</span><b id="heroCount">—</b></div>
+          <div class="dash-row"><span>服务状态</span><b class="online"><span class="status-dot"></span> ONLINE</b></div>
+          <div class="dash-pills"><span>自动发货</span><span>订单查询</span><span>客服支持</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="stats wrap">
+      <div><strong id="productCount">—</strong><span>上架商品</span></div>
+      <div><strong id="categoryCount">—</strong><span>商品分类</span></div>
+      <div><strong>24/7</strong><span>在线服务</span></div>
+      <div><strong>⚡</strong><span>快速处理</span></div>
+    </section>
+
+    <section class="section wrap" id="products">
+      <div class="section-head">
+        <div><span class="kicker">PRODUCT SELECT</span><h2>选择商品</h2><p>按分类浏览，查看价格、库存、交付方式与详细说明。</p></div>
+        <div class="product-tools"><label class="search-box"><span>⌕</span><input id="productSearch" placeholder="搜索 ChatGPT、Claude、Gemini…" /></label></div>
+      </div>
+      <div class="categories" id="categories"></div>
+      <div class="product-grid" id="productGrid"></div>
+      <div class="empty" id="emptyState" hidden><div class="empty-icon">◌</div><h3>当前还没有商品</h3><p>前端已接通 <code>/public/config</code>。只要 API 返回商品数据，这里会自动显示。</p><a class="secondary inline-btn" href="#guide">查看配置说明</a></div>
+    </section>
+
+    <section class="section dark-section" id="redeem">
+      <div class="wrap split-section">
+        <div><span class="kicker">REDEEM CENTER</span><h2>已经有卡密？<br>直接进入充值中心。</h2><p>输入你购买到的卡密，前端会尝试调用后端充值/兑换接口。当前后端若尚未提供接口，会给出明确提示，不会假装成功。</p><div class="chips"><span>卡密校验</span><span>充值状态</span><span>订单关联</span></div></div>
+        <div class="redeem-card"><div class="card-title"><strong>卡密兑换</strong><span>自助处理</span></div><label>兑换卡密<input id="redeemCode" placeholder="例如：XXXX-XXXX-XXXX" autocomplete="off" /></label><label>联系邮箱（可选）<input id="redeemEmail" type="email" placeholder="用于异常联系" /></label><button class="primary wide" id="redeemBtn">验证并继续</button><p class="fine" id="redeemResult">不会在前端保存你的卡密。</p></div>
+      </div>
+    </section>
+
+    <section class="section wrap" id="orders">
+      <div class="section-head"><div><span class="kicker">ORDER CENTER</span><h2>订单中心</h2><p>输入订单号，查看支付、处理与交付状态。</p></div><span class="soft-badge">实时查询</span></div>
+      <div class="order-panel">
+        <div class="order-form"><input id="orderInput" placeholder="请输入订单号" autocomplete="off" /><button class="primary" id="queryBtn">查询订单</button></div>
+        <div class="order-hints"><span>常见状态：待支付</span><span>处理中</span><span>已完成</span><span>已关闭</span></div>
+        <div class="order-result" id="orderResult"></div>
+      </div>
+    </section>
+
+    <section class="section wrap" id="guide">
+      <div class="section-head"><div><span class="kicker">HOW IT WORKS</span><h2>购买与使用</h2><p>把关键流程讲明白，减少下单后的反复沟通。</p></div></div>
+      <div class="steps-grid">
+        <article><b>01</b><h3>浏览商品</h3><p>确认套餐、周期、交付方式、当前库存和售后说明。</p></article>
+        <article><b>02</b><h3>填写信息</h3><p>按商品要求填写账号、邮箱或其他必要的充值信息。</p></article>
+        <article><b>03</b><h3>完成付款</h3><p>订单页显示最终金额与可用支付方式，按页面提示完成支付。</p></article>
+        <article><b>04</b><h3>查看交付</h3><p>保存订单号，在订单中心查看状态、交付内容和处理结果。</p></article>
+      </div>
+    </section>
+
+    <section class="section wrap">
+      <div class="service-banner"><div><span class="kicker">SERVICE GUARANTEE</span><h2>商品详情优先，规则提前说清。</h2><p>库存、价格、交付方式与售后条件都以订单和商品详情为准。</p></div><a class="primary" href="#products">开始挑选</a></div>
+    </section>
+
+    <section class="section wrap" id="faq">
+      <div class="section-head"><div><span class="kicker">FAQ</span><h2>常见问题</h2><p>下单前先看这里，通常能解决大部分疑问。</p></div></div>
+      <div class="faq" id="faqList"></div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap footer-top">
+      <div><a class="brand footer-brand" href="#home"><span class="brand-mark">知</span><span><strong>知禾商城</strong><small>AI MEMBERSHIP & DIGITAL SERVICES</small></span></a><p>独立第三方 AI 会员与数字服务平台。相关品牌归其各自权利人所有。</p></div>
+      <div><b>商城</b><a href="#products">全部商品</a><a href="#redeem">卡密充值</a><a href="#orders">订单查询</a></div>
+      <div><b>帮助</b><a href="#guide">购买教程</a><a href="#faq">FAQ</a><a href="mailto:support@zhihebot.shop">联系客服</a></div>
+      <div><b>系统</b><span class="footer-status"><i></i> API ONLINE</span><small>api.zhihebot.shop</small></div>
+    </div>
+    <div class="copyright wrap">© 2026 知禾商城 · 请以实际商品详情、支付页面与订单页规则为准</div>
+  </footer>
+
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-hidden="true"><div class="modal-card"><button class="close" id="closeModal" aria-label="关闭">×</button><div id="modalBody"></div></div></div>
+  <div class="toast-wrap" id="toastWrap"></div>
+  <script src="app.js"></script>
+</body>
+</html>
