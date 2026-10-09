@@ -18,6 +18,8 @@ export interface OrderRow {
   lookup_password_hash: string | null; lookup_fail_count: number;
   lookup_locked_until: string | null; note: string | null;
   payment_method: string | null; payment_ref: string | null;
+  payment_status?: 'pending' | 'confirmed' | 'cancelled' | string;
+  confirmed_at?: string | null;
   amount: number; discount_amount: number; coupon_code: string | null;
   /** 商品小计（价×数量，未减券未加费）；老订单为 NULL */
   goods_amount?: number | null;
