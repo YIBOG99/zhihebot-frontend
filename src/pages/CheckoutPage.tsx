@@ -33,7 +33,7 @@ export function CheckoutPage() {
   const { id } = useParams({ strict: false }) as { id: string };
   const navigate = useNavigate();
   const { data: product, isLoading } = useProduct(id);
-  const { data: settings } = useSiteSettings();
+  const { data: settings, isLoading: settingsLoading } = useSiteSettings();
   const { user } = useAuthSession();
   /** 登录用户的邀请奖励券（游客为空数组，不展示券选择区） */
   const { coupons } = useMyRewardCoupons(user?.id ?? null);
@@ -206,6 +206,10 @@ export function CheckoutPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (settingsLoading) {
+      toast.info('正在读取支付配置，请稍后再提交订单');
+      return;
+    }
     const canUseBalance = Boolean(user && !isRecharge && balanceAvailable >= total);
     if (!hasExternalPaymentChannels && !canUseBalance) {
       toast.error('商城尚未配置可用收款方式，请联系店主完成支付设置后再下单');
