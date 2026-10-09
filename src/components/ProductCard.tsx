@@ -20,6 +20,7 @@ export function ProductCard({ product }: { product: Product }) {
       {/* Cover */}
       <div className="relative aspect-[16/9] overflow-hidden bg-surface-2">
         <img src={product.cover_url || PRODUCT_PLACEHOLDER} alt={product.title}
+          onError={(event) => { const image = event.currentTarget; if (image.src !== new URL(PRODUCT_PLACEHOLDER, window.location.href).href) image.src = PRODUCT_PLACEHOLDER; }}
           className="cover-img h-full w-full object-cover" loading="lazy" />
         <span className="cover-shine" aria-hidden />
         {product.is_hot && (
