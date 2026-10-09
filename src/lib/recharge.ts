@@ -51,7 +51,7 @@ export async function createRechargeOrder(
     _quantity: 1,
     _contact_email: email,
     _contact_phone: phone,
-    _lookup_password_hash: info.pwHash,
+    _lookup_password_hash: pwHash,
     _note: null,
     _amount: amount,
     _is_recharge: true,
