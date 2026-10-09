@@ -55,7 +55,7 @@ export function RateLimitPanel() {
   const [actingId, setActingId] = useState<string | null>(null);
   /** 待确认的移除目标 id → setTimeout 句柄 */
   const [pendingKey, setPendingKey] = useState<string | null>(null);
-  const timerRef = useRef<{ current: number | null }>({ current: null });
+  const timerRef = useRef<number | null>(null);
 
   const whitelist = useRateLimitWhitelist();
   const blocks = useRateLimitBlocks(50);

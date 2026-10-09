@@ -6,7 +6,6 @@ import { supabase } from '@/supabase/client';
 import { useProduct, useSiteSettings } from '@/lib/queries';
 import { loadBuyerInfo, saveBuyerInfo, hashPassword } from '@/lib/buyer-vault';
 import { requestCaptcha, type CaptchaChallenge } from '@/lib/order-captcha';
-import { PayQrPanel } from '@/components/PayQrPanel';
 import { PayCountdownBar } from '@/components/PayCountdownBar';
 import { useAuthSession } from '@/hooks/use-auth-session';
 import { useMyRewardCoupons, type RewardCoupon } from '@/lib/referral';
@@ -106,8 +105,6 @@ export function CheckoutPage() {
       toast.error('复制失败，请长按文字手动复制');
     }
   }
-  /** 在线支付宝通道不可用时置 true，用于在通道选择器上标注原因，不再偷偷跳到别的通道视图 */
-  const [alipayOnlineUnavailable, setAlipayOnlineUnavailable] = useState(false);
   /** 本机记住的查询密码摘要；用户一旦在框里重新输入即作废 */
   const [savedHash, setSavedHash] = useState<string | null>(null);
 
@@ -242,7 +239,7 @@ export function CheckoutPage() {
         _challenge_id: captchaOn ? captcha!.id : null,
         // 大小写不敏感：统一转大写后提交，与服务端哈希口径一致
         _challenge_answer: captchaOn ? captchaAnswer.trim().toUpperCase() : null,
-      }).select().single();
+      } as never).select().single();
       if (error) throw error;
       if (!data?.ok) throw new Error(data?.message ?? '提交失败，请重试');
       console.log('[Checkout] order created via rpc:', orderNo, '| amount =', total, '| discount =', data.discount);
@@ -292,12 +289,8 @@ export function CheckoutPage() {
       setPayChannel('balance');
       return;
     }
-    // USDT 为纯展示地址、金额按商品价折算等值，无需加收手续费也不改单
-    if (c === 'usdt') {
-      setPayChannel('usdt');
-      scrollToTopNow();
-      return;
-    }
+    // USDT 免手续费，但仍必须把所选支付方式写回订单，方便后台核账与筛选。
+    // 与其他人工核账通道一样，调用服务端 RPC 记录 payment_method 后再展示地址。
     setSwitching(true);
     try {
       const r = await switchOrderChannel(result.orderNo, c, orderPwHash);
@@ -338,7 +331,7 @@ export function CheckoutPage() {
         <div className="glow-frame rounded-2xl border border-success/30 bg-success/5 p-6 text-center">
           <Check size={32} className="mx-auto mb-3 text-success" />
           <h1 className="text-xl font-bold text-foreground">订单已创建</h1>
-          <p className="mt-2 text-sm text-muted-foreground">请选择支付方式完成付款，支付宝1 到账后系统自动发卡。</p>
+          <p className="mt-2 text-sm text-muted-foreground">请选择支付方式完成付款。支付宝收款码通道需店主核账后发卡；自动发卡需先完成正式支付接口配置。</p>
         </div>
 
         {/* Order info */}
@@ -414,9 +407,6 @@ export function CheckoutPage() {
                         可用余额 ¥{balanceAvailable.toFixed(2)}{balanceAvailable < result.amount ? ' · 余额不足' : ''}
                       </span>
                     )}
-                    {c.id === 'alipay' && alipayOnlineUnavailable && (
-                      <span className="rounded-lg border border-warning/30 bg-warning/10 px-2 py-1 text-[10px] font-semibold text-warning">在线收款暂未开通，可改用「支付宝3」</span>
-                    )}
                   </button>
                 );
               })}
@@ -472,14 +462,16 @@ export function CheckoutPage() {
           </div>
         )}
 
-        {/* 支付宝1（在线扫码）—— 不可用时留在本通道并提示，不跳到其他视图 */}
+        {/* 支付宝1：独立收款码/收款链接；若链接可唤起 App，则收银页显示深链按钮 */}
         {!payExpired && payChannel === 'alipay' && (
           <div className="mt-6 space-y-3">
-            <PayQrPanel orderId={result.orderNo} amount={result.amount} expiresAt={expiresAt}
-              onUnavailable={(reason) => {
-                console.log('[Checkout] 支付宝在线通道不可用，停留在本通道', { reason });
-                setAlipayOnlineUnavailable(true);
-              }} />
+            <div className="rounded-xl border border-border bg-card p-5">
+              <p className="text-sm text-muted-foreground">点击下方进入支付宝1收银页。若后台配置的是可用的支付宝收款链接，手机浏览器会显示「打开支付宝立即付款」；仅有图片时仍可扫码付款。</p>
+              <button onClick={() => navigate({ to: '/pay/alipay-qr', search: { order: result.orderNo, amount: String(result.amount), product: product.title, channel: 'alipay' } as never })}
+                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-info py-3 text-sm font-bold text-primary-foreground transition-colors hover:bg-info/85 active:scale-[0.99]">
+                <QrCode size={15} /> 前往支付宝1收银页
+              </button>
+            </div>
             <button onClick={() => setPayChannel('choose')} className="text-xs text-muted-foreground hover:text-foreground transition-colors">← 更换支付方式</button>
           </div>
         )}
@@ -488,7 +480,7 @@ export function CheckoutPage() {
         {!payExpired && payChannel === 'alipay_qr' && (
           <div className="mt-6 space-y-3">
             <div className="rounded-xl border border-border bg-card p-5">
-              <p className="text-sm text-muted-foreground">点击下方按钮进入支付宝收银页，页面展示收款二维码、应付金额与倒计时；本通道支付时限为 10 分钟，超时二维码将自动失效。</p>
+              <p className="text-sm text-muted-foreground">点击下方按钮进入支付宝2收银页，页面展示收款码、应付金额与倒计时。注意：静态个人收款码本身不会自动失效，订单是否过期以订单状态和服务端截止时间为准。</p>
               <button onClick={() => navigate({ to: CASHIER_PATH.alipay_qr!, search: { order: result.orderNo, amount: String(result.amount), product: product.title } as never })}
                 className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-info py-3 text-sm font-bold text-primary-foreground transition-colors hover:bg-info/85 active:scale-[0.99]">
                 <QrCode size={15} /> 前往支付宝收银页

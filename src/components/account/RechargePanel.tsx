@@ -7,7 +7,6 @@ import { Loader2, QrCode, Wallet, Coins, MessageCircle, TimerOff, Copy, Check, X
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSiteSettings } from '@/lib/queries';
-import { PayQrPanel } from '@/components/PayQrPanel';
 import { PayCountdownBar } from '@/components/PayCountdownBar';
 import { loadBuyerInfo } from '@/lib/buyer-vault';
 import { createRechargeOrder, RECHARGE_MIN, RECHARGE_MAX } from '@/lib/recharge';
@@ -274,12 +273,15 @@ export function RechargePanel({ principal, onClose }: {
 
               {channel === 'alipay' && (
                 <div className="mt-4 space-y-3">
-                  <PayQrPanel orderId={orderNo} amount={amount} expiresAt={expiresAt}
-                    onUnavailable={(reason) => {
-                      console.log('[RechargePanel] 支付宝在线通道不可用', { reason });
-                      toast.warning('支付宝1 暂不可用，请改用支付宝2 / 支付宝3');
-                    }}
-                    onSettled={() => { invalidateWallet(qc); toast.success('充值已到账'); }} />
+                  <div className="rounded-lg border border-border bg-card p-4">
+                    <p className="text-xs leading-relaxed text-muted-foreground">
+                      支付宝1使用你在后台单独设置的收款码/收款链接。完成付款后请按页面提示保留订单号；店主在后台核实到账并确认充值后，余额才会入账。当前开发分支未接入该静态收款方式的自动对账。
+                    </p>
+                    <button onClick={() => void navigate({ to: '/pay/alipay-qr', search: { order: orderNo, amount: String(amount), channel: 'alipay' } as never })}
+                      className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-2.5 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary-hover">
+                      前往支付宝1付款
+                    </button>
+                  </div>
                   <button onClick={() => setChannel('choose')} className="text-xs text-muted-foreground hover:text-foreground transition-colors">← 更换支付方式</button>
                 </div>
               )}

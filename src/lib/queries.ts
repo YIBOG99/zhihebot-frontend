@@ -4,10 +4,10 @@ import type { Category, Product, ContentRow, FaqRow, SiteSettings, PaymentChanne
 import { DEMO_CATEGORIES, DEMO_PRODUCTS, DEMO_CONTENTS, DEMO_FAQS, DEMO_SITE_SETTINGS } from './demo-data';
 
 /**
- * 独立前台阶段：默认使用导出快照渲染，避免商城 UI 依赖原 Meoo 数据库。
- * 未来新后端就绪后，将 VITE_PUBLIC_SNAPSHOT_MODE=false 即可切回远端公开数据。
+ * 独立商城：默认从本项目 Supabase 读取数据。仅当显式设置 VITE_PUBLIC_SNAPSHOT_MODE=true
+ * 时才启用仓库快照预览，避免生产环境误把演示快照当作实时商品、库存与支付配置。
  */
-const PUBLIC_SNAPSHOT_MODE = import.meta.env.VITE_PUBLIC_SNAPSHOT_MODE !== 'false';
+const PUBLIC_SNAPSHOT_MODE = import.meta.env.VITE_PUBLIC_SNAPSHOT_MODE === 'true';
 
 
 /** 商品图片存储桶（storage.buckets.id，公开可读、仅管理员可写） */
@@ -24,7 +24,7 @@ export function useInvalidateShop() {
 }
 
 /** Product 行 → 表单草稿（null 一律转空串，便于受控输入） */
-export function toProductDraft(p: Partial<Product> & Record<string, unknown>): ProductDraft {
+export function toProductDraft(p: Record<string, unknown>): ProductDraft {
   const str = (v: unknown) => (v === null || v === undefined ? '' : String(v));
   return {
     id: str(p.id),
@@ -133,7 +133,7 @@ export function draftToPayload(d: ProductDraft): Record<string, unknown> {
 
 /** 保存商品编辑（走 RLS admins_write_products）。失败时抛带原因的 Error */
 export async function saveProduct(id: string, draft: ProductDraft): Promise<void> {
-  const { error } = await supabase.from('products').update(draftToPayload(draft)).eq('id', id);
+  const { error } = await supabase.from('products').update(draftToPayload(draft) as never).eq('id', id);
   if (error) {
     console.error('[saveProduct] failed:', error.code, error.message);
     throw new Error(`${error.code ?? ''} ${error.message}`.trim());
@@ -147,7 +147,7 @@ export async function createProduct(draft: ProductDraft): Promise<void> {
   const { data: exist, error: qErr } = await supabase.from('products').select('id').eq('id', id).maybeSingle();
   if (qErr) throw new Error(`${qErr.code ?? ''} ${qErr.message}`.trim());
   if (exist) throw new Error(`商品 ID「${id}」已存在，请换一个`);
-  const { error } = await supabase.from('products').insert({ id, ...draftToPayload(draft) });
+  const { error } = await supabase.from('products').insert({ id, ...draftToPayload(draft) } as never);
   if (error) {
     console.error('[createProduct] failed:', error.code, error.message);
     throw new Error(`${error.code ?? ''} ${error.message}`.trim());
@@ -219,7 +219,7 @@ export async function callAlipayPay(action: 'create' | 'query', orderId: string)
 export interface BlockRpcResult { ok: boolean; message: string }
 
 async function callBlockRpc(fn: 'customer_block' | 'customer_unblock', args: Record<string, unknown>): Promise<BlockRpcResult> {
-  const { data, error } = await supabase.rpc(fn, args);
+  const { data, error } = await supabase.rpc(fn, args as never);
   if (error) {
     console.error(`[callBlockRpc:${fn}] transport error:`, error.code, error.message);
     return { ok: false, message: `${error.code ?? ''} ${error.message}`.trim() };
@@ -289,7 +289,7 @@ export function useInvalidateBlocklist() {
 
 /** 白名单 RPC 结果（rate_limit_whitelist_add / _remove 标量 TEXT 返回：NULL=成功） */
 async function callWhitelistRpc(fn: 'rate_limit_whitelist_add' | 'rate_limit_whitelist_remove', args: Record<string, unknown>): Promise<BlockRpcResult> {
-  const { data, error } = await supabase.rpc(fn, args);
+  const { data, error } = await supabase.rpc(fn, args as never);
   if (error) {
     console.error(`[callWhitelistRpc:${fn}] transport error:`, error.code, error.message);
     return { ok: false, message: `${error.code ?? ''} ${error.message}`.trim() };
@@ -378,7 +378,7 @@ export function useProducts(categorySlug?: string) {
         if (categorySlug) q = q.eq('category_slug', categorySlug);
         const { data, error } = await q;
         if (error) throw error;
-        return data as Product[];
+        return data as unknown as Product[];
       } catch (error) {
         console.warn('[useProducts] remote failed, falling back to exported snapshot:', error);
         return categorySlug ? DEMO_PRODUCTS.filter((p) => p.category_slug === categorySlug) : DEMO_PRODUCTS;
@@ -397,7 +397,7 @@ export function useProduct(id: string) {
       try {
         const { data, error } = await supabase.from('products').select('*').eq('id', id).single();
         if (error) throw error;
-        return data as Product;
+        return data as unknown as Product;
       } catch (error) {
         console.warn(`[useProduct] remote failed for ${id}, falling back to exported snapshot:`, error);
         return local;
@@ -503,7 +503,7 @@ export async function patchSiteSetting(key: string, patch: Record<string, unknow
   const current = (await readSiteSetting<Record<string, unknown>>(key)) ?? {};
   const merged = { ...current, ...patch };
   const { error } = await supabase.from('site_settings')
-    .upsert({ key, value: merged, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+    .upsert({ key, value: merged as never, updated_at: new Date().toISOString() }, { onConflict: 'key' });
   if (error) {
     console.error('[patchSiteSetting] failed:', error.code, error.message);
     throw new Error(`${error.code ?? ''} ${error.message}`.trim());

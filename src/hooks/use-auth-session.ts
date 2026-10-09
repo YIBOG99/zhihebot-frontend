@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/supabase/client';
 
-export type AuthUser = { id: string; username: string };
+export type AuthUser = { id: string; username: string; email: string | null };
 
 /** session.user 上可能出现的验证时间字段：顶层是权威值，user_metadata 里的是历史快照副本 */
 type SessionUser = {
@@ -23,7 +23,7 @@ function fromSession(s: { user?: SessionUser | null } | null) {
   const confirmed = u.email_confirmed_at ?? u.confirmed_at ?? (meta.email_confirmed_at as string | null) ?? null;
   console.log('[useAuthSession] uid =', u.id, '| email =', u.email, '| emailConfirmedAt =', confirmed);
   return {
-    user: { id: u.id, username: String(meta.username ?? u.email?.split('@')[0] ?? '用户') } as AuthUser,
+    user: { id: u.id, username: String(meta.username ?? u.email?.split('@')[0] ?? '用户'), email: u.email ?? null },
     emailConfirmedAt: confirmed,
   };
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from '@tanstack/react-router';
-import { Loader2, Package, ShoppingCart, KeyRound, Settings, LayoutDashboard, Search, Pencil, Plus, Ban, ShieldCheck, Mail, Phone, AlertTriangle, ChevronDown, Clock } from 'lucide-react';
+import { Loader2, Package, ShoppingCart, KeyRound, Settings, LayoutDashboard, Search, Pencil, Plus, Ban, ShieldCheck, Mail, Phone, AlertTriangle, ChevronDown, Clock, CreditCard } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/supabase/client';
 import { useIsAdmin } from '@/hooks/use-is-admin';
@@ -8,19 +8,21 @@ import { StatsBoard, StatsSkeleton, StatsError } from '@/components/AdminStatsPa
 import { ProductEditSheet } from '@/components/ProductEditSheet';
 import { WechatPayConfigCard } from '@/components/WechatPayConfigCard';
 import { AlipayQrPayConfigCard } from '@/components/AlipayQrPayConfigCard';
+import { AlipayPrimaryPayConfigCard } from '@/components/AlipayPrimaryPayConfigCard';
 import { AlipayManualPayConfigCard } from '@/components/AlipayManualPayConfigCard';
+import { UsdtPayConfigCard } from '@/components/UsdtPayConfigCard';
 import { ReferralConfigCard } from '@/components/ReferralConfigCard';
 import { CaptchaConfigCard } from '@/components/CaptchaConfigCard';
 import { FeeRecommendConfigCard } from '@/components/FeeRecommendConfigCard';
 import { AnnouncementConfigCard } from '@/components/AnnouncementConfigCard';
 import { BrandConfigCard } from '@/components/BrandConfigCard';
-import { AiSupportConfigCard } from '@/components/AiSupportConfigCard';
 import { BlocklistPanel } from '@/components/admin/BlocklistPanel';
 import { RateLimitPanel } from '@/components/admin/RateLimitPanel';
 import { useAdminDashboard, callOrderRpc, useInvalidateShop, toProductDraft, emptyProductDraft, genProductId, blockCustomer, unblockCustomer, useBlockedCustomers, useSuspectBuyers, useInvalidateBlocklist } from '@/lib/queries';
 import { refundOrderToBalance } from '@/lib/wallet';
 import type { OrderRow, Product, CardSecretRow, Category, ProductDraft, BlockedCustomer, SuspectBuyer } from '@/lib/types';
 import { formatYuan } from '@/lib/utils';
+import { PAYMENT_LABEL } from '@/lib/pay-channels';
 
 const TABS = [
   { id: 'overview', label: '概览', icon: LayoutDashboard },
@@ -29,6 +31,7 @@ const TABS = [
   { id: 'cards', label: '卡密库', icon: KeyRound },
   { id: 'blocklist', label: '黑名单', icon: Ban },
   { id: 'ratelimit', label: '频控', icon: ShieldCheck },
+  { id: 'payments', label: '支付设置', icon: CreditCard },
   { id: 'settings', label: '站点设置', icon: Settings },
 ] as const;
 
@@ -72,6 +75,7 @@ export function AdminPage() {
         {tab === 'cards' && <CardsTab />}
         {tab === 'blocklist' && <BlocklistPanel />}
         {tab === 'ratelimit' && <RateLimitPanel />}
+        {tab === 'payments' && <PaymentsTab />}
         {tab === 'settings' && <SettingsTab />}
       </div>
     </div>
@@ -406,8 +410,21 @@ function OrdersTab() {
     try {
       const r = await refundOrderToBalance(orderId);
       console.log('[Admin orders] wallet_refund_order result =', JSON.stringify(r));
-      if (r.ok) { toast.success(r.message); await load(); }
-      else toast.error(r.message);
+      if (r.ok) {
+        // wallet_refund_order is the authoritative money operation; this table is an admin audit trail.
+        const order = orders.find((item) => item.id === orderId);
+        const { data: authData } = await supabase.auth.getUser();
+        const { error: auditError } = await supabase.from('order_refunds').insert({
+          order_id: orderId,
+          amount: Number(order?.amount ?? 0),
+          refund_method: 'balance',
+          reason: r.message,
+          created_by: authData.user?.id ?? null,
+        });
+        if (auditError) console.warn('[Admin orders] refund audit write failed after successful wallet refund:', auditError.message);
+        toast.success(auditError ? '退款已完成；退款流水已记入钱包，审计表暂不可用' : r.message);
+        await load();
+      } else toast.error(r.message);
     } finally {
       setActing(null);
     }
@@ -520,6 +537,9 @@ function OrdersTab() {
                       </button>
                     )}
                     <span className="rounded-full bg-surface-3 px-2.5 py-1 text-xs text-muted-foreground">{STATUS_LABEL[o.status]}</span>
+                    <span className="rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground">
+                      支付：{o.payment_method ? (PAYMENT_LABEL[o.payment_method] || o.payment_method) : '未选择'}
+                    </span>
                     {o.status === 'completed' && o.payment_method === 'balance' && !o.is_recharge && (
                       <button onClick={() => requestRefund(o.id)} disabled={!!acting}
                         className={`rounded-lg border px-3 py-1.5 text-xs transition-colors disabled:opacity-50 ${pendingRefundId === o.id ? 'border-warning/60 bg-warning/10 font-semibold text-warning' : 'border-border text-muted-foreground hover:border-warning/40 hover:text-warning'}`}>
@@ -586,11 +606,74 @@ function OrdersTab() {
           })}
         </ul>
       )}
+      <RefundAuditPanel />
     </div>
   );
 }
 
-/* ── Products ── */
+function RefundAuditPanel() {
+  const [rows, setRows] = useState<Array<{
+    id: string; order_id: string; amount: number; refund_method: string;
+    reason: string | null; created_at: string; created_by: string | null;
+  }>>([]);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
+
+  async function load() {
+    setLoading(true);
+    setErr(null);
+    const { data, error } = await supabase.from('order_refunds')
+      .select('*').order('created_at', { ascending: false }).limit(50);
+    if (error) {
+      setErr(error.message);
+      setRows([]);
+    } else {
+      setRows((data ?? []) as typeof rows);
+    }
+    setLoading(false);
+  }
+
+  useEffect(() => { void load(); }, []);
+
+  return (
+    <section className="mt-8 rounded-xl border border-border bg-card p-5">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-semibold text-foreground">退款记录</h3>
+          <p className="mt-1 text-xs text-muted-foreground">最近 50 条后台退款审计记录（实际余额退款由钱包 RPC 处理）。</p>
+        </div>
+        <button type="button" onClick={() => void load()} disabled={loading}
+          className="rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground disabled:opacity-50">
+          {loading ? '加载中…' : '刷新'}
+        </button>
+      </div>
+      {loading ? (
+        <p className="py-5 text-center text-xs text-muted-foreground">正在读取退款记录…</p>
+      ) : err ? (
+        <LoadFail msg={err} onRetry={() => void load()} />
+      ) : rows.length === 0 ? (
+        <p className="rounded-lg border border-dashed border-border py-8 text-center text-xs text-muted-foreground">暂无退款记录；应用独立后端迁移后，新退款将自动记入此处。</p>
+      ) : (
+        <ul className="space-y-2">
+          {rows.map((item) => (
+            <li key={item.id} className="flex flex-col gap-1.5 rounded-lg border border-border px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <p className="break-all font-mono text-xs text-foreground">{item.order_id}</p>
+                <p className="mt-1 text-[11px] text-muted-foreground">{item.reason || '退款处理'} · {item.refund_method}</p>
+              </div>
+              <div className="shrink-0 text-left sm:text-right">
+                <p className="text-sm font-semibold text-warning">¥{Number(item.amount).toFixed(2)}</p>
+                <p className="mt-1 text-[11px] text-muted-foreground">{new Date(item.created_at).toLocaleString('zh-CN')}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+/* ── Products ── *//* ── Products ── */
 function ProductsTab() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -608,7 +691,7 @@ function ProductsTab() {
     ]);
     if (error) { console.error('[Admin products] load failed:', error.code, error.message); setErr(`${error.code ?? ''} ${error.message}`); }
     else console.log('[Admin products] loaded rows =', data?.length ?? 0);
-    setProducts((data ?? []) as Product[]);
+    setProducts((data ?? []) as unknown as Product[]);
     setCategories((cats ?? []) as Category[]);
     setLoading(false);
   }
@@ -773,6 +856,30 @@ function CardsTab() {
   );
 }
 
+/* ── Payments ── */
+function PaymentsTab() {
+  return (
+    <div className="space-y-5">
+      <div className="rounded-xl border border-border bg-card p-5">
+        <h2 className="text-base font-semibold text-foreground">支付通道配置</h2>
+        <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+          五种通道分别保存、独立启停。个人收款码与 USDT 都采用人工核账；确认到账后再从订单管理执行确认收款/发卡。
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2 text-[11px]">
+          {['支付宝1 · 深链/收款码', '支付宝2 · 个人收款码', '支付宝3 · 账号/收款码', '微信支付 · 收款码', 'USDT · 地址/网络'].map((label) => (
+            <span key={label} className="rounded-full border border-primary/25 bg-primary/5 px-2.5 py-1 text-primary">{label}</span>
+          ))}
+        </div>
+      </div>
+      <AlipayPrimaryPayConfigCard />
+      <AlipayQrPayConfigCard />
+      <AlipayManualPayConfigCard />
+      <WechatPayConfigCard />
+      <UsdtPayConfigCard />
+    </div>
+  );
+}
+
 /* ── Settings ── */
 function SettingsTab() {
   const [settings, setSettings] = useState<Record<string, string>>({});
@@ -814,15 +921,6 @@ function SettingsTab() {
       {/* 首页公告弹窗可视化配置（推荐） */}
       <AnnouncementConfigCard />
 
-      {/* 微信收款可视化配置（推荐） */}
-      <WechatPayConfigCard />
-
-      {/* 支付宝扫码转账（个人经营码）可视化配置：无需签约，钱进个人账户，人工核账发卡 */}
-      <AlipayQrPayConfigCard />
-
-      {/* 支付宝人工转账可视化配置（在线收款审核期间的兜底通道） */}
-      <AlipayManualPayConfigCard />
-
       {/* 邀请好友返券配置（面额/门槛/开关） */}
       <ReferralConfigCard />
 
@@ -832,8 +930,6 @@ function SettingsTab() {
       {/* 下单人机校验（防机器批量下单后恶意退款） */}
       <CaptchaConfigCard />
 
-      {/* AI 客服配置（开关/话术/知识库） */}
-      <AiSupportConfigCard />
 
       {/* 原始 JSON 编辑（高级） */}
       {Object.entries(settings).map(([key, val]) => (

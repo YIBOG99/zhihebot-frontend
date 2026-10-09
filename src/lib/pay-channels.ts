@@ -6,6 +6,7 @@ export type PayChannel = 'balance' | 'alipay' | 'wechat' | 'alipay_qr' | 'alipay
 
 /** 静态收款类通道的独立收银页路径（URL 只带 order + amount，页面自行回读时限） */
 export const CASHIER_PATH: Partial<Record<PayChannel, string>> = {
+  alipay: '/pay/alipay-qr',
   wechat: '/pay/wechat',
   alipay_qr: '/pay/alipay-qr',
   alipay_manual: '/pay/alipay-manual',
@@ -54,14 +55,14 @@ export const PAY_CHANNELS: ChannelMeta[] = [
     desc: '直接用账户余额抵扣，免渠道手续费，付款后立即自动发放卡密。余额不足时请先充值。',
   },
   {
-    id: 'alipay', label: '支付宝1', badge: '秒到账 · 自动发货', icon: 'qrcode', tone: 'info',
+    id: 'alipay', label: '支付宝1', badge: '深链优先 · 人工核账', icon: 'qrcode', tone: 'info',
     hasFee: true, recommended: true,
-    desc: '生成订单专属二维码，手机付款后云端实时核验到账并自动发放卡密，全程无需等待人工核账。',
+    desc: '使用后台单独上传的支付宝收款码/收款链接；可识别有效收款链接时支持手机唤起支付宝，收款后由店主核账发卡。',
   },
   {
     id: 'alipay_qr', label: '支付宝2', badge: '个人收款码 · 人工核账', icon: 'qrcode', tone: 'info',
     hasFee: true, recommended: true,
-    desc: '跳转到独立收银页，扫描店主支付宝收款码后在「给个人付款」页面按金额转账并备注订单号，店主核账后发卡。',
+    desc: '使用支付宝2独立收款码/链接；识别到有效支付宝收款链接时可尝试唤起 App，否则扫码付款并备注订单号，店主核账后发卡。',
   },
   {
     id: 'alipay_manual', label: '支付宝3', badge: '备用通道', icon: 'wallet', tone: 'muted',
@@ -101,17 +102,19 @@ export function isChannelConfigured(id: PayChannel, payment?: PaymentChannels): 
     case 'balance': return true;
     case 'wechat': return Boolean(payment?.wechat?.qr_url);
     case 'alipay_qr': return Boolean(payment?.alipay_qr?.qr_url);
-    case 'alipay_manual': return Boolean(payment?.alipay?.qr_url);
+    case 'alipay_manual': return Boolean(payment?.alipay?.qr_url || payment?.alipay?.account);
     case 'usdt': return Boolean(payment?.usdt?.address);
     // 在线通道无法在前台判断签约状态，交给 PayQrPanel 出码时反馈
-    case 'alipay': return true;
+    case 'alipay': return Boolean(payment?.alipay_primary?.qr_url || payment?.alipay_primary?.pay_url);
   }
 }
 
 /** 收银页跳转参数：静态收款三页统一只认 order + amount（alipay_qr 额外带 product 用于展示） */
 export function cashierSearch(id: PayChannel, orderNo: string, amount: number, title?: string) {
   const base = { order: orderNo, amount: String(amount) };
-  return id === 'alipay_qr' && title ? { ...base, product: title } : base;
+  if (id === 'alipay') return { ...base, channel: 'alipay', ...(title ? { product: title } : {}) };
+  if (id === 'alipay_qr') return title ? { ...base, product: title } : base;
+  return base;
 }
 
 /** 通道按钮上的手续费说明行（每种支付方式都要写清楚） */

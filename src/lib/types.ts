@@ -18,6 +18,8 @@ export interface OrderRow {
   lookup_password_hash: string | null; lookup_fail_count: number;
   lookup_locked_until: string | null; note: string | null;
   payment_method: string | null; payment_ref: string | null;
+  payment_status?: 'pending' | 'confirmed' | 'cancelled' | string;
+  confirmed_at?: string | null;
   amount: number; discount_amount: number; coupon_code: string | null;
   /** 商品小计（价×数量，未减券未加费）；老订单为 NULL */
   goods_amount?: number | null;
@@ -143,6 +145,8 @@ export interface RateLimitBlockRow {
 }
 /** 收款通道配置（存于 site_settings key='payment'） */
 export interface PaymentChannels {
+  /** 支付宝1：独立收款码/收款链接，可尝试唤起支付宝 App；人工核账 */
+  alipay_primary?: { qr_url?: string; pay_url?: string; deep_link?: string; name?: string; note?: string };
   alipay?: { account?: string; name?: string; note?: string; qr_url?: string };
   usdt?: { network?: string; address?: string; note?: string };
   wechat?: { qr_url?: string; account_name?: string; note?: string };
@@ -256,7 +260,7 @@ export interface WalletTx {
   id: string; kind: 'recharge' | 'spend' | 'unfreeze' | 'refund' | 'admin_adjust';
   amount: number; balance_after: number; order_id: string | null; note: string | null; created_at: string;
 }
-export interface SiteSettings { brand: Record<string, string>; contact: Record<string, string>; payment: PaymentChannels; seo: Record<string, string>; announcement?: AnnouncementConfig; branding?: BrandingConfig; ai_support?: AiSupportConfig; captcha?: CaptchaConfig; billing?: BillingConfig; recommend?: RecommendConfig; }
+export interface SiteSettings { brand: Record<string, string>; contact: Record<string, string>; payment: PaymentChannels; seo: Record<string, string>; referral?: Record<string, unknown>; announcement?: AnnouncementConfig; branding?: BrandingConfig; ai_support?: AiSupportConfig; captcha?: CaptchaConfig; billing?: BillingConfig; recommend?: RecommendConfig; }
 export interface DashboardPoint { day: string; visits: number; order_count: number; revenue: number; }
 export interface BossSalesRow { title: string; sold_count: number; revenue: number; }
 export interface DashboardData {

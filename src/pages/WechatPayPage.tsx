@@ -175,7 +175,7 @@ export function WechatPayPage() {
               caption="若无法直接扫码：长按二维码图片选择「存储图片」，再用微信扫一扫从相册选取"
               footer={
                 <p className="mt-4 text-center text-sm text-foreground">
-                  收款方：<span className="font-semibold">{wechat.account_name || '店主'}</span>
+                  收款方：<span className="font-semibold">{wechat?.account_name || '店主'}</span>
                 </p>
               }
             />

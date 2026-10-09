@@ -9,7 +9,9 @@ const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, one-day-app-id',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Max-Age': '86400',
   'Content-Type': 'application/json',
 };
 
@@ -37,7 +39,6 @@ Deno.serve(async (req) => {
 
     const row = (exact ?? [])[0] as Record<string, unknown> | undefined;
     const email = String(row?.email ?? '').trim();
-    console.log('[login-lookup] username =', raw, '| matched email =', email || '(none)');
     if (!email) {
       return new Response(JSON.stringify({ ok: false, message: '用户不存在' }), { headers: corsHeaders });
     }

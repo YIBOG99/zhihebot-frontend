@@ -35,7 +35,7 @@ export function CommissionProductList() {
 
   if (!globalOn) return null;
 
-  const rows: Row[] = ((products ?? []) as Array<Record<string, unknown>>)
+  const rows: Row[] = ((products ?? []) as unknown as Array<Record<string, unknown>>)
     .map((p) => {
       const c = p.commission as CommissionCfg | null | undefined;
       if (c?.enabled !== true) return null; // opt-in：未单独开启返佣的商品不参与计佣

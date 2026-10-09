@@ -508,70 +508,70 @@ export const DEMO_FAQS: FaqRow[] = [
     "group_name": "下单与支付",
     "question": "支持哪些付款方式？",
     "answer": "目前支持支付宝转账与 USDT（TRC20）两种收款方式。下单页会展示对应收款信息，完成付款后回填转账凭证即可，店主确认到账后系统自动发货。",
-    "sort_order": "1"
+    "sort_order": 1
   },
   {
     "id": "demo-faq-2",
     "group_name": "下单与支付",
     "question": "为什么没有在线自动扣款？",
     "answer": "虚拟商品跨境代充涉及渠道合规问题，本站采用「先下单锁定库存 → 人工核账 → 自动发卡」的流程，既保证资金安全也能避免异常订单误扣款。",
-    "sort_order": "2"
+    "sort_order": 2
   },
   {
     "id": "demo-faq-3",
     "group_name": "下单与支付",
     "question": "付款后多久能收到卡密？",
     "answer": "正常营业时间内通常 5–15 分钟完成核账并自动发放；夜间提交的订单会在次日集中处理，处理完成后查单页状态会同步更新。",
-    "sort_order": "3"
+    "sort_order": 3
   },
   {
     "id": "demo-faq-4",
     "group_name": "发货与激活",
     "question": "如何查询我的订单和卡密？",
     "answer": "进入「订单查询」页，输入下单时填写的订单号、邮箱或手机号以及自设的查询密码即可查看完整发货信息。请妥善保存这三项，连续输错 5 次会临时锁定 10 分钟。",
-    "sort_order": "4"
+    "sort_order": 4
   },
   {
     "id": "demo-faq-5",
     "group_name": "发货与激活",
     "question": "卡密激活失败怎么办？",
     "answer": "请先按详情页教程逐步核对：账号地区、网络环境、是否已完成手机号验证。若确认操作无误仍失败，携带订单号与失败截图联系客服，可换发新凭证。",
-    "sort_order": "5"
+    "sort_order": 5
   },
   {
     "id": "demo-faq-6",
     "group_name": "发货与激活",
     "question": "一个凭证能在多个账号上使用吗？",
     "answer": "不能。每个凭证仅可绑定一个账号，激活后即作废。请勿在公开场合泄露凭证内容。",
-    "sort_order": "6"
+    "sort_order": 6
   },
   {
     "id": "demo-faq-7",
     "group_name": "售后与退款",
     "question": "哪些情况可以退款？",
     "answer": "凭证未使用且因渠道原因无法激活的，可申请全额退款或换发；已激活成功的权益不支持退款。因买家自身账号违规被封禁不属于可退范围。",
-    "sort_order": "7"
+    "sort_order": 7
   },
   {
     "id": "demo-faq-8",
     "group_name": "售后与退款",
     "question": "退款多久到账？",
     "answer": "确认符合退款条件后，原路退回一般在 1–3 个工作日内完成；USDT 订单按提交时的汇率折算退回。",
-    "sort_order": "8"
+    "sort_order": 8
   },
   {
     "id": "demo-faq-9",
     "group_name": "账号与安全",
     "question": "必须注册才能购买吗？",
     "answer": "不强制。游客可完整下单，凭「订单号 + 联系方式 + 查询密码」取货。注册后可在个人中心查看历史订单、享受会员折扣与老客专属码。",
-    "sort_order": "9"
+    "sort_order": 9
   },
   {
     "id": "demo-faq-10",
     "group_name": "账号与安全",
     "question": "你们会拿到我的账号密码吗？",
     "answer": "不会。本站只交付兑换凭证，全程不需要也不应索取您的任何登录密码。任何索要密码的行为都不是本站客服。",
-    "sort_order": "10"
+    "sort_order": 10
   }
 ];
 

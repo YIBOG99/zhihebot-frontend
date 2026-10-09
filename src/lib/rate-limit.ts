@@ -21,7 +21,7 @@ export function isRateLimitedMessage(msg?: string | null): boolean {
  * ⚠️ 倒计时一律按秒驱动，所以分钟必须 ×60 换算；解析不到返回 null 交由调用方兜底。
  */
 export function parseRateLimitSeconds(msg?: string | null): number | null {
-  if (!isRateLimitedMessage(msg)) return null;
+  if (!msg || !isRateLimitedMessage(msg)) return null;
   const sec = msg.match(/(\d+)\s*秒/);
   if (sec) return clampSeconds(Number(sec[1]));
   const min = msg.match(/(\d+)\s*分钟/);

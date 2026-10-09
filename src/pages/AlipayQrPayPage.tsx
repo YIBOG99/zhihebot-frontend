@@ -33,10 +33,10 @@ const CASHIER_LIMIT_MIN = 10;
  * 支付宝扫码转账落地页（个人经营码通道）。
  * 与「支付宝人工转账」的区别：本页只做一件事——把店主上传的个人收款码以竞品式
  * 独立收银台形态呈现（蓝头 + 待支付胶囊 + 大红金额 + 绿框码 + 倒计时），
- * 过期后二维码变暗并提示重新下单。钱直接进店主个人账户，无法自动对账，靠人工核账发卡。
+ * 订单过期后收款码区域会变暗并提示重新下单。钱直接进店主个人账户，无法自动对账，靠人工核账发卡。
  */
 export function AlipayQrPayPage() {
-  const search = useSearch({ strict: false }) as { order?: string; amount?: string; product?: string };
+  const search = useSearch({ strict: false }) as { order?: string; amount?: string; product?: string; channel?: string };
   const { data: settings, isLoading } = useSiteSettings();
   const [copied, setCopied] = useState(false);
   /** 从 orders 表回读的支付截止时刻；NULL = 老订单不限时 */
@@ -47,17 +47,22 @@ export function AlipayQrPayPage() {
   /** 剩余毫秒（本页自绘大号倒计时用，以服务端时刻算差值，不受本机时钟影响） */
   const [remain, setRemain] = useState(0);
 
-  const alipayQr = settings?.payment?.alipay_qr;
+  const primaryChannel = search.channel === 'alipay';
+  const alipayQr = primaryChannel ? settings?.payment?.alipay_primary : settings?.payment?.alipay_qr;
+  const channelTitle = primaryChannel ? '支付宝1' : '支付宝2';
   const orderNo = search.order ?? '';
   const amount = Number(search.amount) || 0;
   const remainText = fmtRemain(remain);
   /** 配置值是收款链接时才能一键唤起支付宝 App；图片形式只能扫码 */
   const qrValue = alipayQr?.qr_url ?? '';
-  const canJump = isAlipayPayLink(qrValue);
+  const configuredPayUrl = primaryChannel ? (settings?.payment?.alipay_primary?.pay_url ?? '') : '';
+  const paymentLink = configuredPayUrl.trim() || qrValue;
+  const displayQrValue = qrValue.trim() || paymentLink;
+  const canJump = isAlipayPayLink(paymentLink);
   const [jumpNotice, setJumpNotice] = useState<string | null>(null);
 
   function handleJump() {
-    const r = jumpToAlipayApp(qrValue);
+    const r = jumpToAlipayApp(paymentLink);
     if (r.notice) {
       setJumpNotice(r.notice);
       setTimeout(() => setJumpNotice(null), 6000);
@@ -141,7 +146,7 @@ export function AlipayQrPayPage() {
       } catch { ok = false; }
     }
     if (ok) {
-      setCopied(key);
+      setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     }
   }
@@ -150,12 +155,12 @@ export function AlipayQrPayPage() {
     return <div className="cashier-light mx-auto flex max-w-lg items-center justify-center px-4 py-24 text-center text-muted-foreground">加载中…</div>;
   }
 
-  const hasQr = Boolean(alipayQr?.qr_url);
+  const hasQr = Boolean(displayQrValue);
 
   return (
     <div className="cashier-light min-h-screen bg-background">
       {/* 蓝色头部条 + 状态胶囊（公共件，三页共用） */}
-      <CashierHeader title="支付宝2" icon={<QrCode size={19} />} expired={expired} />
+      <CashierHeader title={channelTitle} icon={<QrCode size={19} />} expired={expired} />
 
       <div className="mx-auto max-w-lg px-4 sm:px-6 py-7">
         {/* 金额区：红色超大字 */}
@@ -178,7 +183,7 @@ export function AlipayQrPayPage() {
             <div className="rounded-2xl border border-danger/30 bg-surface p-6 text-center">
               {hasQr && (
                 <div className="mb-5">
-                  <QrExpiryFrame src={alipayQr!.qr_url!} alt="支付宝收款码" expired />
+                  <QrExpiryFrame src={displayQrValue} alt={`${channelTitle}收款码`} expired />
                 </div>
               )}
               <h3 className="text-lg font-bold text-danger">订单已过期，请返回重新下单</h3>
@@ -199,9 +204,9 @@ export function AlipayQrPayPage() {
           ) : hasQr ? (
             <div>
               <QrExpiryFrame
-                src={qrValue}
-                alt="支付宝收款码"
-                caption={canJump ? '扫码或点击下方按钮，直接打开支付宝付款' : '请使用支付宝扫描二维码完成支付'}
+                src={displayQrValue}
+                alt={`${channelTitle}收款码`}
+                caption={canJump ? '扫码或点击下方按钮，尝试直接打开支付宝付款' : '请使用支付宝扫描二维码完成支付'}
                 footer={
                   <p className="mt-4 text-center text-sm text-foreground">
                     收款方：<span className="font-semibold">{alipayQr!.name || '店主'}</span>
@@ -226,7 +231,7 @@ export function AlipayQrPayPage() {
             <div className="flex items-start gap-2.5 rounded-xl border border-warning/40 bg-surface p-5">
               <AlertCircle size={16} className="mt-0.5 shrink-0 text-warning" />
               <div>
-                <p className="text-sm text-warning">店主尚未上传支付宝收款码</p>
+                <p className="text-sm text-warning">店主尚未配置支付宝收款码或有效收款链接</p>
                 <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                   请返回更换支付方式，或改用「支付宝3」「微信收款」「USDT」完成付款。
                 </p>

@@ -130,6 +130,7 @@ export function AlipayManualPayPage() {
   }
 
   const hasQr = Boolean(alipay?.qr_url);
+  const hasAccount = Boolean(alipay?.account?.trim());
 
   return (
     <div className="cashier-light min-h-screen bg-background">
@@ -180,9 +181,9 @@ export function AlipayManualPayPage() {
                 </Link>
               </div>
             </div>
-          ) : hasQr ? (
+          ) : (hasQr || hasAccount) ? (
             <div>
-              <QrExpiryFrame
+              {hasQr && <QrExpiryFrame
                 src={qrValue}
                 alt="支付宝收款码"
                 caption={canJump ? '扫码或点击下方按钮，直接打开支付宝付款' : '请使用支付宝扫描二维码完成支付'}
@@ -191,8 +192,8 @@ export function AlipayManualPayPage() {
                     收款方：<span className="font-semibold">{alipay!.name || '店主'}</span>
                   </p>
                 }
-              />
-              {canJump && (
+              />}
+              {hasQr && canJump && (
                 <div className="mt-5">
                   <button type="button" onClick={handleJump}
                     className="btn-sheen flex w-full items-center justify-center gap-2 rounded-xl bg-info py-3.5 text-sm font-bold text-white shadow-md shadow-info/25 transition-colors hover:bg-info/90 active:scale-[0.99]">
@@ -219,6 +220,25 @@ export function AlipayManualPayPage() {
           )}
         </div>
 
+        {!expired && hasAccount && (
+          <div className="mt-5 rounded-xl border border-info/30 bg-card p-5">
+            <p className="text-sm font-semibold text-foreground">收款账号（备用转账方式）</p>
+            <p className="mt-1 text-xs text-muted-foreground">请在支付宝中选择转账，核对收款方后输入页面显示的准确金额，并备注订单号。</p>
+            <div className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-border bg-background px-3 py-3">
+              <div className="min-w-0">
+                <p className="text-[11px] text-muted-foreground">收款账号</p>
+                <p className="break-all font-mono text-sm text-foreground">{alipay?.account}</p>
+              </div>
+              <button type="button" onClick={() => copyValue('account', alipay?.account ?? '')}
+                className="shrink-0 rounded-lg border border-info/40 px-3 py-2 text-xs font-semibold text-info hover:bg-info/10">
+                {copiedKey === 'account' ? <Check size={13} /> : <Copy size={13} />}
+                {copiedKey === 'account' ? '已复制' : '复制账号'}
+              </button>
+            </div>
+            {alipay?.name && <p className="mt-2 text-xs text-muted-foreground">收款方：<span className="font-semibold text-foreground">{alipay.name}</span></p>}
+          </div>
+        )}
+
         {/* 图片形式的收款码：无一键跳转能力，给店主一个可感知的说明（仅展示，不阻断） */}
         {!expired && hasQr && !canJump && (
           <p className="mt-4 rounded-lg border border-border bg-surface p-3 text-center text-[11px] leading-relaxed text-muted-foreground">
@@ -230,7 +250,7 @@ export function AlipayManualPayPage() {
             展示收款账号既没人用、又容易让顾客走错流程。payment.alipay.account 字段与后台配置保留，需要时可复原。 */}
 
         {/* 等待提示 */}
-        {!expired && hasQr && (
+        {!expired && (hasQr || hasAccount) && (
           <p className="mt-5 text-center text-sm text-info">等待支付，支付完成后点击下方按钮查询卡密。</p>
         )}
 
@@ -255,15 +275,19 @@ export function AlipayManualPayPage() {
         )}
 
         {/* 步骤 */}
-        {hasQr && !expired && (
+        {(hasQr || hasAccount) && !expired && (
           <ol className="mt-6 space-y-3">
             {[
-              canJump
-                ? '点击下方「打开支付宝立即付款」按钮，自动跳转支付宝付款页'
-                : '保存上面的收款码图片',
-              canJump
-                ? `核对收款方为「${alipay!.name || '店主'}」，输入精确金额`
-                : '打开支付宝 → 扫一扫 → 从相册选取收款码',
+              !hasQr
+                ? '打开支付宝，进入转账功能并填写上方收款账号'
+                : canJump
+                  ? '点击下方「打开支付宝立即付款」按钮，自动跳转支付宝付款页'
+                  : '保存上面的收款码图片',
+              !hasQr
+                ? `核对收款方为「${alipay?.name || '店主'}」，输入页面显示的准确金额`
+                : canJump
+                  ? `核对收款方为「${alipay!.name || '店主'}」，输入精确金额`
+                  : '打开支付宝 → 扫一扫 → 从相册选取收款码',
               '在备注里粘贴上面的订单号，确认付款',
               '付款完成后点击下方按钮，凭订单号与查询密码自助查单取卡密',
             ].map((step, i) => (
