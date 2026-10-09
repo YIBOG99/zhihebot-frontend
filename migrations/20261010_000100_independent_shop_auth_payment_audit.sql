@@ -31,7 +31,7 @@ UPDATE public.orders
 -- Refund audit trail; the wallet_refund_order RPC continues to perform the actual balance refund.
 CREATE TABLE IF NOT EXISTS public.order_refunds (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  order_id TEXT NOT NULL REFERENCES public.orders(id) ON DELETE CASCADE,
+  order_id TEXT NOT NULL REFERENCES public.orders(id) ON DELETE RESTRICT,
   amount NUMERIC(10,2) NOT NULL DEFAULT 0 CHECK (amount >= 0),
   refund_method TEXT NOT NULL DEFAULT 'balance',
   reason TEXT,
