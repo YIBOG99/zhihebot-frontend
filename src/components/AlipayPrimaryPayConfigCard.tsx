@@ -25,9 +25,9 @@ export function AlipayPrimaryPayConfigCard() {
         const payment = await readSiteSetting<{ alipay_primary?: AlipayPrimaryCfg }>('payment');
         if (!alive) return;
         const c = payment?.alipay_primary ?? {};
-        setQrUrl(c.qr_url ?? '');
-        setPayUrl(c.pay_url ?? '');
-        setName(c.name ?? '');
+        setQrUrl(c.qr_url || '/payment-codes/payment-qr-1.png');
+        setPayUrl(c.pay_url || 'https://qr.alipay.com/fkx1539453hgmrbkkrl0e84');
+        setName(c.name || '支付宝1');
         setNote(c.note ?? '');
       } catch (e) {
         console.error('[AlipayPrimaryPayConfig] load failed:', e);
