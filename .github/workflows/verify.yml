@@ -27,7 +27,9 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - name: TypeScript typecheck
-        run: pnpm run typecheck
+      # TanStack Router's Vite plugin generates routeTree.gen.ts during the build.
+      # Build first so a newly added file route is present before TypeScript checks it.
       - name: Production build
         run: pnpm run build
+      - name: TypeScript typecheck
+        run: pnpm run typecheck
