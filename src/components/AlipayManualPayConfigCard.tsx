@@ -10,6 +10,7 @@ type AlipayCfg = { account?: string; name?: string; note?: string; qr_url?: stri
  *  写入 site_settings.payment.alipay，不影响 wechat / usdt 子对象。 */
 export function AlipayManualPayConfigCard() {
   const [qrUrl, setQrUrl] = useState('');
+  const [qrSourceValid, setQrSourceValid] = useState(true);
   const [account, setAccount] = useState('');
   const [name, setName] = useState('');
   const [note, setNote] = useState('');
@@ -36,6 +37,10 @@ export function AlipayManualPayConfigCard() {
   }, []);
 
   async function save() {
+    if (!qrSourceValid) {
+      toast.error('请填写有效的支付宝收款链接，或切回上传收款码图片；普通网页 URL 不能作为收款码链接。');
+      return;
+    }
     setSaving(true);
     try {
       // patchSiteSetting 为浅合并：整体覆盖 payment.alipay，其余通道原样保留
@@ -66,7 +71,7 @@ export function AlipayManualPayConfigCard() {
       <div className="space-y-4">
         <div>
           <label className="mb-1.5 block text-xs font-medium text-muted-foreground">支付宝收款二维码</label>
-          <QrSourceField value={qrUrl} onChange={setQrUrl} />
+          <QrSourceField value={qrUrl} onChange={setQrUrl} onValidityChange={setQrSourceValid} />
           <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground">
             上传支付宝 App「收款码」页面截图（建议正方形、清晰无遮挡），买家在收款页可直接扫码付款。
             想启用<b className="text-foreground">「打开支付宝立即付款」一键跳转</b>：切到「收款链接」并填入
