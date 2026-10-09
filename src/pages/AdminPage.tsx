@@ -409,8 +409,21 @@ function OrdersTab() {
     try {
       const r = await refundOrderToBalance(orderId);
       console.log('[Admin orders] wallet_refund_order result =', JSON.stringify(r));
-      if (r.ok) { toast.success(r.message); await load(); }
-      else toast.error(r.message);
+      if (r.ok) {
+        // wallet_refund_order is the authoritative money operation; this table is an admin audit trail.
+        const order = orders.find((item) => item.id === orderId);
+        const { data: authData } = await supabase.auth.getUser();
+        const { error: auditError } = await supabase.from('order_refunds').insert({
+          order_id: orderId,
+          amount: Number(order?.amount ?? 0),
+          refund_method: 'balance',
+          reason: r.message,
+          created_by: authData.user?.id ?? null,
+        });
+        if (auditError) console.warn('[Admin orders] refund audit write failed after successful wallet refund:', auditError.message);
+        toast.success(auditError ? '退款已完成；退款流水已记入钱包，审计表暂不可用' : r.message);
+        await load();
+      } else toast.error(r.message);
     } finally {
       setActing(null);
     }
