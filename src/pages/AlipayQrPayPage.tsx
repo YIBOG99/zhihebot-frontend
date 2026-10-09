@@ -55,11 +55,13 @@ export function AlipayQrPayPage() {
   const remainText = fmtRemain(remain);
   /** 配置值是收款链接时才能一键唤起支付宝 App；图片形式只能扫码 */
   const qrValue = alipayQr?.qr_url ?? '';
-  const canJump = isAlipayPayLink(qrValue);
+  const configuredPayUrl = primaryChannel ? (settings?.payment?.alipay_primary?.pay_url ?? '') : '';
+  const paymentLink = configuredPayUrl.trim() || qrValue;
+  const canJump = isAlipayPayLink(paymentLink);
   const [jumpNotice, setJumpNotice] = useState<string | null>(null);
 
   function handleJump() {
-    const r = jumpToAlipayApp(qrValue);
+    const r = jumpToAlipayApp(paymentLink);
     if (r.notice) {
       setJumpNotice(r.notice);
       setTimeout(() => setJumpNotice(null), 6000);
