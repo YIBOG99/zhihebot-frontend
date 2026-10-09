@@ -40,19 +40,19 @@ export function HomePage() {
       <section className="relative overflow-hidden border-b border-border">
         <div className="home-glow home-glow-a" />
         <div className="home-glow home-glow-b" />
-        <div className="mx-auto max-w-7xl px-5 pb-16 pt-20 sm:px-6 sm:pb-20 sm:pt-24 lg:px-8 lg:pb-24 lg:pt-28">
-          <div className="max-w-4xl">
+        <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-5 pb-16 pt-16 sm:px-6 sm:pb-20 sm:pt-20 lg:grid-cols-[1.08fr_.92fr] lg:px-8 lg:pb-24 lg:pt-24">
+          <div className="relative z-10 max-w-4xl">
             <div className="hero-kicker">
               <span className="hero-kicker-dot" />
-              AI 会员自助充值商城 · 24/7 在线
+              智核数字商品 · 全天候在线
             </div>
             <h1 className="mt-5 max-w-4xl text-[42px] font-black leading-[1.08] tracking-[-0.045em] text-foreground sm:text-6xl lg:text-[76px]">
-              把 AI 会员，
+              把数字好物，
               <br />
-              <span className="hero-gradient-text">简单买、快速用。</span>
+              <span className="hero-gradient-text">简单选、安心用。</span>
             </h1>
             <p className="mt-6 max-w-2xl text-base leading-8 text-muted-foreground sm:text-lg">
-              精选 ChatGPT、Claude、Grok、Gemini 与 AI 编程工具，商品详情、库存、价格与订单状态统一管理。手机打开也能快速完成购买。
+              精选数字权益与实用工具，商品信息、库存、价格和订单状态清晰可查。轻松选购，付款后按商品交付规则快速获取。
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -77,6 +77,21 @@ export function HomePage() {
               <span>·</span>
               <Link to="/tutorials" className="hover:text-foreground transition">已有卡密？直接充值</Link>
             </div>
+          </div>
+          <div className="hero-orbit-scene relative mx-auto hidden w-full max-w-[520px] lg:block" aria-hidden="true">
+            <div className="orbit-ring orbit-ring-outer" />
+            <div className="orbit-ring orbit-ring-inner" />
+            <div className="orbit-core">
+              <div className="orbit-core-mark"><Sparkles size={32} /></div>
+              <span className="mt-4 block text-xs font-bold uppercase tracking-[0.28em] text-primary">ZHIHE / DIGITAL</span>
+              <span className="mt-2 block text-2xl font-black tracking-tight text-foreground">下一代数字商店</span>
+              <span className="mt-2 block text-sm text-muted-foreground">简单 · 清晰 · 可信赖</span>
+            </div>
+            <div className="orbit-float orbit-float-top"><span className="orbit-float-icon"><ShieldCheck size={17} /></span><span><b>安全选购</b><small>信息清晰可查</small></span><i /></div>
+            <div className="orbit-float orbit-float-right"><span className="orbit-float-icon"><Zap size={17} /></span><span><b>快速交付</b><small>订单状态可追踪</small></span><i /></div>
+            <div className="orbit-float orbit-float-bottom"><span className="orbit-float-icon"><CheckCircle2 size={17} /></span><span><b>流程透明</b><small>售后规则明确</small></span><i /></div>
+            <div className="orbit-coordinate orbit-coordinate-a">35°41' N / 139°41' E</div>
+            <div className="orbit-coordinate orbit-coordinate-b">SYSTEM ONLINE <span /></div>
           </div>
         </div>
       </section>

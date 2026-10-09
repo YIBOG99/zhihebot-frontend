@@ -9,7 +9,7 @@ import { requestCaptcha, type CaptchaChallenge } from '@/lib/order-captcha';
 import { PayCountdownBar } from '@/components/PayCountdownBar';
 import { useAuthSession } from '@/hooks/use-auth-session';
 import { useMyRewardCoupons, type RewardCoupon } from '@/lib/referral';
-import { PAY_CHANNELS, CASHIER_PATH, isChannelConfigured, feeSuffixOf, CHANNEL_CARD_BASE, TONE_TEXT, type PayChannel } from '@/lib/pay-channels';
+import { PAY_CHANNELS, CASHIER_PATH, isChannelConfigured, feeSuffixOf, CHANNEL_CARD_BASE, TONE_TEXT, toChannelId, type PayChannel } from '@/lib/pay-channels';
 import { useMyWallet, payWithBalance, switchOrderChannel, calcPayable, effectiveFeeRate } from '@/lib/wallet';
 import { formatYuan, scrollToTopNow } from '@/lib/utils';
 import { parseRateLimitSeconds, useCountdownSeconds, rateLimitButtonLabel, fmtMinSec } from '@/lib/rate-limit';
@@ -33,7 +33,7 @@ export function CheckoutPage() {
   const { id } = useParams({ strict: false }) as { id: string };
   const navigate = useNavigate();
   const { data: product, isLoading } = useProduct(id);
-  const { data: settings } = useSiteSettings();
+  const { data: settings, isLoading: settingsLoading } = useSiteSettings();
   const { user } = useAuthSession();
   /** 登录用户的邀请奖励券（游客为空数组，不展示券选择区） */
   const { coupons } = useMyRewardCoupons(user?.id ?? null);
@@ -179,16 +179,26 @@ export function CheckoutPage() {
    * 「选择支付方式」屏展示的通道：**以店主已配置的真实收款通道为准**，
    * 不再被商品级 payment_methods 白名单筛掉。
    * ⚠️ 用户明确要求：不得擅自收窄他已开通的支付方式（三个支付宝 + 微信必须全部出现）。
-   * 商品白名单仅作为后台勾选记录保留，前台只在「连一个都没配」时兜底参考。
+   * 商品白名单仅作为后台勾选记录保留；未配置的收款方式不显示、不允许继续下单。
    * 余额支付只在登录后展示（游客无法站内扣款），充值类商品不可用余额代充。
    */
+  // 商品后台勾选的支付方式是白名单；不允许结算页显示商品未开放的通道。
+  // 只映射历史上明确支持的值，未知字符串绝不能因 toChannelId 的兼容兜底而意外开放 USDT。
+  const knownProductPaymentValues = new Set(['balance', 'alipay', 'alipay_online', 'alipay_qr', 'alipay_manual', 'wechat', 'weixin', 'usdt', 'manual']);
+  const productPaymentMethods = Array.isArray(product.payment_methods) ? product.payment_methods : [];
+  const allowedProductChannels = new Set(
+    productPaymentMethods
+      .filter((value) => knownProductPaymentValues.has(String(value).trim().toLowerCase()))
+      .map((value) => toChannelId(value)),
+  );
   const configuredChannels = PAY_CHANNELS.filter((c) => {
+    if (!allowedProductChannels.has(c.id)) return false;
     if (c.id === 'balance' && (!user || isRecharge)) return false;
     return isChannelConfigured(c.id, settings?.payment);
   });
-  const pickableChannels = configuredChannels.length > 0
-    ? configuredChannels
-    : PAY_CHANNELS.filter((c) => c.id !== 'balance');
+  // 未配置的收款渠道不能作为可付款选项兜底展示，避免顾客把空白收款页误认为可付款。
+  const pickableChannels = configuredChannels;
+  const hasExternalPaymentChannels = configuredChannels.some((c) => c.id !== 'balance');
   console.log('[Checkout] 可选通道', {
     productId: product.id,
     whitelist: product.payment_methods,
@@ -206,6 +216,15 @@ export function CheckoutPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (settingsLoading) {
+      toast.info('正在读取支付配置，请稍后再提交订单');
+      return;
+    }
+    const canUseBalance = Boolean(user && !isRecharge && balanceAvailable >= total);
+    if (!hasExternalPaymentChannels && !canUseBalance) {
+      toast.error('商城尚未配置可用收款方式，请联系店主完成支付设置后再下单');
+      return;
+    }
     if (!email && !phone) { toast.error('请至少填写邮箱或手机号'); return; }
     // 人机校验：开关开启时必须已出题并作答（最终判定仍在服务端 RPC，这里只是免一次无谓往返）
     const captchaOn = settings?.captcha?.enabled !== false;
@@ -326,6 +345,7 @@ export function CheckoutPage() {
 
   if (result) {
     const usdt = settings?.payment?.usdt;
+    const usdtNetwork = usdt?.network?.trim() || 'TRC20';
     return (
       <div className="mx-auto max-w-2xl px-4 sm:px-6 py-12">
         <div className="glow-frame rounded-2xl border border-success/30 bg-success/5 p-6 text-center">
@@ -382,6 +402,11 @@ export function CheckoutPage() {
         {!payExpired && payChannel === 'choose' && (
           <div className="mt-6">
             <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">选择支付方式</p>
+            {pickableChannels.length === 0 ? (
+              <div className="rounded-xl border border-warning/30 bg-warning/5 p-5 text-sm leading-relaxed text-muted-foreground">
+                当前没有可用的支付方式。请稍后重试，或联系店主在后台「支付设置」中配置收款码、收款链接或 USDT 地址。
+              </div>
+            ) : (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {pickableChannels.map((c) => {
                 const Icon = CHANNEL_ICON[c.icon] ?? QrCode;
@@ -411,9 +436,10 @@ export function CheckoutPage() {
                 );
               })}
             </div>
+            )}
             {recOn && (
               <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
-                {settings?.recommend?.note || '推荐使用支付宝付款，到账最快'}。
+                {settings?.recommend?.note || '请根据页面提示选择支付方式；转账类通道付款后需等待店主核账'}。
               </p>
             )}
           </div>
@@ -498,7 +524,7 @@ export function CheckoutPage() {
           <div className="mt-6 space-y-3">
             {usdt?.address ? (
               <div className="rounded-xl border border-border bg-card p-5">
-                <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-warning">USDT · {usdt.network || 'TRC20'}</p>
+                <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-warning">USDT · {usdtNetwork}</p>
                 <p className="select-all text-sm font-mono leading-relaxed break-all text-foreground">{usdt.address}</p>
                 {usdt.note && <p className="mt-2 text-[11px] leading-relaxed text-danger">{usdt.note}</p>}
                 <button type="button"
@@ -507,7 +533,7 @@ export function CheckoutPage() {
                   {copied === 'usdt' ? <><Check size={13} className="text-success" /> 地址已复制</> : <><Copy size={13} /> 复制收款地址</>}
                 </button>
                 <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">
-                  请在交易所（如欧易 OKX）选择 <b className="text-foreground">TRON（TRC20）</b> 网络提币到上面这个地址，金额按应付 <span className="font-mono text-foreground">¥{result.amount.toFixed(2)}</span> 折算等值 USDT。其他网络（ERC20 / BSC 等）转入无法找回。
+                  请在交易所选择 <b className="text-foreground">{usdtNetwork}</b> 网络提币到上方地址，金额按应付 <span className="font-mono text-foreground">¥{result.amount.toFixed(2)}</span> 折算等值 USDT。务必让提币网络与此处配置完全一致，错误网络可能造成资产永久丢失。
                 </p>
               </div>
             ) : (

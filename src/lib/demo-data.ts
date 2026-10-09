@@ -578,70 +578,44 @@ export const DEMO_FAQS: FaqRow[] = [
 export const DEMO_SITE_SETTINGS: SiteSettings = {
   "brand": {
     "name": "智核",
-    "slogan": "AI 会员自助充值商城",
-    "subtitle": "海外 AI 订阅 · 正规渠道 · 自动发卡",
+    "slogan": "数字商品自助商城",
+    "subtitle": "数字商品 · 订单可查 · 安全交付",
     "logoText": "智核"
   },
   "contact": {
-    "wechat": "zhihe-service",
-    "qq": "88001234",
-    "email": "support@zhihe.shop",
-    "workTime": "每日 09:00 - 24:00",
-    "notice": "本店为虚拟商品自助商城，付款后请保留订单号与查询密码，这是唯一取货凭证。"
+    "wechat": "",
+    "qq": "",
+    "email": "",
+    "workTime": "",
+    "notice": "请在正式上线前于后台填写真实的售后联系方式与服务时间。付款后请保留订单号和查询密码。"
   },
   "payment": {
-    "alipay": {
-      "account": "zhihe999@outlook.com",
-      "name": "智核数字服务",
-      "note": "转账请备注订单号后 6 位"
-    },
-    "usdt": {
-      "network": "TRC20",
-      "address": "XU6YcNKqAqxGZrLbs0P5bHh8svtkaeGGit",
-      "note": "仅支持 TRON（TRC20）链转账，其他链转入无法找回；转账前请反复核对地址。"
-    },
-    "wechat": {
-      "qr_url": "",
-      "account_name": "智核数字服务",
-      "note": "请添加店主微信后转账，务必备注订单号后 6 位；确认到账后立即发放卡密。"
-    }
+    "alipay_primary": { "qr_url": "", "pay_url": "", "name": "", "note": "" },
+    "alipay_qr": { "qr_url": "", "name": "", "note": "" },
+    "alipay": { "qr_url": "", "account": "", "name": "", "note": "" },
+    "wechat": { "qr_url": "", "account_name": "", "note": "" },
+    "usdt": { "network": "TRC20", "address": "", "note": "" }
   },
   "seo": {
-    "title": "智核 · AI 会员自助充值商城",
-    "description": "ChatGPT Plus / Pro、Claude Pro / Max、Grok Super、Gemini AI Pro 等海外 AI 订阅正规渠道代充，自动发卡、订单可查、售后有保障。",
-    "keywords": "ChatGPT Plus 代充,Claude Pro 购买,AI 会员充值,Grok Super,Gemini Pro"
+    "title": "智核数字商品商城",
+    "description": "数字商品在线选购、订单查询与安全交付。",
+    "keywords": "数字商品,虚拟商品,订单查询,卡密"
   },
   "announcement": {
-    "enabled": true,
+    "enabled": false,
     "title": "智核",
     "subtitle": "请认准官方网址，谨防假冒。",
-    "official_url": "nl8068w5.meoo.info",
-    "security_note": "客服只通过首页展示的联系方式处理，谨防被骗。",
-    "warning_note": "下单前请看清商品介绍，有问题请先联系客服。",
-    "links": [
-      {
-        "label": "微信客服",
-        "url": "",
-        "icon": "chat"
-      },
-      {
-        "label": "QQ 通知交流群",
-        "url": "",
-        "icon": "qq"
-      },
-      {
-        "label": "Telegram 频道",
-        "url": "",
-        "icon": "telegram"
-      }
-    ],
-    "cta_label": "好的，我知道了",
+    "official_url": "https://zhihebot.shop",
+    "security_note": "仅通过网站公布的官方联系方式处理售后，谨防冒充。",
+    "warning_note": "下单前请阅读商品说明和售后规则。",
+    "links": [],
+    "cta_label": "我知道了",
     "snooze_label": "24 小时内不再提醒",
     "snooze_hours": 24
   },
   "branding": {
     "logo_url": "",
     "name": "智核商店",
-    "tagline": "AI MEMBERSHIP & DIGITAL SERVICES"
+    "tagline": "DIGITAL GOODS · SECURE DELIVERY"
   }
 };

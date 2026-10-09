@@ -13,11 +13,14 @@ import { isAlipayPayLink } from '@/lib/alipay-deeplink';
  *   成功后自动切到 link 模式并填入解出的链接——解决支付宝个人收钱码页面不提供复制链接入口的问题。
  * value 始终是字符串，两种来源共用同一字段，存储结构不变。
  */
-export function QrSourceField({ value, onChange }: { value: string; onChange: (next: string) => void }) {
+export function QrSourceField({ value, onChange, onValidityChange }: { value: string; onChange: (next: string) => void; onValidityChange?: (isValid: boolean) => void }) {
   const looksLikeLink = isAlipayPayLink(value);
   const [mode, setMode] = useState<'image' | 'link'>(looksLikeLink ? 'link' : 'image');
   // 管理后台异步加载已保存的链接时，同步切换到链接输入模式；图片上传值不触发切换。
   useEffect(() => { if (looksLikeLink) setMode('link'); }, [looksLikeLink]);
+  useEffect(() => {
+    onValidityChange?.(mode === 'image' || !value.trim() || looksLikeLink);
+  }, [mode, value, looksLikeLink, onValidityChange]);
   const [decoding, setDecoding] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -29,9 +32,15 @@ export function QrSourceField({ value, onChange }: { value: string; onChange: (n
         toast.error('没能识别出二维码内容，换一张更清晰的截图再试');
         return;
       }
+      if (!isAlipayPayLink(text)) {
+        onValidityChange?.(false);
+        toast.error('识别结果不是受支持的支付宝官方收款链接，请确认二维码来源');
+        return;
+      }
       onChange(text);
       setMode('link');
-      toast.success('已提取收款链接，保存后前台即显示无图案的纯二维码');
+      onValidityChange?.(true);
+      toast.success('已提取并验证支付宝收款链接，保存后前台即显示纯二维码');
     } catch (e) {
       console.error('[QrSourceField] decode failed', e);
       toast.error(e instanceof Error ? e.message : '识别失败，请重试');
@@ -53,9 +62,15 @@ export function QrSourceField({ value, onChange }: { value: string; onChange: (n
         toast.error('这张图里没识别出二维码，可改用下方「选一张本地图片识别」');
         return;
       }
+      if (!isAlipayPayLink(text)) {
+        onValidityChange?.(false);
+        toast.error('二维码内容不是受支持的支付宝官方收款链接，请确认收款码来源');
+        return;
+      }
       onChange(text);
       setMode('link');
-      toast.success('已提取收款链接，保存后前台即显示无图案的纯二维码');
+      onValidityChange?.(true);
+      toast.success('已提取并验证支付宝收款链接，保存后前台即显示纯二维码');
     } catch (e) {
       console.error('[QrSourceField] decode current image failed', e);
       toast.error('该图片无法在本地读取（跨域限制），请用下方「选一张本地图片识别」');
@@ -76,7 +91,10 @@ export function QrSourceField({ value, onChange }: { value: string; onChange: (n
           <button
             key={t.key}
             type="button"
-            onClick={() => setMode(t.key)}
+            onClick={() => {
+              setMode(t.key);
+              onValidityChange?.(t.key === 'image' || !value.trim() || isAlipayPayLink(value.trim()));
+            }}
             className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
               mode === t.key ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
             }`}
@@ -92,13 +110,16 @@ export function QrSourceField({ value, onChange }: { value: string; onChange: (n
         <>
           <input
             value={value}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={(e) => {
+              onChange(e.target.value);
+              onValidityChange?.(!e.target.value.trim() || isAlipayPayLink(e.target.value.trim()));
+            }}
             placeholder="例如 https://qr.alipay.com/baxxxxxxxxxxxxxxx"
             spellCheck={false}
             className="w-full rounded-lg border border-border bg-input px-3.5 py-2.5 font-mono text-sm text-foreground placeholder:font-sans placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
           />
-          {value.trim() && !/^https?:\/\//i.test(value.trim()) && (
-            <p className="mt-1.5 text-[11px] leading-relaxed text-danger">需以 http:// 或 https:// 开头，否则无法生成二维码。</p>
+          {value.trim() && !isAlipayPayLink(value.trim()) && (
+            <p className="mt-1.5 text-[11px] leading-relaxed text-danger">只接受受支持的支付宝官方收款链接（如 qr.alipay.com）；普通网页 URL 不能用于支付深链。</p>
           )}
         </>
       )}

@@ -34,7 +34,7 @@ export function SiteHeader() {
           <span className="min-w-0">
             <span className="block truncate text-lg font-bold tracking-tight text-foreground sm:text-xl">{brandName}</span>
             <span className="mt-0.5 block truncate text-[9px] font-semibold uppercase tracking-[0.22em] text-muted-foreground sm:text-[10px]">
-              {tagline || 'AI MEMBERSHIP & DIGITAL SERVICES'}
+              {tagline || 'PREMIUM DIGITAL GOODS · INSTANT DELIVERY'}
             </span>
           </span>
         </Link>

@@ -18,17 +18,19 @@
 2. 从项目设置中复制 Project URL 与 anon/public key。
 3. **不要把 `migrations/` 目录中的所有 SQL 一次性全选执行。** 该目录包含重复版本、函数签名升级和非幂等的策略创建语句；其中种子数据还含有旧收款配置与旧站点地址。先按 [数据库迁移审计说明](DATABASE_MIGRATION_AUDIT.md) 选择并验证迁移，再初始化数据库。
 4. 在 Supabase Authentication 中启用所需登录方式，并配置正式站点的 Site URL 与 Redirect URLs。
-5. 创建自己的管理员登录用户。完成注册后，在 SQL Editor 执行以下语句，将邮箱对应的 Auth 用户授予管理员角色（把邮箱替换为你自己的登录邮箱）：
+5. 按唯一管理员启用流程创建管理员。当前分支的 `20261010_000500_single_admin_allowlist.sql` 将管理员角色限制在指定邮箱，并会撤销其他账号已有的 admin 角色。请先阅读 [管理员启用说明](ADMIN_BOOTSTRAP.md)，先用该邮箱在 `/register` 注册并验证邮箱，再在 Supabase SQL Editor 中按说明授予 admin；不要套用任意邮箱的通用 SQL。迁移应用前务必核实目标 Auth 用户、角色数据和团队权限要求。
 
-```sql
-insert into public.user_roles (user_id, role)
-select id, 'admin'::public.app_role
-from auth.users
-where lower(email) = lower('替换为你的管理员邮箱')
-on conflict (user_id, role) do nothing;
-```
+不要把 service-role key 放进前端环境变量。
 
-执行前确认 `public.user_roles` 与 `public.app_role` 已由仓库迁移创建。不要把 service-role key 放进前端环境变量。
+## 当前目标 Supabase 项目
+
+部署目标项目 URL 为 `https://aqoryvygjavngcgkmuom.supabase.co`（请在发布前登录 Supabase Dashboard 再次核对项目归属）。将此 URL 与该项目自己的 publishable/anon 公钥配置到前端部署平台的环境变量：
+
+- `VITE_SUPABASE_URL=https://aqoryvygjavngcgkmuom.supabase.co`
+- `VITE_SUPABASE_ANON_KEY`：使用该项目提供的 publishable key
+- `VITE_PUBLIC_SNAPSHOT_MODE=false`
+
+**注意：** publishable key 只用于浏览器公开客户端，不具备数据库管理员权限，不能用来执行 migration、创建管理员、设置 Edge Function secrets 或部署函数。上述操作需要 Supabase Dashboard/CLI 的项目权限以及适当的管理凭据。不要将 service-role key 放进前端变量或提交到 Git。
 
 ## 2. 配置前端
 
@@ -42,8 +44,10 @@ on conflict (user_id, role) do nothing;
 
 ## 3. 部署 Edge Functions
 
-仓库 `functions/` 中的函数需要部署到你自己的 Supabase 项目，并按代码要求设置 secrets。至少先检查：
+仓库 `functions/` 中的函数需要部署到你自己的 Supabase 项目，并按代码要求设置 secrets。正式启用前至少部署/核对：
 
+- `login-lookup`：新版用户名登录协议会在服务器验证密码并仅返回会话令牌，必须和前端版本同步部署；需要 `SUPABASE_URL`、`SUPABASE_SERVICE_ROLE_KEY`、`SUPABASE_ANON_KEY`。
+- `alipay-pay` 与 `alipay-sweep`：只有确认使用官方支付宝网关后才配置；需要商户 App ID、商户私钥、支付宝公钥以及 Supabase 服务端 secrets，并做验签、查单和重复通知测试。
 - `order-captcha`：需要对应的验证码表及站点设置数据。
 - `boss-api`：需要 `BOSS_KEY`、`SUPABASE_URL`、`SUPABASE_SERVICE_ROLE_KEY`。service-role key 只能保存在 Supabase Function secrets 中。
 
@@ -76,13 +80,13 @@ on conflict (user_id, role) do nothing;
 ### 账号与管理后台
 
 - 登录、注册页面代码存在；登录使用 Supabase Auth，注册要求邮箱验证码。是否可成功注册/登录取决于独立 Supabase URL/anon key、Auth 邮件模板/SMTP、数据库迁移和 RLS 均已配置。
-- `login-lookup` Edge Function 可辅助旧用户名映射；本分支已移除邮箱映射明文日志并补齐 CORS 预检，但接口仍会返回匹配邮箱，存在账号枚举风险。部署前必须在目标项目验证函数权限、profiles 字段和服务角色密钥，并进一步加服务端速率限制/隐私保护；不得将 service-role key 暴露给浏览器。
-- `/admin` 需要已登录的 Supabase 用户和 `user_roles` 中的管理员角色。仅有页面不代表后台已完成可登录验收。
+- `login-lookup` Edge Function 的开发分支版本已改为：服务端接收用户名与密码、在服务端调用 Supabase Auth 验证凭据，只向浏览器返回会话令牌，不返回账号邮箱。部署最新函数前，用户名登录会因前后端协议不一致而失败；发布时必须同步部署前端与函数，并确认 `SUPABASE_URL`、`SUPABASE_SERVICE_ROLE_KEY`、`SUPABASE_ANON_KEY` secrets 已设置。不得将 service-role key 暴露给浏览器。
+- `/admin` 需要已登录的 Supabase 用户和 `user_roles` 中的管理员角色。使用 `docs/ADMIN_BOOTSTRAP.md` 将已验证邮箱的 Auth 用户提升为 admin；仅有页面不代表后台已完成可登录验收。
 - 退款、发卡和订单状态更新依赖数据库 RPC/触发器与服务端权限。未在目标项目执行并测试最终迁移前，不应处理真实订单或承诺退款可用。
 
 ### 发布门槛
 
-- 本分支的 GitHub Actions 验证通过仅证明前端静态检查/构建通过，不代表生产环境支付、邮件、管理员权限、数据库迁移或 Cloudflare 部署已验证。
+- 当前开发分支最新提交 `f6ba40e09463a5b3d756fe17d2b9d41bb959a72b` 的 GitHub Actions `build-and-typecheck` 已通过 TypeScript typecheck 与 production build（[workflow run](https://github.com/YIBOG99/zhihebot-frontend/actions/runs/37972518391)）。此结果不代表生产环境支付、邮件、管理员权限、数据库迁移或 Cloudflare 部署已验证。
 - 上线前须在独立 Supabase 项目完成：从空库按审定顺序初始化、配置 Auth 邮件、设置管理员角色、部署并配置 Edge Functions、用测试订单走通建单/支付回调/发卡/退款，再进行 Cloudflare Pages 生产部署和回归。
 
 
@@ -92,3 +96,12 @@ on conflict (user_id, role) do nothing;
 - /admin 的「支付设置」已独立成 Tab，分别配置支付宝1（二维码与可选付款链接）、支付宝2、支付宝3、微信收款码和 USDT 地址/网络。
 - 支付宝1可分开保存二维码与付款链接。收银页仅对可信支付宝收款链接生成付款二维码并尝试手机深链；图片或普通网站链接不会伪装成可唤起的支付链接。
 - 后台「退回余额」继续由 wallet_refund_order 完成真实余额操作；成功后额外写入 order_refunds 审计记录。若新 migration 尚未应用，钱包退款流水仍是权威记录，订单审计表写入会告警而不回滚已完成退款。
+
+
+## 管理员启用与用户名登录协议
+
+- 管理员授予步骤见 [ADMIN_BOOTSTRAP.md](./ADMIN_BOOTSTRAP.md)。必须先通过网站注册并验证邮箱，再由 Supabase SQL Editor 向 `public.user_roles` 添加 `admin` 角色。
+- 用户名登录依赖最新版本的 `functions/login-lookup/index.ts`；函数在服务端校验密码，不再向浏览器返回邮箱。前端和 Edge Function 必须同步部署；部署前需要通过目标项目的实际登录回归测试。
+- 代码仓库变更无法自行设置 Supabase secrets、部署 Edge Functions、应用 migration 或创建实际管理员账号。这些属于目标 Supabase 项目的部署/配置步骤，当前不能宣称已经在线完成。
+
+- 本轮增量迁移包括 `20261010_000100` 至 `20261010_000400`；当前分支的 `20261010_000500_single_admin_allowlist.sql` 另负责限制唯一管理员。以上 SQL 尚未在你的实际 Supabase 项目运行。

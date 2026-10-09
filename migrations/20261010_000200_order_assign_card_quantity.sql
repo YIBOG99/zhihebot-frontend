@@ -111,5 +111,9 @@ EXCEPTION WHEN OTHERS THEN
 END;
 $func$;
 
-REVOKE ALL ON FUNCTION public.order_assign_card(TEXT) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.order_assign_card(TEXT) TO authenticated;
+-- This is an internal fulfillment primitive, not a public RPC. Authenticated clients
+-- could otherwise mark arbitrary pending orders as completed by calling it directly.
+-- Security-definer payment/admin RPCs execute as the function owner; the trusted Alipay
+-- Edge Function uses service_role for its retry path.
+REVOKE ALL ON FUNCTION public.order_assign_card(TEXT) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.order_assign_card(TEXT) TO service_role;

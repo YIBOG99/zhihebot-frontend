@@ -37,7 +37,6 @@ export function RegisterPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
-  const [pendingUsername, setPendingUsername] = useState('');
   const [loading, setLoading] = useState(false);
   /** 好友分享链接带来的邀请码（?ref=XXX），注册成功后自动核销发奖 */
   const [refCode, setRefCode] = useState<string | null>(null);
@@ -53,11 +52,10 @@ export function RegisterPage() {
     const mail = email.trim().toLowerCase();
     if (!EMAIL_RE.test(mail)) { toast.error('请输入正确的邮箱地址'); return; }
     if (password.length < 6) { toast.error('密码至少 6 位'); return; }
-    if (!supabaseConfigured) { toast.error('注册服务尚未配置：请为网站部署设置 VITE_SUPABASE_URL 和 VITE_SUPABASE_ANON_KEY'); return; }
+    if (!supabaseConfigured) { toast.error('网站后端环境变量缺失，注册请求尚未发送。请在 Cloudflare Pages 项目设置 → Variables and Secrets 中配置 VITE_SUPABASE_URL 与 VITE_SUPABASE_ANON_KEY，然后重新部署；不要在这里输入密码重试。'); return; }
     setLoading(true);
     try {
       const profileUsername = resolveProfileUsername(username, mail);
-      setPendingUsername(profileUsername);
       const { error } = await supabase.auth.signUp({
         email: mail, password,
         options: { data: { username: profileUsername } },
@@ -83,10 +81,27 @@ export function RegisterPage() {
       // session 同步后再建档，避免 RLS 下 auth.uid() 为空导致 403
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError || !user) throw new Error('登录状态尚未同步，请稍后重试');
-      const { error: upErr } = await supabase.from('profiles').upsert(
-        { id: user.id, username: pendingUsername, email: mail }, { onConflict: 'id' },
-      );
-      if (upErr) console.warn('[RegisterPage] 资料补写失败（不阻断注册）:', upErr.message);
+      // Auth trigger 已负责创建 profile 与处理重复用户名；此处只同步已验证邮箱，
+      // 不覆盖触发器为冲突用户名分配的唯一用户名。
+      const { error: upErr } = await supabase.from('profiles')
+        .update({ email: mail }).eq('id', user.id);
+      if (upErr) console.warn('[RegisterPage] 邮箱资料补写失败（不阻断注册）:', upErr.message);
+
+      // 触发器可能因用户名重复追加短后缀。同步 Auth metadata，让登录后界面显示可实际登录的规范用户名。
+      const requestedUsername = String(user.user_metadata?.username ?? '').trim();
+      const { data: savedProfile, error: profileReadError } = await supabase.from('profiles')
+        .select('username').eq('id', user.id).maybeSingle();
+      if (profileReadError) {
+        console.warn('[RegisterPage] 规范用户名读取失败，仍保留邮箱登录:', profileReadError.message);
+      } else if (savedProfile?.username && savedProfile.username !== requestedUsername) {
+        const { error: metadataError } = await supabase.auth.updateUser({
+          data: { username: savedProfile.username },
+        });
+        if (!metadataError) {
+          toast.info(`用户名已调整为「${savedProfile.username}」，请使用此用户名或邮箱登录`);
+        }
+      }
+
       // 有推荐人则立即归因发奖（服务端校验：仅新注册账号、每人一次）
       const bindResult = await bindPendingReferral();
       if (bindResult.bound) toast.success(bindResult.message || '邀请码已生效，奖励券已到账');

@@ -198,25 +198,6 @@ export interface AnnouncementConfig {
   /** 勾选后静默小时数，默认 24 */
   snooze_hours?: number;
 }
-/** AI 客服自定义知识条目（补充 FAQ 之外的问答） */
-export interface AiKnowledgeItem { q: string; a: string; }
-/** AI 客服配置（存于 site_settings key='ai_support'）。提示词与知识库由服务端读取，前端仅用于展示/编辑 */
-export interface AiSupportConfig {
-  /** 关闭后前台气泡隐藏 */
-  enabled?: boolean;
-  /** 客服显示名，默认「AI 在线客服」 */
-  display_name?: string;
-  /** 开场白（首次展开面板时作为第一条 AI 消息） */
-  greeting?: string;
-  /** 快捷提问列表（最多 6 条） */
-  quick_questions?: string[];
-  /** 店主追加的业务说明（拼在安全条款之后，不可覆盖安全条款） */
-  system_prompt_extra?: string;
-  /** 自定义知识库 Q&A */
-  knowledge?: AiKnowledgeItem[];
-  /** 「转人工」引导文案 */
-  human_note?: string;
-}
 /**
  * 下单人机校验配置（存于 site_settings key='captcha'）。
  * ⚠️ 开关的最终判定在 order_create RPC 内部再读一次本配置，前端传什么值都绕不过去；
@@ -260,7 +241,7 @@ export interface WalletTx {
   id: string; kind: 'recharge' | 'spend' | 'unfreeze' | 'refund' | 'admin_adjust';
   amount: number; balance_after: number; order_id: string | null; note: string | null; created_at: string;
 }
-export interface SiteSettings { brand: Record<string, string>; contact: Record<string, string>; payment: PaymentChannels; seo: Record<string, string>; referral?: Record<string, unknown>; announcement?: AnnouncementConfig; branding?: BrandingConfig; ai_support?: AiSupportConfig; captcha?: CaptchaConfig; billing?: BillingConfig; recommend?: RecommendConfig; }
+export interface SiteSettings { brand: Record<string, string>; contact: Record<string, string>; payment: PaymentChannels; seo: Record<string, string>; referral?: Record<string, unknown>; announcement?: AnnouncementConfig; branding?: BrandingConfig; captcha?: CaptchaConfig; billing?: BillingConfig; recommend?: RecommendConfig; }
 export interface DashboardPoint { day: string; visits: number; order_count: number; revenue: number; }
 export interface BossSalesRow { title: string; sold_count: number; revenue: number; }
 export interface DashboardData {

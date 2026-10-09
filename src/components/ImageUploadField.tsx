@@ -4,7 +4,7 @@ import { decode } from 'base64-arraybuffer';
 import { ImagePlus, Loader2, Link2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/supabase/client';
-import { PRODUCT_IMAGE_BUCKET_ID } from '@/lib/queries';
+import { PRODUCT_IMAGE_BUCKET_NAME } from '@/lib/queries';
 
 const MAX_BYTES = 5 * 1024 * 1024;
 
@@ -38,10 +38,10 @@ export function ImageUploadField({ value, onChange }: Props) {
         const ext = (file.name.split('.').pop() || 'png').toLowerCase().replace(/[^a-z0-9]/g, '') || 'png';
         const path = `products/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
         const { data, error } = await supabase.storage
-          .from(PRODUCT_IMAGE_BUCKET_ID)
+          .from(PRODUCT_IMAGE_BUCKET_NAME)
           .upload(path, decode(base64), { contentType: file.type, upsert: false });
         if (error) { console.error('[ImageUploadField] upload failed:', error.message); throw new Error(error.message); }
-        const { data: pub } = supabase.storage.from(PRODUCT_IMAGE_BUCKET_ID).getPublicUrl(data.path);
+        const { data: pub } = supabase.storage.from(PRODUCT_IMAGE_BUCKET_NAME).getPublicUrl(data.path);
         onChange(pub.publicUrl);
         console.log('[ImageUploadField] uploaded ->', pub.publicUrl);
         toast.success('图片已上传');
