@@ -102,10 +102,10 @@ export function isChannelConfigured(id: PayChannel, payment?: PaymentChannels): 
     case 'balance': return true;
     case 'wechat': return Boolean(payment?.wechat?.qr_url);
     case 'alipay_qr': return Boolean(payment?.alipay_qr?.qr_url);
-    case 'alipay_manual': return Boolean(payment?.alipay?.qr_url);
+    case 'alipay_manual': return Boolean(payment?.alipay?.qr_url || payment?.alipay?.account);
     case 'usdt': return Boolean(payment?.usdt?.address);
     // 在线通道无法在前台判断签约状态，交给 PayQrPanel 出码时反馈
-    case 'alipay': return Boolean(payment?.alipay_primary?.qr_url);
+    case 'alipay': return Boolean(payment?.alipay_primary?.qr_url || payment?.alipay_primary?.pay_url);
   }
 }
 
