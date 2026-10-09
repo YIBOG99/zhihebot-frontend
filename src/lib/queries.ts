@@ -415,7 +415,7 @@ export function useContents(kind?: ContentRow['kind']) {
     queryKey: ['contents', kind ?? 'all'],
     queryFn: async () => {
       const local = kind ? DEMO_CONTENTS.filter((c) => c.kind === kind) : DEMO_CONTENTS;
-      if (PUBLIC_SNAPSHOT_MODE) return local;
+      if (PUBLIC_SNAPSHOT_MODE || !supabaseConfigured) return local;
       try {
         let q = supabase.from('contents').select('*').eq('published', true).order('sort_order');
         if (kind) q = q.eq('kind', kind);
@@ -437,7 +437,7 @@ export function useContent(slug: string) {
     queryKey: ['content', slug],
     queryFn: async () => {
       const local = DEMO_CONTENTS.find((c) => c.slug === slug);
-      if (PUBLIC_SNAPSHOT_MODE) return local;
+      if (PUBLIC_SNAPSHOT_MODE || !supabaseConfigured) return local;
       try {
         const { data, error } = await supabase.from('contents').select('*').eq('slug', slug).single();
         if (error) throw error;
