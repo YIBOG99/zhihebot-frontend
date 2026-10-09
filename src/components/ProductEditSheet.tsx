@@ -7,9 +7,9 @@ import {
 } from '@/components/ui/sheet';
 import { ImageUploadField } from '@/components/ImageUploadField';
 import {
-  createProduct, saveProduct, validateProductDraft, type ProductDraft,
+  createProduct, saveProduct, validateProductDraft,
 } from '@/lib/queries';
-import type { Category } from '@/lib/types';
+import type { Category, ProductDraft } from '@/lib/types';
 
 const STOCK_OPTIONS = [
   { value: 'many', label: '充足' },
