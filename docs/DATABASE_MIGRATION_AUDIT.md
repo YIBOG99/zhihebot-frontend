@@ -102,6 +102,10 @@
 3. `20261010_000300_auth_profile_username_conflict.sql`
    - 避免重复用户名的唯一约束冲突导致 Supabase Auth 注册失败；
    - 在用户名冲突时为新用户生成带用户 ID 后缀的唯一用户名。
+4. `20261010_000400_sanitize_legacy_meoo_settings.sql`
+   - 仅当数据库中仍然存在已知模板默认值时，清空旧支付宝账号和旧 USDT 地址；
+   - 清空仍为模板默认值的联系渠道，并将旧 Meoo 公告域名替换为 `https://zhihebot.shop`、关闭该默认公告；
+   - 不覆盖与旧模板值不同的商户配置。执行后仍要逐项核对 site_settings，并在后台填入真实收款配置。
 
 这些迁移已提交到开发分支，但**尚未在可丢弃的 Supabase/PostgreSQL 数据库中执行**。上线前需要验证表/列/FK 与现有最终版函数兼容、迁移执行顺序、并发库存分配、库存不足回滚、重复支付回调幂等、Auth 注册用户名冲突和退款审计 RLS。若此前已经应用某个同名增量迁移，应先检查 schema 当前状态，避免重复执行不幂等 SQL。
 
@@ -112,3 +116,6 @@
 - 这项变化要求部署最新的 `login-lookup` Edge Function；只发布前端而没有发布函数会导致用户名登录失败。直接邮箱登录仍走 Supabase Auth。
 - 管理员账号创建步骤见 `docs/ADMIN_BOOTSTRAP.md`。不要将 service-role key 或支付私钥写入前端环境变量。
 - 当前分支尚未连到用户的新 Supabase 实例，无法运行真实注册、登录、支付回调或发卡测试；CI 绿灯只证明构建/类型检查，不代表线上交易闭环可用。
+
+
+另已把前端 demo fallback 里的旧收款账号、钱包地址、联系方式与 Meoo 域名移除。迁移 `20261010_000400_sanitize_legacy_meoo_settings.sql` 也只对精确匹配的已知旧模板值进行清理，不会替店主填入真实支付配置。
