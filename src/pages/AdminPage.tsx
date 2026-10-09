@@ -831,7 +831,6 @@ function SettingsTab() {
       {/* 下单人机校验（防机器批量下单后恶意退款） */}
       <CaptchaConfigCard />
 
-      {/* AI 客服配置（开关/话术/知识库） */}
 
       {/* 原始 JSON 编辑（高级） */}
       {Object.entries(settings).map(([key, val]) => (
