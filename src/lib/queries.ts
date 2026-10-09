@@ -378,7 +378,7 @@ export function useProducts(categorySlug?: string) {
         if (categorySlug) q = q.eq('category_slug', categorySlug);
         const { data, error } = await q;
         if (error) throw error;
-        return data as Product[];
+        return data as unknown as Product[];
       } catch (error) {
         console.warn('[useProducts] remote failed, falling back to exported snapshot:', error);
         return categorySlug ? DEMO_PRODUCTS.filter((p) => p.category_slug === categorySlug) : DEMO_PRODUCTS;
