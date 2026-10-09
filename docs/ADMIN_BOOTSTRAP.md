@@ -2,7 +2,11 @@
 
 此步骤用于你自己的 Supabase 项目。它**不会创建登录密码**，也不会让未登录用户获得管理员权限。
 
-## 唯一管理员邮箱\n\n本商城管理员邮箱已固定为 **1119746379@qq.com**。数据库迁移 `20261010_000500_single_admin_allowlist.sql` 会撤销其他邮箱的 `admin` 角色，并阻止其他邮箱以后被授予 `admin`。不要将其他邮箱添加为管理员。\n\n## 1. 先注册唯一管理员账号
+## 唯一管理员邮箱
+
+本商城管理员邮箱已固定为 **1119746379@qq.com**。数据库迁移 `20261010_000500_single_admin_allowlist.sql` 会撤销其他邮箱的 `admin` 角色，并阻止其他邮箱以后被授予 `admin`。不要将其他邮箱添加为管理员。
+
+## 1. 先注册唯一管理员账号
 
 1. 在已部署的商城打开 `/register`，用你控制的邮箱注册。
 2. 收到验证码后完成邮箱验证，并确认可以在 `/login` 正常登录。
@@ -18,8 +22,8 @@ DECLARE
   target_email text := lower(btrim('1119746379@qq.com'));
   target_user_id uuid;
 BEGIN
-  IF target_email = '' OR target_email = 'replace_with_admin_email' THEN
-    RAISE EXCEPTION '请先把 REPLACE_WITH_ADMIN_EMAIL 替换成实际管理员邮箱';
+  IF target_email <> '1119746379@qq.com' THEN
+    RAISE EXCEPTION '管理员邮箱与固定白名单不一致';
   END IF;
 
   SELECT id
