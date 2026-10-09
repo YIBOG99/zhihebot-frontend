@@ -44,8 +44,10 @@
 
 ## 3. 部署 Edge Functions
 
-仓库 `functions/` 中的函数需要部署到你自己的 Supabase 项目，并按代码要求设置 secrets。至少先检查：
+仓库 `functions/` 中的函数需要部署到你自己的 Supabase 项目，并按代码要求设置 secrets。正式启用前至少部署/核对：
 
+- `login-lookup`：新版用户名登录协议会在服务器验证密码并仅返回会话令牌，必须和前端版本同步部署；需要 `SUPABASE_URL`、`SUPABASE_SERVICE_ROLE_KEY`、`SUPABASE_ANON_KEY`。
+- `alipay-pay` 与 `alipay-sweep`：只有确认使用官方支付宝网关后才配置；需要商户 App ID、商户私钥、支付宝公钥以及 Supabase 服务端 secrets，并做验签、查单和重复通知测试。
 - `order-captcha`：需要对应的验证码表及站点设置数据。
 - `boss-api`：需要 `BOSS_KEY`、`SUPABASE_URL`、`SUPABASE_SERVICE_ROLE_KEY`。service-role key 只能保存在 Supabase Function secrets 中。
 
@@ -84,7 +86,7 @@
 
 ### 发布门槛
 
-- 已查询到的 GitHub Actions 成功记录对应较早提交；当前最新分支提交没有对应的 workflow/checks，因此当前最新代码尚未完成 CI 的 typecheck/build 复验。即便旧版本 CI 通过，也不代表生产环境支付、邮件、管理员权限、数据库迁移或 Cloudflare 部署已验证。
+- 当前开发分支最新提交 `f6ba40e09463a5b3d756fe17d2b9d41bb959a72b` 的 GitHub Actions `build-and-typecheck` 已通过 TypeScript typecheck 与 production build（[workflow run](https://github.com/YIBOG99/zhihebot-frontend/actions/runs/37972518391)）。此结果不代表生产环境支付、邮件、管理员权限、数据库迁移或 Cloudflare 部署已验证。
 - 上线前须在独立 Supabase 项目完成：从空库按审定顺序初始化、配置 Auth 邮件、设置管理员角色、部署并配置 Edge Functions、用测试订单走通建单/支付回调/发卡/退款，再进行 Cloudflare Pages 生产部署和回归。
 
 
