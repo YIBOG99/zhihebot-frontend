@@ -142,7 +142,7 @@ export function AlipayQrPayPage() {
     }
     if (ok) {
       setCopied(true);
-      setTimeout(() => setCopied(null), 1500);
+      setTimeout(() => setCopied(false), 1500);
     }
   }
 
