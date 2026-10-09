@@ -22,6 +22,7 @@ import { useAdminDashboard, callOrderRpc, useInvalidateShop, toProductDraft, emp
 import { refundOrderToBalance } from '@/lib/wallet';
 import type { OrderRow, Product, CardSecretRow, Category, ProductDraft, BlockedCustomer, SuspectBuyer } from '@/lib/types';
 import { formatYuan } from '@/lib/utils';
+import { PAYMENT_LABEL } from '@/lib/pay-channels';
 
 const TABS = [
   { id: 'overview', label: '概览', icon: LayoutDashboard },
@@ -536,6 +537,9 @@ function OrdersTab() {
                       </button>
                     )}
                     <span className="rounded-full bg-surface-3 px-2.5 py-1 text-xs text-muted-foreground">{STATUS_LABEL[o.status]}</span>
+                    <span className="rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground">
+                      支付：{o.payment_method ? (PAYMENT_LABEL[o.payment_method] || o.payment_method) : '未选择'}
+                    </span>
                     {o.status === 'completed' && o.payment_method === 'balance' && !o.is_recharge && (
                       <button onClick={() => requestRefund(o.id)} disabled={!!acting}
                         className={`rounded-lg border px-3 py-1.5 text-xs transition-colors disabled:opacity-50 ${pendingRefundId === o.id ? 'border-warning/60 bg-warning/10 font-semibold text-warning' : 'border-border text-muted-foreground hover:border-warning/40 hover:text-warning'}`}>
@@ -602,11 +606,74 @@ function OrdersTab() {
           })}
         </ul>
       )}
+      <RefundAuditPanel />
     </div>
   );
 }
 
-/* ── Products ── */
+function RefundAuditPanel() {
+  const [rows, setRows] = useState<Array<{
+    id: string; order_id: string; amount: number; refund_method: string;
+    reason: string | null; created_at: string; created_by: string | null;
+  }>>([]);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
+
+  async function load() {
+    setLoading(true);
+    setErr(null);
+    const { data, error } = await supabase.from('order_refunds')
+      .select('*').order('created_at', { ascending: false }).limit(50);
+    if (error) {
+      setErr(error.message);
+      setRows([]);
+    } else {
+      setRows((data ?? []) as typeof rows);
+    }
+    setLoading(false);
+  }
+
+  useEffect(() => { void load(); }, []);
+
+  return (
+    <section className="mt-8 rounded-xl border border-border bg-card p-5">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-semibold text-foreground">退款记录</h3>
+          <p className="mt-1 text-xs text-muted-foreground">最近 50 条后台退款审计记录（实际余额退款由钱包 RPC 处理）。</p>
+        </div>
+        <button type="button" onClick={() => void load()} disabled={loading}
+          className="rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground disabled:opacity-50">
+          {loading ? '加载中…' : '刷新'}
+        </button>
+      </div>
+      {loading ? (
+        <p className="py-5 text-center text-xs text-muted-foreground">正在读取退款记录…</p>
+      ) : err ? (
+        <LoadFail msg={err} onRetry={() => void load()} />
+      ) : rows.length === 0 ? (
+        <p className="rounded-lg border border-dashed border-border py-8 text-center text-xs text-muted-foreground">暂无退款记录；应用独立后端迁移后，新退款将自动记入此处。</p>
+      ) : (
+        <ul className="space-y-2">
+          {rows.map((item) => (
+            <li key={item.id} className="flex flex-col gap-1.5 rounded-lg border border-border px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <p className="break-all font-mono text-xs text-foreground">{item.order_id}</p>
+                <p className="mt-1 text-[11px] text-muted-foreground">{item.reason || '退款处理'} · {item.refund_method}</p>
+              </div>
+              <div className="shrink-0 text-left sm:text-right">
+                <p className="text-sm font-semibold text-warning">¥{Number(item.amount).toFixed(2)}</p>
+                <p className="mt-1 text-[11px] text-muted-foreground">{new Date(item.created_at).toLocaleString('zh-CN')}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+/* ── Products ── *//* ── Products ── */
 function ProductsTab() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
