@@ -76,8 +76,8 @@ on conflict (user_id, role) do nothing;
 ### 账号与管理后台
 
 - 登录、注册页面代码存在；登录使用 Supabase Auth，注册要求邮箱验证码。是否可成功注册/登录取决于独立 Supabase URL/anon key、Auth 邮件模板/SMTP、数据库迁移和 RLS 均已配置。
-- `login-lookup` Edge Function 可辅助旧用户名映射；本分支已移除邮箱映射明文日志并补齐 CORS 预检，但接口仍会返回匹配邮箱，存在账号枚举风险。部署前必须在目标项目验证函数权限、profiles 字段和服务角色密钥，并进一步加服务端速率限制/隐私保护；不得将 service-role key 暴露给浏览器。
-- `/admin` 需要已登录的 Supabase 用户和 `user_roles` 中的管理员角色。仅有页面不代表后台已完成可登录验收。
+- `login-lookup` Edge Function 的开发分支版本已改为：服务端接收用户名与密码、在服务端调用 Supabase Auth 验证凭据，只向浏览器返回会话令牌，不返回账号邮箱。部署最新函数前，用户名登录会因前后端协议不一致而失败；发布时必须同步部署前端与函数，并确认 `SUPABASE_URL`、`SUPABASE_SERVICE_ROLE_KEY`、`SUPABASE_ANON_KEY` secrets 已设置。不得将 service-role key 暴露给浏览器。
+- `/admin` 需要已登录的 Supabase 用户和 `user_roles` 中的管理员角色。使用 `docs/ADMIN_BOOTSTRAP.md` 将已验证邮箱的 Auth 用户提升为 admin；仅有页面不代表后台已完成可登录验收。
 - 退款、发卡和订单状态更新依赖数据库 RPC/触发器与服务端权限。未在目标项目执行并测试最终迁移前，不应处理真实订单或承诺退款可用。
 
 ### 发布门槛
@@ -92,3 +92,10 @@ on conflict (user_id, role) do nothing;
 - /admin 的「支付设置」已独立成 Tab，分别配置支付宝1（二维码与可选付款链接）、支付宝2、支付宝3、微信收款码和 USDT 地址/网络。
 - 支付宝1可分开保存二维码与付款链接。收银页仅对可信支付宝收款链接生成付款二维码并尝试手机深链；图片或普通网站链接不会伪装成可唤起的支付链接。
 - 后台「退回余额」继续由 wallet_refund_order 完成真实余额操作；成功后额外写入 order_refunds 审计记录。若新 migration 尚未应用，钱包退款流水仍是权威记录，订单审计表写入会告警而不回滚已完成退款。
+
+
+## 管理员启用与用户名登录协议
+
+- 管理员授予步骤见 [ADMIN_BOOTSTRAP.md](./ADMIN_BOOTSTRAP.md)。必须先通过网站注册并验证邮箱，再由 Supabase SQL Editor 向 `public.user_roles` 添加 `admin` 角色。
+- 用户名登录依赖最新版本的 `functions/login-lookup/index.ts`；函数在服务端校验密码，不再向浏览器返回邮箱。前端和 Edge Function 必须同步部署；部署前需要通过目标项目的实际登录回归测试。
+- 代码仓库变更无法自行设置 Supabase secrets、部署 Edge Functions、应用 migration 或创建实际管理员账号。这些属于目标 Supabase 项目的部署/配置步骤，当前不能宣称已经在线完成。
