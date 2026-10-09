@@ -49,8 +49,8 @@ export function AlipayQrPayPage() {
 
   const primaryChannel = search.channel === 'alipay';
   const alipayQr = primaryChannel
-    ? { qr_url: settings?.payment?.alipay_primary?.qr_url || '/payment-codes/payment-qr-1.png', pay_url: settings?.payment?.alipay_primary?.pay_url || 'https://qr.alipay.com/fkx1539453hgmrbkkrl0e84', ...settings?.payment?.alipay_primary }
-    : { qr_url: settings?.payment?.alipay_qr?.qr_url || '/payment-codes/payment-qr-2.png', ...settings?.payment?.alipay_qr };
+    ? { ...settings?.payment?.alipay_primary, qr_url: settings?.payment?.alipay_primary?.qr_url || '/payment-codes/payment-qr-1.png', pay_url: settings?.payment?.alipay_primary?.pay_url || 'https://qr.alipay.com/fkx1539453hgmrbkkrl0e84' }
+    : { ...settings?.payment?.alipay_qr, qr_url: settings?.payment?.alipay_qr?.qr_url || '/payment-codes/payment-qr-2.png' };
   const channelTitle = primaryChannel ? '支付宝1' : '支付宝2';
   const orderNo = search.order ?? '';
   const amount = Number(search.amount) || 0;
