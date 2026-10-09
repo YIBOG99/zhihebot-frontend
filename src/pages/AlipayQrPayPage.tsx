@@ -36,7 +36,7 @@ const CASHIER_LIMIT_MIN = 10;
  * 过期后二维码变暗并提示重新下单。钱直接进店主个人账户，无法自动对账，靠人工核账发卡。
  */
 export function AlipayQrPayPage() {
-  const search = useSearch({ strict: false }) as { order?: string; amount?: string; product?: string };
+  const search = useSearch({ strict: false }) as { order?: string; amount?: string; product?: string; channel?: string };
   const { data: settings, isLoading } = useSiteSettings();
   const [copied, setCopied] = useState(false);
   /** 从 orders 表回读的支付截止时刻；NULL = 老订单不限时 */
@@ -47,7 +47,9 @@ export function AlipayQrPayPage() {
   /** 剩余毫秒（本页自绘大号倒计时用，以服务端时刻算差值，不受本机时钟影响） */
   const [remain, setRemain] = useState(0);
 
-  const alipayQr = settings?.payment?.alipay_qr;
+  const primaryChannel = search.channel === 'alipay';
+  const alipayQr = primaryChannel ? settings?.payment?.alipay_primary : settings?.payment?.alipay_qr;
+  const channelTitle = primaryChannel ? '支付宝1' : '支付宝2';
   const orderNo = search.order ?? '';
   const amount = Number(search.amount) || 0;
   const remainText = fmtRemain(remain);
@@ -155,7 +157,7 @@ export function AlipayQrPayPage() {
   return (
     <div className="cashier-light min-h-screen bg-background">
       {/* 蓝色头部条 + 状态胶囊（公共件，三页共用） */}
-      <CashierHeader title="支付宝2" icon={<QrCode size={19} />} expired={expired} />
+      <CashierHeader title={channelTitle} icon={<QrCode size={19} />} expired={expired} />
 
       <div className="mx-auto max-w-lg px-4 sm:px-6 py-7">
         {/* 金额区：红色超大字 */}
@@ -178,7 +180,7 @@ export function AlipayQrPayPage() {
             <div className="rounded-2xl border border-danger/30 bg-surface p-6 text-center">
               {hasQr && (
                 <div className="mb-5">
-                  <QrExpiryFrame src={alipayQr!.qr_url!} alt="支付宝收款码" expired />
+                  <QrExpiryFrame src={alipayQr!.qr_url!} alt={`${channelTitle}收款码`} expired />
                 </div>
               )}
               <h3 className="text-lg font-bold text-danger">订单已过期，请返回重新下单</h3>
@@ -200,8 +202,8 @@ export function AlipayQrPayPage() {
             <div>
               <QrExpiryFrame
                 src={qrValue}
-                alt="支付宝收款码"
-                caption={canJump ? '扫码或点击下方按钮，直接打开支付宝付款' : '请使用支付宝扫描二维码完成支付'}
+                alt={`${channelTitle}收款码`}
+                caption={canJump ? '扫码或点击下方按钮，尝试直接打开支付宝付款' : '请使用支付宝扫描二维码完成支付'}
                 footer={
                   <p className="mt-4 text-center text-sm text-foreground">
                     收款方：<span className="font-semibold">{alipayQr!.name || '店主'}</span>
