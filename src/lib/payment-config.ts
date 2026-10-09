@@ -15,7 +15,7 @@ export interface PaymentOption {
 export function getPaymentOptions(config: PaymentChannels | null | undefined): PaymentOption[] {
   const payment = config ?? {};
 
-  return [
+  const options: PaymentOption[] = [
     {
       key: 'alipay_primary',
       label: '支付宝1',
@@ -48,5 +48,6 @@ export function getPaymentOptions(config: PaymentChannels | null | undefined): P
       network: payment.usdt?.network,
       address: payment.usdt?.address,
     },
-  ].filter((item) => item.enabled);
+  ];
+  return options.filter((item) => item.enabled);
 }
