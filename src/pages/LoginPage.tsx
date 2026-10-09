@@ -54,7 +54,7 @@ export function LoginPage() {
     e.preventDefault();
     if (!username.trim()) { toast.error('请输入用户名或邮箱'); return; }
     if (password.length < 6) { toast.error('密码至少 6 位'); return; }
-    if (!supabaseConfigured) { toast.error('登录服务尚未配置：请为网站部署设置 VITE_SUPABASE_URL 和 VITE_SUPABASE_ANON_KEY'); return; }
+    if (!supabaseConfigured) { toast.error('网站后端环境变量缺失，登录请求尚未发送。请在 Cloudflare Pages 项目设置 → Variables and Secrets 中配置 VITE_SUPABASE_URL 与 VITE_SUPABASE_ANON_KEY，然后重新部署。'); return; }
     setLoading(true);
     try {
       const identifier = username.trim();
