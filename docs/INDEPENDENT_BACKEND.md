@@ -92,7 +92,7 @@ on conflict (user_id, role) do nothing;
 
 ### 发布门槛
 
-- 本分支的 GitHub Actions 验证通过仅证明前端静态检查/构建通过，不代表生产环境支付、邮件、管理员权限、数据库迁移或 Cloudflare 部署已验证。
+- 已查询到的 GitHub Actions 成功记录对应较早提交；当前最新分支提交没有对应的 workflow/checks，因此当前最新代码尚未完成 CI 的 typecheck/build 复验。即便旧版本 CI 通过，也不代表生产环境支付、邮件、管理员权限、数据库迁移或 Cloudflare 部署已验证。
 - 上线前须在独立 Supabase 项目完成：从空库按审定顺序初始化、配置 Auth 邮件、设置管理员角色、部署并配置 Edge Functions、用测试订单走通建单/支付回调/发卡/退款，再进行 Cloudflare Pages 生产部署和回归。
 
 
@@ -109,3 +109,5 @@ on conflict (user_id, role) do nothing;
 - 管理员授予步骤见 [ADMIN_BOOTSTRAP.md](./ADMIN_BOOTSTRAP.md)。必须先通过网站注册并验证邮箱，再由 Supabase SQL Editor 向 `public.user_roles` 添加 `admin` 角色。
 - 用户名登录依赖最新版本的 `functions/login-lookup/index.ts`；函数在服务端校验密码，不再向浏览器返回邮箱。前端和 Edge Function 必须同步部署；部署前需要通过目标项目的实际登录回归测试。
 - 代码仓库变更无法自行设置 Supabase secrets、部署 Edge Functions、应用 migration 或创建实际管理员账号。这些属于目标 Supabase 项目的部署/配置步骤，当前不能宣称已经在线完成。
+
+- 本轮增量迁移包括 `20261010_000100` 至 `20261010_000400`；当前分支的 `20261010_000500_single_admin_allowlist.sql` 另负责限制唯一管理员。以上 SQL 尚未在你的实际 Supabase 项目运行。
