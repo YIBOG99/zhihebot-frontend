@@ -186,9 +186,9 @@ export function CheckoutPage() {
     if (c.id === 'balance' && (!user || isRecharge)) return false;
     return isChannelConfigured(c.id, settings?.payment);
   });
-  const pickableChannels = configuredChannels.length > 0
-    ? configuredChannels
-    : PAY_CHANNELS.filter((c) => c.id !== 'balance');
+  // 未配置的收款渠道不能作为可付款选项兜底展示，避免顾客把空白收款页误认为可付款。
+  const pickableChannels = configuredChannels;
+  const hasExternalPaymentChannels = configuredChannels.some((c) => c.id !== 'balance');
   console.log('[Checkout] 可选通道', {
     productId: product.id,
     whitelist: product.payment_methods,
@@ -206,6 +206,11 @@ export function CheckoutPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const canUseBalance = Boolean(user && !isRecharge && balanceAvailable >= total);
+    if (!hasExternalPaymentChannels && !canUseBalance) {
+      toast.error('商城尚未配置可用收款方式，请联系店主完成支付设置后再下单');
+      return;
+    }
     if (!email && !phone) { toast.error('请至少填写邮箱或手机号'); return; }
     // 人机校验：开关开启时必须已出题并作答（最终判定仍在服务端 RPC，这里只是免一次无谓往返）
     const captchaOn = settings?.captcha?.enabled !== false;
@@ -382,6 +387,11 @@ export function CheckoutPage() {
         {!payExpired && payChannel === 'choose' && (
           <div className="mt-6">
             <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">选择支付方式</p>
+            {pickableChannels.length === 0 ? (
+              <div className="rounded-xl border border-warning/30 bg-warning/5 p-5 text-sm leading-relaxed text-muted-foreground">
+                当前没有可用的支付方式。请稍后重试，或联系店主在后台「支付设置」中配置收款码、收款链接或 USDT 地址。
+              </div>
+            ) : (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {pickableChannels.map((c) => {
                 const Icon = CHANNEL_ICON[c.icon] ?? QrCode;
@@ -411,6 +421,7 @@ export function CheckoutPage() {
                 );
               })}
             </div>
+            )}
             {recOn && (
               <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
                 {settings?.recommend?.note || '推荐使用支付宝付款，到账最快'}。
