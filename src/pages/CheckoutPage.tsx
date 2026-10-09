@@ -9,7 +9,7 @@ import { requestCaptcha, type CaptchaChallenge } from '@/lib/order-captcha';
 import { PayCountdownBar } from '@/components/PayCountdownBar';
 import { useAuthSession } from '@/hooks/use-auth-session';
 import { useMyRewardCoupons, type RewardCoupon } from '@/lib/referral';
-import { PAY_CHANNELS, CASHIER_PATH, isChannelConfigured, feeSuffixOf, CHANNEL_CARD_BASE, TONE_TEXT, type PayChannel } from '@/lib/pay-channels';
+import { PAY_CHANNELS, CASHIER_PATH, isChannelConfigured, feeSuffixOf, CHANNEL_CARD_BASE, TONE_TEXT, toChannelId, type PayChannel } from '@/lib/pay-channels';
 import { useMyWallet, payWithBalance, switchOrderChannel, calcPayable, effectiveFeeRate } from '@/lib/wallet';
 import { formatYuan, scrollToTopNow } from '@/lib/utils';
 import { parseRateLimitSeconds, useCountdownSeconds, rateLimitButtonLabel, fmtMinSec } from '@/lib/rate-limit';
@@ -182,7 +182,17 @@ export function CheckoutPage() {
    * 商品白名单仅作为后台勾选记录保留；未配置的收款方式不显示、不允许继续下单。
    * 余额支付只在登录后展示（游客无法站内扣款），充值类商品不可用余额代充。
    */
+  // 商品后台勾选的支付方式是白名单；不允许结算页显示商品未开放的通道。
+  // 只映射历史上明确支持的值，未知字符串绝不能因 toChannelId 的兼容兜底而意外开放 USDT。
+  const knownProductPaymentValues = new Set(['balance', 'alipay', 'alipay_online', 'alipay_qr', 'alipay_manual', 'wechat', 'weixin', 'usdt', 'manual']);
+  const productPaymentMethods = Array.isArray(product.payment_methods) ? product.payment_methods : [];
+  const allowedProductChannels = new Set(
+    productPaymentMethods
+      .filter((value) => knownProductPaymentValues.has(String(value).trim().toLowerCase()))
+      .map((value) => toChannelId(value)),
+  );
   const configuredChannels = PAY_CHANNELS.filter((c) => {
+    if (!allowedProductChannels.has(c.id)) return false;
     if (c.id === 'balance' && (!user || isRecharge)) return false;
     return isChannelConfigured(c.id, settings?.payment);
   });
