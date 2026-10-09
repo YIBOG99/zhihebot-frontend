@@ -57,6 +57,7 @@ export function AlipayQrPayPage() {
   const qrValue = alipayQr?.qr_url ?? '';
   const configuredPayUrl = primaryChannel ? (settings?.payment?.alipay_primary?.pay_url ?? '') : '';
   const paymentLink = configuredPayUrl.trim() || qrValue;
+  const displayQrValue = qrValue.trim() || paymentLink;
   const canJump = isAlipayPayLink(paymentLink);
   const [jumpNotice, setJumpNotice] = useState<string | null>(null);
 
@@ -154,7 +155,7 @@ export function AlipayQrPayPage() {
     return <div className="cashier-light mx-auto flex max-w-lg items-center justify-center px-4 py-24 text-center text-muted-foreground">加载中…</div>;
   }
 
-  const hasQr = Boolean(alipayQr?.qr_url);
+  const hasQr = Boolean(displayQrValue);
 
   return (
     <div className="cashier-light min-h-screen bg-background">
@@ -182,7 +183,7 @@ export function AlipayQrPayPage() {
             <div className="rounded-2xl border border-danger/30 bg-surface p-6 text-center">
               {hasQr && (
                 <div className="mb-5">
-                  <QrExpiryFrame src={alipayQr!.qr_url!} alt={`${channelTitle}收款码`} expired />
+                  <QrExpiryFrame src={displayQrValue} alt={`${channelTitle}收款码`} expired />
                 </div>
               )}
               <h3 className="text-lg font-bold text-danger">订单已过期，请返回重新下单</h3>
@@ -203,7 +204,7 @@ export function AlipayQrPayPage() {
           ) : hasQr ? (
             <div>
               <QrExpiryFrame
-                src={qrValue}
+                src={displayQrValue}
                 alt={`${channelTitle}收款码`}
                 caption={canJump ? '扫码或点击下方按钮，尝试直接打开支付宝付款' : '请使用支付宝扫描二维码完成支付'}
                 footer={
@@ -230,7 +231,7 @@ export function AlipayQrPayPage() {
             <div className="flex items-start gap-2.5 rounded-xl border border-warning/40 bg-surface p-5">
               <AlertCircle size={16} className="mt-0.5 shrink-0 text-warning" />
               <div>
-                <p className="text-sm text-warning">店主尚未上传支付宝收款码</p>
+                <p className="text-sm text-warning">店主尚未配置支付宝收款码或有效收款链接</p>
                 <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                   请返回更换支付方式，或改用「支付宝3」「微信收款」「USDT」完成付款。
                 </p>
