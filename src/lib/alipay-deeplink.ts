@@ -18,7 +18,16 @@ export function isAlipayPayLink(v: string): boolean {
   if (!/^https?:\/\//i.test(s)) return false;
   if (IMAGE_HOST.test(s)) return false;
   if (/\.database\.meoo\.xyz|\/storage\/v1\//i.test(s)) return false;
-  const path = s.split(/[?#]/)[0];
+  let url: URL;
+  try { url = new URL(s); } catch { return false; }
+  // Only allow known Alipay payment-link hosts. A generic website URL must never be
+  // wrapped in an Alipay deep link and presented to customers as a payment code.
+  const host = url.hostname.toLowerCase();
+  const trustedAlipayHost = host === 'qr.alipay.com'
+    || host === 'render.alipay.com'
+    || host === 'mobilecodec.alipay.com';
+  if (!trustedAlipayHost) return false;
+  const path = url.pathname;
   return !/\.(png|jpe?g|gif|webp|svg|avif|bmp)$/i.test(path);
 }
 
@@ -31,7 +40,7 @@ export function alipayDeepLink(payLink: string): string | null {
   const s = payLink.trim();
   if (!isAlipayPayLink(s)) return null;
   const deep = `alipays://platformapi/startapp?appId=20000067&url=${encodeURIComponent(s)}`;
-  console.log('[alipay-deeplink] built', { payLink: s, deep });
+  console.log('[alipay-deeplink] built', { host: new URL(s).hostname });
   return deep;
 }
 
@@ -63,7 +72,7 @@ export interface AlipayJumpResult {
  */
 export function jumpToAlipayApp(payLink: string): AlipayJumpResult {
   const deep = alipayDeepLink(payLink);
-  console.log('[alipay-deeplink] jump requested', { raw: payLink, deep });
+  console.log('[alipay-deeplink] jump requested', { supportedLink: Boolean(deep) });
   if (!deep) return { handled: false, notice: '当前收款码是图片形式，暂时无法一键跳转，请截图后用支付宝扫一扫。' };
   if (isWeChatBrowser()) {
     return { handled: false, notice: '微信内无法直接打开支付宝，请点击右上角「···」选择「在浏览器打开」后再点此按钮。' };
@@ -71,7 +80,7 @@ export function jumpToAlipayApp(payLink: string): AlipayJumpResult {
   if (!isMobile()) {
     return { handled: false, notice: '电脑端无法唤起支付宝 App，请用手机的收款链接页面扫码或跳转。' };
   }
-  console.log('[alipay-deeplink] jumping', { hasPayLink: Boolean(payLink.trim()), deep });
+  console.log('[alipay-deeplink] attempting app handoff');
   window.location.href = deep;
   return { handled: true, notice: '正在打开支付宝…若未弹出，请确认已安装支付宝 App。' };
 }
