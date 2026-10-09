@@ -10,7 +10,11 @@ const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  // OneDay-App-Id is sent by the storefront for project scoping; it must be allowed
+  // during the browser's CORS preflight or the request never reaches Deno.serve.
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, oneday-app-id',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Vary': 'Origin',
   'Content-Type': 'application/json',
 };
 
@@ -40,6 +44,12 @@ function buildCode(): string {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ ok: false, message: '不支持的请求方式' }), {
+      status: 405,
+      headers: { ...corsHeaders, 'Allow': 'POST, OPTIONS' },
+    });
+  }
   try {
     if (!SUPABASE_URL || !SERVICE_KEY) {
       return new Response(JSON.stringify({ ok: false, message: '服务未配置' }), { status: 500, headers: corsHeaders });
@@ -47,7 +57,11 @@ Deno.serve(async (req) => {
     const admin = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
 
     // 开关由 site_settings.captcha.enabled 决定（缺省视为开启）
-    const { data: cfgRow } = await admin.from('site_settings').select('value').eq('key', 'captcha').maybeSingle();
+    const { data: cfgRow, error: cfgErr } = await admin.from('site_settings').select('value').eq('key', 'captcha').maybeSingle();
+    if (cfgErr) {
+      console.error('[order-captcha] config read failed:', cfgErr.message);
+      return new Response(JSON.stringify({ ok: false, message: '读取验证码配置失败，请稍后重试' }), { status: 503, headers: corsHeaders });
+    }
     const cfg = (cfgRow?.value ?? {}) as Record<string, unknown>;
     if (cfg.enabled === false) {
       return new Response(JSON.stringify({ ok: true, disabled: true }), { headers: corsHeaders });
