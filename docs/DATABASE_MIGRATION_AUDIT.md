@@ -122,3 +122,9 @@
 
 
 另已把前端 demo fallback 里的旧收款账号、钱包地址、联系方式与 Meoo 域名移除。迁移 `20261010_000400_sanitize_legacy_meoo_settings.sql` 也只对精确匹配的已知旧模板值进行清理，不会替店主填入真实支付配置。
+
+## 2026-10-10 续：前台视觉与 CI
+
+- 首页主视觉更新为数字商品品牌文案，桌面端增加轻量轨道/能量环装饰和浮动信任信息卡；遵循系统 reduced-motion 偏好，窄屏不显示装饰轨道以优先保证内容可读。
+- 更新站点 title/description 与导航副标题，去除首页主标题区域的旧 AI 会员商城固定宣传语；实际商品目录仍由后台数据驱动。
+- GitHub Actions 验证工作流已增加对 `chore/independent-backend-readiness` 分支 push 的触发条件。需以最新分支 SHA 对应的 workflow run 结果为准；旧 SHA 的成功记录不能证明最新改动已通过。
