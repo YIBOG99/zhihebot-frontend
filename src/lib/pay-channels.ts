@@ -92,7 +92,8 @@ export function toChannelId(raw: string): PayChannel {
   if (v === 'alipay' || v === 'alipay_online') return 'alipay';
   if (v === 'wechat' || v === 'weixin') return 'wechat';
   if (v === 'alipay_qr') return 'alipay_qr';
-  if (v === 'alipay_manual') return 'alipay_manual';
+  if (v === 'alipay_manual' || v === 'manual') return 'alipay_manual';
+  if (v === 'usdt') return 'usdt';
   return 'usdt';
 }
 
