@@ -2,20 +2,20 @@
 
 此步骤用于你自己的 Supabase 项目。它**不会创建登录密码**，也不会让未登录用户获得管理员权限。
 
-## 1. 先注册一个专用管理员账号
+## 唯一管理员邮箱\n\n本商城管理员邮箱已固定为 **1119746379@qq.com**。数据库迁移 `20261010_000500_single_admin_allowlist.sql` 会撤销其他邮箱的 `admin` 角色，并阻止其他邮箱以后被授予 `admin`。不要将其他邮箱添加为管理员。\n\n## 1. 先注册唯一管理员账号
 
 1. 在已部署的商城打开 `/register`，用你控制的邮箱注册。
 2. 收到验证码后完成邮箱验证，并确认可以在 `/login` 正常登录。
 3. 记下注册邮箱。建议为后台使用单独的邮箱，开启邮箱本身的多重验证，并使用独立强密码。
 
-## 2. 在 Supabase SQL Editor 授予 admin 角色
+## 2. 在 Supabase SQL Editor 授予唯一管理员角色
 
-打开目标项目的 **SQL Editor**，确认当前项目是正式商城使用的那个项目，然后把下面的邮箱替换成注册时的邮箱并执行。该语句只会给已存在的 Auth 用户添加 `admin` 角色；如果邮箱不存在，会明确报错，不会默默创建任何账号。
+打开目标项目的 **SQL Editor**，确认当前项目是正式商城使用的那个项目。先应用 `20261010_000500_single_admin_allowlist.sql` 迁移；然后执行下面的语句（邮箱已固定，不要替换）。该语句只会给已存在的指定 Auth 用户添加 `admin` 角色；如果邮箱尚未注册，会明确报错，不会默默创建任何账号。
 
 ```sql
 DO $$
 DECLARE
-  target_email text := lower(btrim('REPLACE_WITH_ADMIN_EMAIL'));
+  target_email text := lower(btrim('1119746379@qq.com'));
   target_user_id uuid;
 BEGIN
   IF target_email = '' OR target_email = 'replace_with_admin_email' THEN
@@ -41,7 +41,7 @@ END $$;
 SELECT u.email, r.role
   FROM auth.users AS u
   JOIN public.user_roles AS r ON r.user_id = u.id
- WHERE lower(u.email) = lower('REPLACE_WITH_ADMIN_EMAIL')
+ WHERE lower(u.email) = '1119746379@qq.com'
    AND r.role = 'admin'::public.app_role;
 ```
 
@@ -56,6 +56,6 @@ SELECT u.email, r.role
 ## 安全注意事项
 
 - 不要把登录密码、Supabase service-role key、支付宝商户私钥或 webhook 密钥提交到 Git。
-- 只给你自己控制的邮箱授予管理员角色；不要把此 SQL 放进公开注册流程。
+- 管理员白名单唯一值为 `1119746379@qq.com`；不要把授权 SQL 放进公开注册流程。
 - 新角色只对目标 Supabase 项目生效，不会自动同步到其他环境。
 - 添加 admin 只完成授权，不代表付款、退款、卡密发放或生产部署已经通过验收。
