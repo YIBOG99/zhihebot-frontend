@@ -68,7 +68,7 @@ export function OrderLookupPage() {
       // 先用 Edge Function RPC 验证（SECURITY DEFINER），失败则直接查
       const { data: verifyData, error: verifyErr } = await supabase.rpc('order_verify_lookup', {
         _order_id: orderNo.trim(), _contact: contact.trim() || null, _password: hash,
-      });
+      } as never);
       // order_verify_lookup 期望 bcrypt hash，前端 SHA-256 不匹配时降级为直接查询
       const ok = verifyData && (verifyData as { ok: boolean }[])[0]?.ok;
       if (verifyErr || !ok) {
