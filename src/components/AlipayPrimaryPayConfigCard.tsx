@@ -76,10 +76,10 @@ export function AlipayPrimaryPayConfigCard() {
 
       <label className="mb-1.5 block text-xs font-semibold text-muted-foreground">支付宝1收款码 / 收款链接</label>
       <QrSourceField value={qrUrl} onChange={setQrUrl} onValidityChange={setQrSourceValid} />
-      {!qrUrl.trim() && (
+      {!qrUrl.trim() && !payUrl.trim() && (
         <div className="mt-3 flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/5 p-3">
           <AlertCircle size={13} className="mt-0.5 shrink-0 text-warning" />
-          <p className="text-[11px] leading-relaxed text-warning">尚未配置收款码或图片，前台不会显示支付宝1通道。</p>
+          <p className="text-[11px] leading-relaxed text-warning">尚未配置收款码或支付宝官方付款链接，前台不会显示支付宝1通道。</p>
         </div>
       )}
 
