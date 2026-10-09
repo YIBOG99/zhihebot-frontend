@@ -144,7 +144,7 @@ export interface RateLimitBlockRow {
 /** 收款通道配置（存于 site_settings key='payment'） */
 export interface PaymentChannels {
   /** 支付宝1：独立收款码/收款链接，可尝试唤起支付宝 App；人工核账 */
-  alipay_primary?: { qr_url?: string; name?: string; note?: string };
+  alipay_primary?: { qr_url?: string; pay_url?: string; deep_link?: string; name?: string; note?: string };
   alipay?: { account?: string; name?: string; note?: string; qr_url?: string };
   usdt?: { network?: string; address?: string; note?: string };
   wechat?: { qr_url?: string; account_name?: string; note?: string };
