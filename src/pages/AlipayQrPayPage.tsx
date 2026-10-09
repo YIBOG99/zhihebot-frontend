@@ -33,7 +33,7 @@ const CASHIER_LIMIT_MIN = 10;
  * 支付宝扫码转账落地页（个人经营码通道）。
  * 与「支付宝人工转账」的区别：本页只做一件事——把店主上传的个人收款码以竞品式
  * 独立收银台形态呈现（蓝头 + 待支付胶囊 + 大红金额 + 绿框码 + 倒计时），
- * 过期后二维码变暗并提示重新下单。钱直接进店主个人账户，无法自动对账，靠人工核账发卡。
+ * 订单过期后收款码区域会变暗并提示重新下单。钱直接进店主个人账户，无法自动对账，靠人工核账发卡。
  */
 export function AlipayQrPayPage() {
   const search = useSearch({ strict: false }) as { order?: string; amount?: string; product?: string; channel?: string };
