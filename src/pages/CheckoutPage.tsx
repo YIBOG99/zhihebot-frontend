@@ -289,12 +289,8 @@ export function CheckoutPage() {
       setPayChannel('balance');
       return;
     }
-    // USDT 为纯展示地址、金额按商品价折算等值，无需加收手续费也不改单
-    if (c === 'usdt') {
-      setPayChannel('usdt');
-      scrollToTopNow();
-      return;
-    }
+    // USDT 免手续费，但仍必须把所选支付方式写回订单，方便后台核账与筛选。
+    // 与其他人工核账通道一样，调用服务端 RPC 记录 payment_method 后再展示地址。
     setSwitching(true);
     try {
       const r = await switchOrderChannel(result.orderNo, c, orderPwHash);
