@@ -13,7 +13,7 @@
 
 1. 在 Supabase 创建一个全新的项目。
 2. 从项目设置中复制 Project URL 与 anon/public key。
-3. 在项目 SQL Editor 中按文件名升序执行仓库 `migrations/` 目录里的 SQL 文件。先检查每份 SQL 与当前数据库版本；不要把旧项目的数据或服务端密钥复制进来。
+3. **不要把 `migrations/` 目录中的所有 SQL 一次性全选执行。** 该目录包含重复版本、函数签名升级和非幂等的策略创建语句；其中种子数据还含有旧收款配置与旧站点地址。先按 [数据库迁移审计说明](DATABASE_MIGRATION_AUDIT.md) 选择并验证迁移，再初始化数据库。
 4. 在 Supabase Authentication 中启用所需登录方式，并配置正式站点的 Site URL 与 Redirect URLs。
 5. 创建自己的管理员登录用户。完成注册后，在 SQL Editor 执行以下语句，将邮箱对应的 Auth 用户授予管理员角色（把邮箱替换为你自己的登录邮箱）：
 
