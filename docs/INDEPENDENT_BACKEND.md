@@ -76,7 +76,7 @@ on conflict (user_id, role) do nothing;
 ### 账号与管理后台
 
 - 登录、注册页面代码存在；登录使用 Supabase Auth，注册要求邮箱验证码。是否可成功注册/登录取决于独立 Supabase URL/anon key、Auth 邮件模板/SMTP、数据库迁移和 RLS 均已配置。
-- `login-lookup` Edge Function 可辅助旧用户名映射；部署前必须在目标项目验证函数权限、CORS、profiles 字段和服务角色密钥，且不得将 service-role key 暴露给浏览器。
+- `login-lookup` Edge Function 可辅助旧用户名映射；本分支已移除邮箱映射明文日志并补齐 CORS 预检，但接口仍会返回匹配邮箱，存在账号枚举风险。部署前必须在目标项目验证函数权限、profiles 字段和服务角色密钥，并进一步加服务端速率限制/隐私保护；不得将 service-role key 暴露给浏览器。
 - `/admin` 需要已登录的 Supabase 用户和 `user_roles` 中的管理员角色。仅有页面不代表后台已完成可登录验收。
 - 退款、发卡和订单状态更新依赖数据库 RPC/触发器与服务端权限。未在目标项目执行并测试最终迁移前，不应处理真实订单或承诺退款可用。
 
