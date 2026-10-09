@@ -608,7 +608,7 @@ function ProductsTab() {
     ]);
     if (error) { console.error('[Admin products] load failed:', error.code, error.message); setErr(`${error.code ?? ''} ${error.message}`); }
     else console.log('[Admin products] loaded rows =', data?.length ?? 0);
-    setProducts((data ?? []) as Product[]);
+    setProducts((data ?? []) as unknown as Product[]);
     setCategories((cats ?? []) as Category[]);
     setLoading(false);
   }
