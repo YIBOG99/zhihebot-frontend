@@ -62,7 +62,6 @@ export function LoginPage() {
     try {
       const identifier = toIdentifier(username);
       const loginEmail = await resolveLoginEmail(identifier);
-      console.log('[LoginPage] 登录解析:', username, '→', loginEmail);
       let { data: signInData, error } = await supabase.auth.signInWithPassword({ email: loginEmail, password });
       // 兜底：服务端映射出的邮箱登录失败时，再试一次传统拼域名方式（覆盖老 @meoo.local 账号）
       if (error && loginEmail !== identifier) {
