@@ -440,7 +440,7 @@ export function useContent(slug: string) {
     queryKey: ['content', slug],
     queryFn: async () => {
       const local = DEMO_CONTENTS.find((c) => c.slug === slug);
-      if (PUBLIC_SNAPSHOT_MODE) return local;
+      if (PUBLIC_SNAPSHOT_MODE || !supabaseConfigured) return local;
       try {
         const { data, error } = await supabase.from('contents').select('*').eq('slug', slug).single();
         if (error) throw error;
