@@ -618,6 +618,11 @@ function RefundAuditPanel() {
   }>>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+  const [orderId, setOrderId] = useState('');
+  const [amount, setAmount] = useState('');
+  const [method, setMethod] = useState('alipay');
+  const [reason, setReason] = useState('');
+  const [saving, setSaving] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -635,31 +640,106 @@ function RefundAuditPanel() {
 
   useEffect(() => { void load(); }, []);
 
+  async function recordManualRefund() {
+    const id = orderId.trim();
+    const value = Number(amount);
+    if (!id) { toast.error('请输入原订单号'); return; }
+    if (!Number.isFinite(value) || value <= 0) { toast.error('请输入大于 0 的退款金额'); return; }
+    if (!reason.trim()) { toast.error('请填写退款原因或凭证备注'); return; }
+    setSaving(true);
+    try {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      const { error } = await supabase.from('order_refunds').insert({
+        order_id: id,
+        amount: Math.round(value * 100) / 100,
+        refund_method: method,
+        reason: reason.trim(),
+        created_by: authData.user?.id ?? null,
+      });
+      if (error) throw error;
+      toast.success('人工退款记录已登记；此操作不会发起实际退款');
+      setOrderId('');
+      setAmount('');
+      setReason('');
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '登记退款失败，请检查订单号及后台权限');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const methodLabel: Record<string, string> = {
+    balance: '退回余额',
+    alipay: '支付宝',
+    wechat: '微信',
+    usdt: 'USDT',
+    other: '其他渠道',
+  };
+
   return (
     <section className="mt-8 rounded-xl border border-border bg-card p-5">
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
           <h3 className="text-sm font-semibold text-foreground">退款记录</h3>
-          <p className="mt-1 text-xs text-muted-foreground">最近 50 条后台退款审计记录（实际余额退款由钱包 RPC 处理）。</p>
+          <p className="mt-1 text-xs text-muted-foreground">钱包退款会自动记账；其他渠道请在实际退款处理完成后登记凭证。</p>
         </div>
         <button type="button" onClick={() => void load()} disabled={loading}
           className="rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground disabled:opacity-50">
           {loading ? '加载中…' : '刷新'}
         </button>
       </div>
+
+      <div className="mb-5 rounded-lg border border-warning/25 bg-warning/5 p-4">
+        <p className="text-xs font-semibold text-foreground">登记已完成的人工退款</p>
+        <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">仅用于记账，不会调用支付宝、微信或链上接口，也不会更改原订单支付状态。请在实际退款已完成后登记。</p>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <div>
+            <label className="mb-1 block text-[11px] text-muted-foreground">原订单号</label>
+            <input value={orderId} onChange={(e) => setOrderId(e.target.value)} placeholder="输入订单号"
+              className="w-full rounded-lg border border-border bg-input px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none" />
+          </div>
+          <div>
+            <label className="mb-1 block text-[11px] text-muted-foreground">退款金额（元）</label>
+            <input value={amount} onChange={(e) => setAmount(e.target.value)} type="number" min="0.01" step="0.01" placeholder="0.00"
+              className="w-full rounded-lg border border-border bg-input px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none" />
+          </div>
+          <div>
+            <label className="mb-1 block text-[11px] text-muted-foreground">退款渠道</label>
+            <select value={method} onChange={(e) => setMethod(e.target.value)}
+              className="w-full rounded-lg border border-border bg-input px-3 py-2 text-xs text-foreground focus:border-primary focus:outline-none">
+              <option value="alipay">支付宝</option>
+              <option value="wechat">微信</option>
+              <option value="usdt">USDT</option>
+              <option value="other">其他渠道</option>
+            </select>
+          </div>
+          <div>
+            <label className="mb-1 block text-[11px] text-muted-foreground">退款原因 / 凭证备注</label>
+            <input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="例如：已通过原渠道退回，交易流水号…"
+              className="w-full rounded-lg border border-border bg-input px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none" />
+          </div>
+        </div>
+        <button type="button" onClick={() => void recordManualRefund()} disabled={saving}
+          className="mt-3 rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground transition-opacity disabled:opacity-50">
+          {saving ? '登记中…' : '登记退款记录'}
+        </button>
+      </div>
+
       {loading ? (
         <p className="py-5 text-center text-xs text-muted-foreground">正在读取退款记录…</p>
       ) : err ? (
         <LoadFail msg={err} onRetry={() => void load()} />
       ) : rows.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-border py-8 text-center text-xs text-muted-foreground">暂无退款记录；应用独立后端迁移后，新退款将自动记入此处。</p>
+        <p className="rounded-lg border border-dashed border-border py-8 text-center text-xs text-muted-foreground">暂无退款记录；应用独立后端迁移后，记录会显示在此处。</p>
       ) : (
         <ul className="space-y-2">
           {rows.map((item) => (
             <li key={item.id} className="flex flex-col gap-1.5 rounded-lg border border-border px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
                 <p className="break-all font-mono text-xs text-foreground">{item.order_id}</p>
-                <p className="mt-1 text-[11px] text-muted-foreground">{item.reason || '退款处理'} · {item.refund_method}</p>
+                <p className="mt-1 text-[11px] text-muted-foreground">{item.reason || '退款处理'} · {methodLabel[item.refund_method] || item.refund_method}</p>
               </div>
               <div className="shrink-0 text-left sm:text-right">
                 <p className="text-sm font-semibold text-warning">¥{Number(item.amount).toFixed(2)}</p>
@@ -673,7 +753,7 @@ function RefundAuditPanel() {
   );
 }
 
-/* ── Products ── *//* ── Products ── */
+/* ── Products ── */
 function ProductsTab() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
