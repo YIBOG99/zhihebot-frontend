@@ -5,7 +5,6 @@ import { toast } from 'sonner';
 import { supabase } from '@/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSiteSettings, callOrderRpc } from '@/lib/queries';
-import { PayQrPanel } from '@/components/PayQrPanel';
 import { PayCountdownBar } from '@/components/PayCountdownBar';
 import { PAY_CHANNELS, CASHIER_PATH, cashierSearch, isChannelConfigured, feeNoteOf, CHANNEL_CARD_BASE, TONE_TEXT, type PayChannel } from '@/lib/pay-channels';
 import { useMyWallet, payWithBalance, effectiveFeeRate, invalidateWallet } from '@/lib/wallet';
@@ -37,7 +36,6 @@ export function PayResumePage() {
   const [state, setState] = useState<Load>('loading');
   const [order, setOrder] = useState<OrderRow | null>(null);
   const [channel, setChannel] = useState<PayChannel | null>(null);
-  const [alipayUnavailable, setAlipayUnavailable] = useState(false);
   const [expired, setExpired] = useState(false);
   const [copied, setCopied] = useState(false);
   const [cancelArmed, setCancelArmed] = useState(false);
@@ -277,9 +275,6 @@ export function PayResumePage() {
                 {short && (
                   <span className="rounded-lg border border-warning/30 bg-warning/10 px-2 py-1 text-[10px] font-semibold text-warning">余额不足，当前可用 ¥{(wallet?.available ?? 0).toFixed(2)}</span>
                 )}
-                {c.id === 'alipay' && alipayUnavailable && configured && (
-                  <span className="rounded-lg border border-warning/30 bg-warning/10 px-2 py-1 text-[10px] font-semibold text-warning">在线收款暂未开通，可改用其他通道</span>
-                )}
               </button>
             );
           })}
@@ -309,14 +304,16 @@ export function PayResumePage() {
         </div>
       )}
 
-      {/* 在线支付宝：直接在本页出码 + 轮询到账 */}
+      {/* 支付宝1：与下单页统一使用独立收款码/收款链接收银页，不调用旧在线网关 */}
       {!expired && channel === 'alipay' && (
         <div className="mt-6 space-y-3">
-          <PayQrPanel orderId={orderNo} amount={amount} expiresAt={order!.expires_at}
-            onUnavailable={(reason) => {
-              console.log('[PayResume] 支付宝在线通道不可用', { reason });
-              setAlipayUnavailable(true);
-            }} />
+          <div className="rounded-xl border border-border bg-card p-5">
+            <p className="text-sm text-muted-foreground">支付宝1 使用后台单独配置的收款码或收款链接。若二维码中包含有效支付宝链接，手机端会尝试唤起支付宝；图片形式则扫码付款并按页面提示备注订单号。</p>
+            <button onClick={() => navigate({ to: '/pay/alipay-qr', search: { order: orderNo, amount: String(amount), product: title, channel: 'alipay' } as never })}
+              className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-info py-3 text-sm font-bold text-white transition-colors hover:bg-info/85 active:scale-[0.99]">
+              <QrCode size={15} /> 前往支付宝1收银页
+            </button>
+          </div>
           <button onClick={() => setChannel(null)} className="text-xs text-muted-foreground hover:text-foreground transition-colors">← 更换支付方式</button>
         </div>
       )}
