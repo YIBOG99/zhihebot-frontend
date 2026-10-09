@@ -69,6 +69,7 @@ export function LoginPage() {
       } else {
         const loginUsername = identifier.replace(/@meoo\.local$/i, '');
         const result = await signInWithUsername(loginUsername, password);
+        if (!result.user) throw new Error('用户名或密码错误');
         uid = result.user.id;
       }
       toast.success('登录成功');
