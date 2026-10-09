@@ -28,7 +28,7 @@ async function resolveLoginEmail(identifier: string): Promise<string> {
       body: JSON.stringify({ username }),
     });
     const j = (await res.json()) as { ok?: boolean; email?: string };
-    console.log('[LoginPage] login-lookup:', username, '→', j.ok ? j.email : '未命中，回退拼域名');
+    // 不在浏览器控制台记录用户名与邮箱映射，避免暴露账号关联信息。
     if (j.ok && j.email) return j.email.toLowerCase();
   } catch (e) {
     console.warn('[LoginPage] login-lookup 异常，回退拼域名:', e);
