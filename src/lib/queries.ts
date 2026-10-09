@@ -133,7 +133,7 @@ export function draftToPayload(d: ProductDraft): Record<string, unknown> {
 
 /** 保存商品编辑（走 RLS admins_write_products）。失败时抛带原因的 Error */
 export async function saveProduct(id: string, draft: ProductDraft): Promise<void> {
-  const { error } = await supabase.from('products').update(draftToPayload(draft)).eq('id', id);
+  const { error } = await supabase.from('products').update(draftToPayload(draft) as never).eq('id', id);
   if (error) {
     console.error('[saveProduct] failed:', error.code, error.message);
     throw new Error(`${error.code ?? ''} ${error.message}`.trim());
