@@ -503,7 +503,7 @@ export async function patchSiteSetting(key: string, patch: Record<string, unknow
   const current = (await readSiteSetting<Record<string, unknown>>(key)) ?? {};
   const merged = { ...current, ...patch };
   const { error } = await supabase.from('site_settings')
-    .upsert({ key, value: merged, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+    .upsert({ key, value: merged as never, updated_at: new Date().toISOString() }, { onConflict: 'key' });
   if (error) {
     console.error('[patchSiteSetting] failed:', error.code, error.message);
     throw new Error(`${error.code ?? ''} ${error.message}`.trim());
