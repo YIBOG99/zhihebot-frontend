@@ -10,8 +10,10 @@ import { DEMO_CATEGORIES, DEMO_PRODUCTS, DEMO_CONTENTS, DEMO_FAQS, DEMO_SITE_SET
 const PUBLIC_SNAPSHOT_MODE = import.meta.env.VITE_PUBLIC_SNAPSHOT_MODE === 'true';
 
 
-/** 商品图片存储桶（storage.buckets.id，公开可读、仅管理员可写） */
-export const PRODUCT_IMAGE_BUCKET_ID = '690cb3d3-b160-4233-ace9-5947414adc12';
+/** Supabase Storage JS 的 .from() 接收 bucket name；迁移创建的公开 bucket 名为 product-images。 */
+export const PRODUCT_IMAGE_BUCKET_NAME = 'product-images';
+/** Deprecated alias retained for existing imports; this value is a bucket name, not a UUID. */
+export const PRODUCT_IMAGE_BUCKET_ID = PRODUCT_IMAGE_BUCKET_NAME;
 
 /** 让前台/后台所有商品相关缓存失效，编辑商品后调用 */
 export function useInvalidateShop() {
