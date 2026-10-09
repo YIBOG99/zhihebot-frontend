@@ -57,7 +57,7 @@ export function AlipayQrPayPage() {
   const qrValue = alipayQr?.qr_url ?? '';
   const configuredPayUrl = primaryChannel ? (settings?.payment?.alipay_primary?.pay_url ?? '') : '';
   const paymentLink = configuredPayUrl.trim() || qrValue;
-  const displayQrValue = qrValue.trim() || paymentLink;
+  const displayQrValue = qrValue.trim() || (isAlipayPayLink(paymentLink) ? paymentLink : '');
   const canJump = isAlipayPayLink(paymentLink);
   const [jumpNotice, setJumpNotice] = useState<string | null>(null);
 
