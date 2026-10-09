@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Image as ImageIcon, Link2, Loader2, Wand2 } from 'lucide-react';
 import { ImageUploadField } from '@/components/ImageUploadField';
@@ -15,6 +15,8 @@ import { decodeQrFromImage } from '@/lib/qr-decode';
 export function QrSourceField({ value, onChange }: { value: string; onChange: (next: string) => void }) {
   const looksLikeLink = /^https?:\/\//i.test(value.trim()) && !/\.(png|jpe?g|gif|webp|svg|avif|bmp)(\?|#|$)/i.test(value.trim());
   const [mode, setMode] = useState<'image' | 'link'>(looksLikeLink ? 'link' : 'image');
+  // 管理后台异步加载已保存的链接时，同步切换到链接输入模式；图片上传值不触发切换。
+  useEffect(() => { if (looksLikeLink) setMode('link'); }, [looksLikeLink]);
   const [decoding, setDecoding] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
