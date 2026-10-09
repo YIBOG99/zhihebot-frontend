@@ -1,0 +1,198 @@
+-- ============================================
+-- order_create 新签名：加入人机校验凭证核验 + 联系方式时间窗频控
+-- ⚠️ PostgreSQL 中参数列表变化即视为新重载，必须先 DROP 旧签名，否则 42725 function is not unique
+-- 返回结构（TABLE ok/order_id/message/discount）保持不变，前端判定逻辑无需改动
+-- ============================================
+
+-- ⚠️ pgcrypto 装在本实例的 extensions schema（不在 search_path 里），必须全限定调用
+CREATE OR REPLACE FUNCTION public.digest_hex(_text TEXT)
+RETURNS TEXT
+LANGUAGE sql IMMUTABLE SECURITY DEFINER SET search_path = public, extensions
+AS $func$
+  SELECT encode(extensions.digest(btrim(_text), 'sha256'), 'hex');
+$func$;
+
+REVOKE ALL ON FUNCTION public.digest_hex(TEXT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.digest_hex(TEXT) TO anon, authenticated;
+
+DROP FUNCTION IF EXISTS public.order_create(TEXT, TEXT, JSONB, INT, TEXT, TEXT, TEXT, TEXT, NUMERIC, TEXT);
+
+CREATE OR REPLACE FUNCTION public.order_create(
+  _id TEXT,
+  _product_id TEXT,
+  _product_snapshot JSONB,
+  _quantity INT,
+  _contact_email TEXT,
+  _contact_phone TEXT,
+  _lookup_password_hash TEXT,
+  _note TEXT,
+  _amount NUMERIC,
+  _coupon_code TEXT DEFAULT NULL,
+  _challenge_id TEXT DEFAULT NULL,
+  _challenge_answer TEXT DEFAULT NULL
+)
+RETURNS TABLE (ok BOOLEAN, order_id TEXT, message TEXT, discount NUMERIC)
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
+AS $func$
+DECLARE
+  p RECORD;
+  o RECORD;
+  c RECORD;
+  total NUMERIC(10,2);
+  payable NUMERIC(10,2);
+  disc NUMERIC(10,2) := 0;
+  uid UUID;
+  cfg JSONB;
+  cap_enabled BOOLEAN;
+  cap_max INT;
+  cap_window INT;
+  norm_email TEXT;
+  norm_phone TEXT;
+  recent_count INT;
+BEGIN
+  IF _id IS NULL OR _id !~ '^ZH\d{8}[A-Z0-9]{6}$' THEN
+    RETURN QUERY SELECT false, NULL::TEXT, '订单号格式不正确', 0::NUMERIC;
+    RETURN;
+  END IF;
+  IF _lookup_password_hash IS NULL OR length(_lookup_password_hash) <> 64 THEN
+    RETURN QUERY SELECT false, NULL::TEXT, '查询密码无效', 0::NUMERIC;
+    RETURN;
+  END IF;
+  IF (_contact_email IS NULL OR btrim(_contact_email) = '')
+     AND (_contact_phone IS NULL OR btrim(_contact_phone) = '') THEN
+    RETURN QUERY SELECT false, NULL::TEXT, '请至少填写邮箱或手机号', 0::NUMERIC;
+    RETURN;
+  END IF;
+
+  norm_email := nullif(lower(btrim(coalesce(_contact_email, ''))), '');
+  norm_phone := nullif(btrim(regexp_replace(coalesce(_contact_phone, ''), '[^0-9+]', '', 'g')), '');
+
+  -- 黑名单拦截（服务端强制，前端无法绕过）
+  IF EXISTS (
+    SELECT 1 FROM public.blocked_customers b
+     WHERE b.is_active
+       AND (
+         (b.contact_type = 'email' AND b.contact_value = coalesce(norm_email, ''))
+         OR (b.contact_type = 'phone' AND b.contact_value = coalesce(norm_phone, ''))
+       )
+       AND (norm_email IS NOT NULL OR norm_phone IS NOT NULL)
+  ) THEN
+    RETURN QUERY SELECT false, NULL::TEXT, '您暂时无法下单，请联系客服处理', 0::NUMERIC;
+    RETURN;
+  END IF;
+
+  -- ===== 人机校验 + 频控配置（开关由服务端读，前端传值无效）=====
+  SELECT value INTO cfg FROM public.site_settings WHERE key = 'captcha';
+  IF cfg IS NULL THEN cfg := '{}'::JSONB; END IF;
+  cap_enabled := coalesce((cfg->>'enabled')::BOOLEAN, true);
+  cap_max := coalesce((cfg->>'max_orders')::INT, 3);
+  cap_window := coalesce((cfg->>'window_minutes')::INT, 60);
+
+  IF cap_enabled THEN
+    -- 1) 一次性凭证核验：题目必须存在、未过期、未使用，答案 sha256 必须匹配
+    IF _challenge_id IS NULL OR btrim(_challenge_id) = ''
+       OR _challenge_answer IS NULL OR btrim(_challenge_answer) = '' THEN
+      RETURN QUERY SELECT false, NULL::TEXT, '请先完成人机校验', 0::NUMERIC;
+      RETURN;
+    END IF;
+    SELECT * INTO c FROM public.order_captcha_challenges
+     WHERE id = btrim(_challenge_id)
+       AND used_at IS NULL
+       AND expires_at > NOW()
+     FOR UPDATE;
+    IF NOT FOUND THEN
+      RETURN QUERY SELECT false, NULL::TEXT, '校验已失效，请换一道题重新提交', 0::NUMERIC;
+      RETURN;
+    END IF;
+    IF c.answer_hash <> public.digest_hex(_challenge_answer) THEN
+      -- 答错即作废该凭证，防止脚本穷举同一题
+      UPDATE public.order_captcha_challenges SET used_at = NOW() WHERE id = c.id;
+      RETURN QUERY SELECT false, NULL::TEXT, '校验答案不正确，请重试', 0::NUMERIC;
+      RETURN;
+    END IF;
+    UPDATE public.order_captcha_challenges SET used_at = NOW() WHERE id = c.id;
+
+    -- 2) 联系方式时间窗频控：同一邮箱/手机号在窗口内最多 cap_max 笔待付款订单
+    IF cap_max > 0 AND cap_window > 0 THEN
+      SELECT count(*) INTO recent_count FROM public.orders
+       WHERE created_at > NOW() - make_interval(mins => cap_window)
+         AND status IN ('pending_payment', 'pay_processing')
+         AND ((norm_email IS NOT NULL AND contact_email = norm_email)
+           OR (norm_phone IS NOT NULL AND contact_phone = norm_phone));
+      IF recent_count >= cap_max THEN
+        RETURN QUERY SELECT false, NULL::TEXT,
+          format('短时间内下单过多，请 %s 分钟后再试；如需帮助请联系客服', cap_window), 0::NUMERIC;
+        RETURN;
+      END IF;
+    END IF;
+  END IF;
+
+  SELECT * INTO p FROM public.products WHERE id = _product_id AND is_active = true;
+  IF NOT FOUND THEN
+    RETURN QUERY SELECT false, NULL::TEXT, '商品不存在或已下架', 0::NUMERIC;
+    RETURN;
+  END IF;
+
+  IF _quantity IS NULL OR _quantity < 1 OR _quantity > 10 THEN
+    RETURN QUERY SELECT false, NULL::TEXT, '购买数量需在 1-10 之间', 0::NUMERIC;
+    RETURN;
+  END IF;
+  total := round(p.price * _quantity, 2);
+
+  uid := auth.uid();
+
+  IF _coupon_code IS NOT NULL AND btrim(_coupon_code) <> '' THEN
+    IF uid IS NULL THEN
+      RETURN QUERY SELECT false, NULL::TEXT, '请先登录后再使用奖励券', 0::NUMERIC;
+      RETURN;
+    END IF;
+    UPDATE public.referral_rewards
+       SET status = 'used', used_at = NOW()
+     WHERE code = upper(btrim(_coupon_code)) AND inviter_id = uid AND status = 'available'
+     RETURNING * INTO o;
+    IF NOT FOUND THEN
+      RETURN QUERY SELECT false, NULL::TEXT, '奖励券无效或已被使用', 0::NUMERIC;
+      RETURN;
+    END IF;
+    IF total < o.min_amount THEN
+      UPDATE public.referral_rewards SET status = 'available', used_at = NULL WHERE id = o.id;
+      RETURN QUERY SELECT false, NULL::TEXT, format('未满 ¥%s 无法使用该券', to_char(o.min_amount, 'FM999999990')), 0::NUMERIC;
+      RETURN;
+    END IF;
+    disc := LEAST(o.amount, total - 1);
+    IF disc < 0 THEN disc := 0; END IF;
+  END IF;
+
+  payable := round(total - disc, 2);
+  IF _amount IS NULL OR abs(_amount - payable) > 0.01 THEN
+    IF disc > 0 THEN
+      UPDATE public.referral_rewards SET status = 'available', used_at = NULL WHERE code = upper(btrim(_coupon_code));
+    END IF;
+    RETURN QUERY SELECT false, NULL::TEXT, '金额校验不通过，请刷新后重试', 0::NUMERIC;
+    RETURN;
+  END IF;
+
+  INSERT INTO public.orders (
+    id, user_id, product_id, product_snapshot, quantity, contact_email, contact_phone,
+    lookup_password_hash, note, amount, discount_amount, coupon_code, status, expires_at
+  ) VALUES (
+    _id, uid, _product_id, _product_snapshot, _quantity,
+    norm_email, norm_phone,
+    _lookup_password_hash,
+    nullif(btrim(coalesce(_note, '')), ''),
+    payable, disc,
+    CASE WHEN disc > 0 THEN upper(btrim(_coupon_code)) ELSE NULL END,
+    'pending_payment',
+    NOW() + INTERVAL '30 minutes'
+  );
+  RETURN QUERY SELECT true, _id, NULL::TEXT, disc;
+EXCEPTION WHEN unique_violation THEN
+  IF disc > 0 THEN
+    UPDATE public.referral_rewards SET status = 'available', used_at = NULL WHERE code = upper(btrim(_coupon_code));
+  END IF;
+  RETURN QUERY SELECT false, NULL::TEXT, '订单号重复，请重试', 0::NUMERIC;
+END;
+$func$;
+
+REVOKE ALL ON FUNCTION public.order_create(TEXT, TEXT, JSONB, INT, TEXT, TEXT, TEXT, TEXT, NUMERIC, TEXT, TEXT, TEXT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.order_create(TEXT, TEXT, JSONB, INT, TEXT, TEXT, TEXT, TEXT, NUMERIC, TEXT, TEXT, TEXT) TO anon, authenticated;

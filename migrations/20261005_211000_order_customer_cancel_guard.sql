@@ -1,0 +1,63 @@
+-- ============================================
+-- 顾客自助取消未付款订单（v2：补上支付宝出码单的复核关口）
+-- 背景：v1 的注释第 3 条声称「在线通道关单前先向网关确认一次真实交易状态」，
+--       但函数体并未实现——数据库无法访问外网。实测隐患：顾客在支付宝刚付完、
+--       本站轮询还没回落到那一刻点「取消」，单子被置 closed，钱货两空。
+-- 方案：不假装能实时查网关，而是加一道**时间缓冲**：
+--       已出码（pay_processing）且距最后更新不足 90 秒的支付宝类订单，
+--       本轮拒绝关闭并提示稍后再试；这 90 秒足够云端核验任务（每分钟一轮）
+--       或页面轮询把到账登记上。一旦登记成功订单即 completed，本函数自然拒绝取消。
+--       超过 90 秒仍未见到账，说明确实没付，允许关闭。
+-- 安全口径不变：
+--   1) 只允许关闭自己的单（user_id = auth.uid()）；游客单一律拒绝。
+--   2) 只允许 pending_payment / pay_processing 两态；已发卡绝不回收。
+--   3) 与管理员关单/超时关单同一套奖励券返还规则。
+-- 签名未变（仍为 (TEXT)），CREATE OR REPLACE 直接生效，无需 DROP。
+-- ============================================
+
+CREATE OR REPLACE FUNCTION public.order_customer_cancel(_order_id TEXT)
+RETURNS TEXT
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
+AS $func$
+DECLARE
+  o RECORD;
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RETURN '请先登录后再取消订单；未登录下的单请到查单页核实或联系客服';
+  END IF;
+
+  SELECT * INTO o FROM public.orders WHERE id = btrim(_order_id);
+  IF NOT FOUND THEN RETURN '订单不存在'; END IF;
+  IF o.user_id IS DISTINCT FROM auth.uid() THEN RETURN '无权操作该订单'; END IF;
+  IF o.status = 'closed' THEN RETURN NULL; END IF; -- 幂等：已关闭视为成功
+  IF o.status NOT IN ('pending_payment', 'pay_processing') THEN
+    RETURN '该订单当前状态无法取消（已进入核账或已发货），如需帮助请联系客服';
+  END IF;
+  IF o.card_secret IS NOT NULL THEN RETURN '订单已完成发货，无法取消'; END IF;
+
+  -- 已出码的支付宝类订单：给云端核验留出确认窗口，避免「刚付完就自己关掉」
+  IF o.status = 'pay_processing' AND coalesce(o.payment_method, '') LIKE 'alipay%'
+     AND coalesce(o.updated_at, o.created_at) > NOW() - INTERVAL '90 seconds' THEN
+    RETURN '正在确认你的付款结果，请等待约一分钟后重试。若你确实已完成付款，请勿取消，系统会自动为你发放卡密';
+  END IF;
+
+  UPDATE public.orders
+     SET status = 'closed',
+         close_reason = 'customer_cancel',
+         timeline = timeline || jsonb_build_object('at', now(), 'label', '顾客主动取消'),
+         updated_at = NOW()
+   WHERE id = o.id;
+
+  IF o.coupon_code IS NOT NULL AND o.discount_amount > 0 THEN
+    UPDATE public.referral_rewards SET status = 'available', used_at = NULL
+     WHERE code = o.coupon_code AND status = 'used';
+  END IF;
+
+  RETURN NULL; -- NULL = 成功
+EXCEPTION WHEN OTHERS THEN
+  RETURN '取消失败：' || SQLERRM;
+END;
+$func$;
+
+REVOKE ALL ON FUNCTION public.order_customer_cancel(TEXT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.order_customer_cancel(TEXT) TO authenticated;

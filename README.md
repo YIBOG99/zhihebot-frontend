@@ -1,90 +1,55 @@
-# zhihebot.shop 前端 V2
+# Meoo 项目开发指南
 
-这是 `zhihebot.shop` 的静态前端版本，默认连接：
+本项目从 [Meoo](https://meoo.space) 平台导出，修改后可重新导入。
+以下规则确保项目能被平台正确识别和恢复，请在使用本地 AI 工具（Cursor / Copilot / Claude Code 等）开发时遵守。
 
-```text
-https://api.zhihebot.shop
+## 启动项目
+
+```bash
+pnpm install
+pnpm dev
 ```
 
-## 已包含
+开发服务器端口：**3015**（`http://localhost:3015`）
 
-- 现代化商城首页 / Hero / 公告栏
-- 分类筛选、商品搜索
-- 商品卡片
-- 商品详情弹窗
-- 商品详情 Q&A
-- 创建订单前端入口（`POST /public/orders`）
-- 订单查询（`GET /public/orders/:id`）
-- 卡密充值中心 UI（尝试调用 `POST /public/redeem`）
-- FAQ / 购买教程 / 售后说明
-- 移动端适配
-- 深色 Hero / 玻璃风格面板 / 响应式布局
-- API 驱动的商品、站点信息、公告、支付配置
+## 开发约束
 
-## 当前后端兼容
+- **技术栈**：react + vite，不要更换框架或构建工具（如切换为 Angular / Svelte），否则导入时会被拒绝
+- **不要删除以下文件**：`meoo-manifest.json`、`meoo-cloud-snapshot.json`（重新导入时需要；同名隐藏文件为平台兼容副本）
 
-前端已经兼容你现有的：
+## 云服务（Supabase）
 
-```text
-GET https://api.zhihebot.shop/public/config
-```
+### 数据库
 
-页面会从返回结果读取：
+- `src/supabase/client.ts` — Supabase 客户端配置，**不要删除或重命名此文件**（平台靠它检测云服务状态）
+- 修改数据库结构时，在 `migrations/` 目录下**新增** `.sql` 文件，不要修改或删除已有的 migration 文件
+- 命名格式：`YYYYMMDD_HHmmss_name.sql`，name 为纯小写 snake_case（如 `20260605_120000_add_orders_table.sql`）
+- 平台按文件名字典序执行，时间戳前缀保证顺序
+- **必须使用幂等语法**：`CREATE TABLE IF NOT EXISTS`、`CREATE OR REPLACE FUNCTION`、`DROP ... IF EXISTS` + `CREATE`，因为导入时所有 migration 会重新执行
+- SQL 内容为纯 DDL（CREATE / ALTER / DROP），整个文件作为一条语句执行
 
-```json
-{
-  "settings": {},
-  "payments": {},
-  "products": []
-}
-```
+### Edge Functions
 
-其中 `products` 有数据时，商城自动渲染商品。
+- 云函数放在 `functions/<函数名>/index.ts`
+- 每个函数一个目录，入口必须是 `index.ts`
+- 导入后平台会自动部署所有检测到的云函数
 
-## 约定的可选订单接口
+### 环境变量
 
-为了让前端“立即下单 / 卡密充值”真正工作，后端可提供：
+- 系统变量（`SUPABASE_URL`、`SUPABASE_ANON_KEY` 等）导入后自动配置，无需手动管理
+- 自定义环境变量（如第三方 API Key）导入后需要在平台上重新设置
 
-```text
-POST /public/orders
-GET  /public/orders/:id
-POST /public/redeem
-```
+## 导入回平台
 
-前端不会伪造成功。如果接口不存在，会直接把后端错误显示出来。
+1. 将项目打包为 ZIP（排除 `node_modules`、`.git`、`dist` 目录）
+2. 在 Meoo 首页点击输入框的「+」→「导入项目」
+3. 上传 ZIP → 平台自动验证 → 创建新项目
+4. 点击「确认开启云服务」一键恢复数据库和云函数
 
-## GitHub 上传
+## 独立前台复刻模式
 
-仓库：
+本版本默认启用 `VITE_PUBLIC_SNAPSHOT_MODE=true`。商品、分类、选购指南、教程、FAQ、品牌与站点公告会优先使用从导出工程整理出的只读快照，因此前台无需依赖原 Meoo 数据库即可渲染。
 
-```text
-https://github.com/deepseek10010/zhihebot-frontend.git
-```
+当新的独立后端准备好后，将 `VITE_PUBLIC_SNAPSHOT_MODE=false`，再配置 `VITE_SUPABASE_URL`、`VITE_SUPABASE_ANON_KEY` 与 `VITE_ONEDAY_APP_ID`，即可切回远端公开数据。
 
-把本目录中的以下文件上传到仓库根目录：
-
-```text
-index.html
-app.js
-styles.css
-README.md
-```
-
-## Cloudflare Pages
-
-推荐部署链路：
-
-```text
-GitHub → Cloudflare Pages → zhihebot.shop
-```
-
-构建方式：
-
-- Framework preset：None
-- Build command：留空
-- Build output directory：`/`
-- Root directory：`/`
-
-## 重要
-
-当前你的 API 已能返回配置，但 `products` 之前为空。因此，部署前端后，如果 API 仍返回空商品列表，页面会正常显示“当前还没有商品”的提示；这是后端商品数据尚未配置导致的，不是前端白屏。
+注意：本版本的下单、登录、支付、卡密发放与管理后台仍属于后端接入阶段；不要把原 `.env`、服务端密钥或支付宝私钥提交到仓库。

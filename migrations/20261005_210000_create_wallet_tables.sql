@@ -1,0 +1,80 @@
+-- ============================================
+-- 账户余额（钱包）体系
+-- 需求：顾客提前充值存好余额，下单时可用「余额支付」，并显示剩余余额。
+-- 设计要点：
+--   1) user_wallets 一人一行；available_balance 为可花金额，frozen_amount 为
+--      「余额支付已扣款、但订单还没发卡」的在途金额。真实可用 = available_balance。
+--      frozen_amount 只是审计视图，不参与可用额度计算，避免前端算错。
+--   2) wallet_transactions 全量流水，任何余额变动必留痕；(order_id, kind) 唯一索引
+--      保证同一笔订单不会被重复入账 / 重复扣款（幂等关口）。
+--   3) 余额只能由站内充值订单到账产生，后台不提供手工加钱入口（防不可审计的资金口子）。
+--   4) RLS：本人只读，禁止前端直接 UPDATE（所有写操作走 SECURITY DEFINER 函数）。
+-- ============================================
+
+CREATE TABLE IF NOT EXISTS public.user_wallets (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
+  available_balance NUMERIC(12,2) NOT NULL DEFAULT 0 CHECK (available_balance >= 0),
+  frozen_amount NUMERIC(12,2) NOT NULL DEFAULT 0 CHECK (frozen_amount >= 0),
+  total_recharged NUMERIC(12,2) NOT NULL DEFAULT 0,
+  total_spent NUMERIC(12,2) NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.wallet_transactions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  kind TEXT NOT NULL, -- recharge / spend / unfreeze / refund / admin_adjust
+  amount NUMERIC(12,2) NOT NULL,
+  balance_after NUMERIC(12,2) NOT NULL,
+  order_id TEXT,
+  ref TEXT,
+  note TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS wallet_tx_user_idx ON public.wallet_transactions (user_id, created_at DESC);
+-- 幂等关口：同一订单同一动作只允许一条流水
+CREATE UNIQUE INDEX IF NOT EXISTS wallet_tx_order_kind_uniq
+  ON public.wallet_transactions (order_id, kind) WHERE order_id IS NOT NULL;
+
+ALTER TABLE public.user_wallets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.wallet_transactions ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS users_select_own_wallet ON public.user_wallets;
+CREATE POLICY users_select_own_wallet ON public.user_wallets
+  FOR SELECT USING (user_id = auth.uid());
+
+DROP POLICY IF EXISTS admins_all_wallet ON public.user_wallets;
+CREATE POLICY admins_all_wallet ON public.user_wallets
+  FOR ALL USING (public.has_role(auth.uid(), 'admin')) WITH CHECK (public.has_role(auth.uid(), 'admin'));
+
+DROP POLICY IF EXISTS users_select_own_wallet_tx ON public.wallet_transactions;
+CREATE POLICY users_select_own_wallet_tx ON public.wallet_transactions
+  FOR SELECT USING (user_id = auth.uid());
+
+DROP POLICY IF EXISTS admins_all_wallet_tx ON public.wallet_transactions;
+CREATE POLICY admins_all_wallet_tx ON public.wallet_transactions
+  FOR ALL USING (public.has_role(auth.uid(), 'admin')) WITH CHECK (public.has_role(auth.uid(), 'admin'));
+
+-- 新注册账号自动开钱包（与 profiles 建档同一套 trigger 思路）
+CREATE OR REPLACE FUNCTION public.handle_new_wallet()
+RETURNS TRIGGER
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
+AS $func$
+BEGIN
+  INSERT INTO public.user_wallets (user_id) VALUES (NEW.id) ON CONFLICT (user_id) DO NOTHING;
+  RETURN NEW;
+END;
+$func$;
+
+DROP TRIGGER IF EXISTS on_auth_user_created_wallet ON auth.users;
+CREATE TRIGGER on_auth_user_created_wallet
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_wallet();
+
+-- 存量账号补建钱包
+INSERT INTO public.user_wallets (user_id)
+SELECT u.id FROM auth.users u
+ON CONFLICT (user_id) DO NOTHING;
