@@ -439,7 +439,7 @@ export function CheckoutPage() {
             )}
             {recOn && (
               <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
-                {settings?.recommend?.note || '推荐使用支付宝付款，到账最快'}。
+                {settings?.recommend?.note || '请根据页面提示选择支付方式；转账类通道付款后需等待店主核账'}。
               </p>
             )}
           </div>
