@@ -256,7 +256,7 @@ export interface WalletTx {
   id: string; kind: 'recharge' | 'spend' | 'unfreeze' | 'refund' | 'admin_adjust';
   amount: number; balance_after: number; order_id: string | null; note: string | null; created_at: string;
 }
-export interface SiteSettings { brand: Record<string, string>; contact: Record<string, string>; payment: PaymentChannels; seo: Record<string, string>; announcement?: AnnouncementConfig; branding?: BrandingConfig; ai_support?: AiSupportConfig; captcha?: CaptchaConfig; billing?: BillingConfig; recommend?: RecommendConfig; }
+export interface SiteSettings { brand: Record<string, string>; contact: Record<string, string>; payment: PaymentChannels; seo: Record<string, string>; referral?: Record<string, unknown>; announcement?: AnnouncementConfig; branding?: BrandingConfig; ai_support?: AiSupportConfig; captcha?: CaptchaConfig; billing?: BillingConfig; recommend?: RecommendConfig; }
 export interface DashboardPoint { day: string; visits: number; order_count: number; revenue: number; }
 export interface BossSalesRow { title: string; sold_count: number; revenue: number; }
 export interface DashboardData {
