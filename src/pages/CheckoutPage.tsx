@@ -335,6 +335,7 @@ export function CheckoutPage() {
 
   if (result) {
     const usdt = settings?.payment?.usdt;
+    const usdtNetwork = usdt?.network?.trim() || 'TRC20';
     return (
       <div className="mx-auto max-w-2xl px-4 sm:px-6 py-12">
         <div className="glow-frame rounded-2xl border border-success/30 bg-success/5 p-6 text-center">
@@ -513,7 +514,7 @@ export function CheckoutPage() {
           <div className="mt-6 space-y-3">
             {usdt?.address ? (
               <div className="rounded-xl border border-border bg-card p-5">
-                <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-warning">USDT · {usdt.network || 'TRC20'}</p>
+                <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-warning">USDT · {usdtNetwork}</p>
                 <p className="select-all text-sm font-mono leading-relaxed break-all text-foreground">{usdt.address}</p>
                 {usdt.note && <p className="mt-2 text-[11px] leading-relaxed text-danger">{usdt.note}</p>}
                 <button type="button"
@@ -522,7 +523,7 @@ export function CheckoutPage() {
                   {copied === 'usdt' ? <><Check size={13} className="text-success" /> 地址已复制</> : <><Copy size={13} /> 复制收款地址</>}
                 </button>
                 <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">
-                  请在交易所（如欧易 OKX）选择 <b className="text-foreground">TRON（TRC20）</b> 网络提币到上面这个地址，金额按应付 <span className="font-mono text-foreground">¥{result.amount.toFixed(2)}</span> 折算等值 USDT。其他网络（ERC20 / BSC 等）转入无法找回。
+                  请在交易所选择 <b className="text-foreground">{usdtNetwork}</b> 网络提币到上方地址，金额按应付 <span className="font-mono text-foreground">¥{result.amount.toFixed(2)}</span> 折算等值 USDT。务必让提币网络与此处配置完全一致，错误网络可能造成资产永久丢失。
                 </p>
               </div>
             ) : (
