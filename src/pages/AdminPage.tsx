@@ -646,13 +646,26 @@ function RefundAuditPanel() {
     if (!id) { toast.error('请输入原订单号'); return; }
     if (!Number.isFinite(value) || value <= 0) { toast.error('请输入大于 0 的退款金额'); return; }
     if (!reason.trim()) { toast.error('请填写退款原因或凭证备注'); return; }
+    const roundedAmount = Math.round(value * 100) / 100;
     setSaving(true);
     try {
+      const { data: order, error: orderError } = await supabase.from('orders')
+        .select('id, amount').eq('id', id).maybeSingle();
+      if (orderError) throw orderError;
+      if (!order) throw new Error('未找到对应订单，请核对订单号');
+      const { data: existingRefunds, error: refundQueryError } = await supabase.from('order_refunds')
+        .select('amount').eq('order_id', id);
+      if (refundQueryError) throw refundQueryError;
+      const previouslyRecorded = (existingRefunds ?? []).reduce((sum, item) => sum + Number(item.amount ?? 0), 0);
+      if (previouslyRecorded + roundedAmount > Number(order.amount) + 0.005) {
+        throw new Error(`退款登记金额超出订单应付金额（订单 ¥${Number(order.amount).toFixed(2)}，已登记 ¥${previouslyRecorded.toFixed(2)}）`);
+      }
+
       const { data: authData, error: authError } = await supabase.auth.getUser();
       if (authError) throw authError;
       const { error } = await supabase.from('order_refunds').insert({
         order_id: id,
-        amount: Math.round(value * 100) / 100,
+        amount: roundedAmount,
         refund_method: method,
         reason: reason.trim(),
         created_by: authData.user?.id ?? null,
