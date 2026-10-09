@@ -23,9 +23,44 @@ function invalidCredentials(): Response {
   return json({ ok: false, message: '用户名或密码不正确' }, 401);
 }
 
+// Best-effort per-isolate defense-in-depth. Supabase Auth's own rate limits remain
+// authoritative; this additionally limits repeated username lookups before GoTrue is called.
+const attempts = new Map<string, { startedAt: number; count: number }>();
+const WINDOW_MS = 60_000;
+const MAX_ATTEMPTS_PER_IP = 30;
+
+function overLimit(ip: string): boolean {
+  const now = Date.now();
+  const current = attempts.get(ip);
+  if (!current || now - current.startedAt >= WINDOW_MS) {
+    attempts.set(ip, { startedAt: now, count: 1 });
+  } else {
+    current.count += 1;
+    if (current.count > MAX_ATTEMPTS_PER_IP) return true;
+  }
+
+  // Bound memory in long-lived isolates without creating a scheduled background task.
+  if (attempts.size > 2_000) {
+    for (const [key, entry] of attempts) {
+      if (now - entry.startedAt >= WINDOW_MS) attempts.delete(key);
+    }
+  }
+  return false;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   if (req.method !== 'POST') return json({ ok: false, message: '不支持的请求方式' }, 405);
+  const ip = req.headers.get('cf-connecting-ip')
+    ?? req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    ?? req.headers.get('x-real-ip')
+    ?? '';
+  if (ip && overLimit(ip)) {
+    return new Response(JSON.stringify({ ok: false, message: '尝试次数过多，请稍后再试' }), {
+      status: 429,
+      headers: { ...corsHeaders, 'Retry-After': '60' },
+    });
+  }
   if (!SUPABASE_URL || !SERVICE_KEY || !ANON_KEY) {
     console.error('[login-lookup] Required Supabase function secrets are missing');
     return json({ ok: false, message: '登录服务暂不可用，请使用邮箱登录或稍后重试' }, 503);
@@ -50,6 +85,10 @@ Deno.serve(async (req) => {
 
     let candidates = (exactRows ?? []) as Array<{ email: string | null; username: string | null }>;
     if (candidates.length === 0) {
+      // Case-insensitive lookup stays bounded. Escape LIKE metacharacters so usernames
+      // containing %, _ or backslash cannot be treated as a query pattern.
+      const escapedUsername = raw.replace(/[\\%_]/g, '\\    let candidates = (exactRows ?? []) as Array<{ email: string | null; username: string | null }>;
+    if (candidates.length === 0) {
       // Legacy usernames may differ only by case. Reject ambiguity instead of choosing
       // an arbitrary account when the old case-sensitive unique constraint allows both.
       const { data: allRows, error: allError } = await admin.from('profiles').select('email, username');
@@ -59,6 +98,16 @@ Deno.serve(async (req) => {
       }
       candidates = ((allRows ?? []) as Array<{ email: string | null; username: string | null }>)
         .filter((row) => (row.username ?? '').toLowerCase() === lower);
+    }
+
+    if (candidates.length !== 1) return invalidCredentials();');
+      const { data: foldedRows, error: foldedError } = await admin
+        .from('profiles').select('email, username').ilike('username', escapedUsername).limit(2);
+      if (foldedError) {
+        console.error('[login-lookup] case-insensitive lookup failed:', foldedError.code);
+        return json({ ok: false, message: '登录服务暂不可用，请稍后重试' }, 503);
+      }
+      candidates = (foldedRows ?? []) as Array<{ email: string | null; username: string | null }>;
     }
 
     if (candidates.length !== 1) return invalidCredentials();
