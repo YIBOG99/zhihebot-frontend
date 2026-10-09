@@ -7,7 +7,6 @@ import { BrandLogo, useBrandName } from '@/components/BrandLogo';
 
 /** 真实邮箱走 Supabase Auth；用户名登录由服务端校验凭据，并只返回会话令牌。 */
 async function signInWithUsername(username: string, password: string) {
-  const { supabaseUrl, supabaseAnonKey, projectUrlId } = await import('@/supabase/client');
   const res = await fetch(`${supabaseUrl}/functions/v1/login-lookup`, {
     method: 'POST',
     headers: {
