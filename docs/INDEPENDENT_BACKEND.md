@@ -30,6 +30,16 @@ on conflict (user_id, role) do nothing;
 
 执行前确认 `public.user_roles` 与 `public.app_role` 已由仓库迁移创建。不要把 service-role key 放进前端环境变量。
 
+## 当前目标 Supabase 项目
+
+本次目标项目 URL 已指定为 `https://aqoryvygjavngcgkmuom.supabase.co`。将此 URL 与对应的 publishable/anon 公钥配置到前端部署平台的环境变量：
+
+- `VITE_SUPABASE_URL=https://aqoryvygjavngcgkmuom.supabase.co`
+- `VITE_SUPABASE_ANON_KEY`：使用该项目提供的 publishable key
+- `VITE_PUBLIC_SNAPSHOT_MODE=false`
+
+**注意：** publishable key 只用于浏览器公开客户端，不具备数据库管理员权限，不能用来执行 migration、创建管理员、设置 Edge Function secrets 或部署函数。上述操作需要 Supabase Dashboard/CLI 的项目权限以及适当的管理凭据。不要将 service-role key 放进前端变量或提交到 Git。
+
 ## 2. 配置前端
 
 将仓库根目录 `.env.example` 复制为本地 `.env.local`，填写：
