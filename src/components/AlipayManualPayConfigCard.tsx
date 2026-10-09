@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { AlertCircle, Wallet } from 'lucide-react';
-import { readSiteSetting, patchSiteSetting } from '@/lib/queries';
+import { readSiteSetting, patchSiteSetting, useInvalidateSettings } from '@/lib/queries';
 import { QrSourceField } from '@/components/QrSourceField';
 
 type AlipayCfg = { account?: string; name?: string; note?: string; qr_url?: string };
 
-/** 支付宝人工转账可视化配置：收款码 + 收款账号 + 户名 + 付款须知。
+/** 支付宝3配置：收款码、收款账号、户名和付款须知。
  *  写入 site_settings.payment.alipay，不影响 wechat / usdt 子对象。 */
 export function AlipayManualPayConfigCard() {
   const [qrUrl, setQrUrl] = useState('');
@@ -15,6 +15,7 @@ export function AlipayManualPayConfigCard() {
   const [note, setNote] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const invalidate = useInvalidateSettings();
 
   useEffect(() => {
     let alive = true;
@@ -41,7 +42,8 @@ export function AlipayManualPayConfigCard() {
       await patchSiteSetting('payment', {
         alipay: { qr_url: qrUrl.trim(), account: account.trim(), name: name.trim(), note: note.trim() },
       });
-      toast.success('支付宝人工转账设置已保存');
+      invalidate();
+      toast.success('支付宝3设置已保存，前台立即生效');
     } catch (e) {
       console.error('[AlipayManualPayConfig] save failed:', e);
       toast.error('保存失败，请稍后再试');
@@ -55,7 +57,7 @@ export function AlipayManualPayConfigCard() {
     <section className="rounded-xl border border-border bg-card p-5">
       <div className="mb-1 flex items-center gap-2">
         <Wallet size={15} className="text-info" />
-        <h3 className="text-sm font-semibold text-foreground">支付宝人工转账 · 可视化配置</h3>
+        <h3 className="text-sm font-semibold text-foreground">支付宝3 · 账号/收款码备用通道</h3>
       </div>
       <p className="mb-5 text-xs leading-relaxed text-muted-foreground">
         在线收款审核期间用它兜底营业。买家下单后进入独立收款页，看到你的收款二维码，同时仍可复制收款账号自行转账。
