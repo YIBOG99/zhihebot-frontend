@@ -10,6 +10,7 @@ interface AlipayPrimaryCfg { qr_url?: string; pay_url?: string; name?: string; n
 /** 支付宝1 独立收款码配置；与支付宝2、支付宝3相互独立。 */
 export function AlipayPrimaryPayConfigCard() {
   const [qrUrl, setQrUrl] = useState('');
+  const [qrSourceValid, setQrSourceValid] = useState(true);
   const [payUrl, setPayUrl] = useState('');
   const [name, setName] = useState('');
   const [note, setNote] = useState('');
@@ -39,6 +40,10 @@ export function AlipayPrimaryPayConfigCard() {
   }, []);
 
   async function save() {
+    if (!qrSourceValid) {
+      toast.error('请填写有效的支付宝收款链接，或切回上传收款码图片；普通网页 URL 不能作为收款码链接。');
+      return;
+    }
     if (payUrl.trim() && !isAlipayPayLink(payUrl.trim())) {
       toast.error('支付宝付款链接必须是有效的支付宝收款链接；普通网页地址不能用于深链唤起。请清空该字段并保留收款码，或核对链接。');
       return;
@@ -70,7 +75,7 @@ export function AlipayPrimaryPayConfigCard() {
       </p>
 
       <label className="mb-1.5 block text-xs font-semibold text-muted-foreground">支付宝1收款码 / 收款链接</label>
-      <QrSourceField value={qrUrl} onChange={setQrUrl} />
+      <QrSourceField value={qrUrl} onChange={setQrUrl} onValidityChange={setQrSourceValid} />
       {!qrUrl.trim() && (
         <div className="mt-3 flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/5 p-3">
           <AlertCircle size={13} className="mt-0.5 shrink-0 text-warning" />
