@@ -435,8 +435,6 @@ export type Database = {
           payment_ref?: string | null
           payment_status?: string
           confirmed_at?: string | null
-          payment_status?: string
-          confirmed_at?: string | null
           product_id?: string | null
           product_snapshot: Json
           quantity?: number | null
@@ -465,6 +463,8 @@ export type Database = {
           note?: string | null
           payment_method?: string | null
           payment_ref?: string | null
+          payment_status?: string
+          confirmed_at?: string | null
           product_id?: string | null
           product_snapshot?: Json
           quantity?: number | null
