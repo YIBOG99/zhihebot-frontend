@@ -57,7 +57,7 @@ export async function createRechargeOrder(
     _is_recharge: true,
     _challenge_id: captcha?.id ?? null,
     _challenge_answer: captcha?.answer ?? null,
-  }).select().single();
+  } as never).select().single();
 
   if (error) {
     console.error('[createRechargeOrder] rpc transport error:', error.code, error.message);
