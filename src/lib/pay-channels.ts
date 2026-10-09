@@ -112,7 +112,9 @@ export function isChannelConfigured(id: PayChannel, payment?: PaymentChannels): 
 /** 收银页跳转参数：静态收款三页统一只认 order + amount（alipay_qr 额外带 product 用于展示） */
 export function cashierSearch(id: PayChannel, orderNo: string, amount: number, title?: string) {
   const base = { order: orderNo, amount: String(amount) };
-  return id === 'alipay_qr' && title ? { ...base, product: title } : base;
+  if (id === 'alipay') return { ...base, channel: 'alipay', ...(title ? { product: title } : {}) };
+  if (id === 'alipay_qr') return title ? { ...base, product: title } : base;
+  return base;
 }
 
 /** 通道按钮上的手续费说明行（每种支付方式都要写清楚） */
