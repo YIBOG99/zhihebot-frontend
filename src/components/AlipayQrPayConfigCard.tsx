@@ -10,6 +10,7 @@ interface AlipayQrCfg { qr_url?: string; name?: string; note?: string }
  *  写入 site_settings.payment.alipay_qr，浅合并不动 alipay / wechat / usdt 子对象。 */
 export function AlipayQrPayConfigCard() {
   const [qrUrl, setQrUrl] = useState('');
+  const [qrSourceValid, setQrSourceValid] = useState(true);
   const [name, setName] = useState('');
   const [note, setNote] = useState('');
   const [loading, setLoading] = useState(true);
@@ -37,6 +38,10 @@ export function AlipayQrPayConfigCard() {
   }, []);
 
   async function save() {
+    if (!qrSourceValid) {
+      toast.error('请填写有效的支付宝收款链接，或切回上传收款码图片；普通网页 URL 不能作为收款码链接。');
+      return;
+    }
     setSaving(true);
     try {
       await patchSiteSetting('payment', { alipay_qr: { qr_url: qrUrl.trim(), name: name.trim(), note: note.trim() } });
@@ -63,7 +68,7 @@ export function AlipayQrPayConfigCard() {
       </p>
 
       <label className="mb-1.5 block text-xs font-semibold text-muted-foreground">支付宝收款码</label>
-      <QrSourceField value={qrUrl} onChange={setQrUrl} />
+      <QrSourceField value={qrUrl} onChange={setQrUrl} onValidityChange={setQrSourceValid} />
       <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground">
         想要<b className="text-foreground">中间没有头像、纯黑白的干净二维码</b>（和 daituai.cc 一样）：先切到「上传收款码图片」把支付宝「收钱」页保存的那张码传上来，
         再点下面的<b className="text-foreground">「从当前配置提取收款链接」</b>——浏览器会本地读出码里那串 <span className="font-mono">https://qr.alipay.com/…</span> 并自动填好，
