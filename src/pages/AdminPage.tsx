@@ -986,7 +986,10 @@ function SettingsTab() {
     if (error) { console.error('[Admin settings] load failed:', error.code, error.message); setErr(`${error.code ?? ''} ${error.message}`); }
     else console.log('[Admin settings] loaded rows =', data?.length ?? 0);
     const obj: Record<string, string> = {};
-    for (const row of data ?? []) obj[row.key] = JSON.stringify(row.value, null, 2);
+    for (const row of data ?? []) {
+      if (row.key === 'ai_support') continue; // 旧库清理前也不再展示已移除的 AI 客服配置
+      obj[row.key] = JSON.stringify(row.value, null, 2);
+    }
     setSettings(obj);
     setLoading(false);
   }
