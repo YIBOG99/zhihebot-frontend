@@ -62,7 +62,7 @@ export const PAY_CHANNELS: ChannelMeta[] = [
   {
     id: 'alipay_qr', label: '支付宝2', badge: '个人收款码 · 人工核账', icon: 'qrcode', tone: 'info',
     hasFee: true, recommended: true,
-    desc: '跳转到独立收银页，扫描店主支付宝收款码后在「给个人付款」页面按金额转账并备注订单号，店主核账后发卡。',
+    desc: '使用支付宝2独立收款码/链接；识别到有效支付宝收款链接时可尝试唤起 App，否则扫码付款并备注订单号，店主核账后发卡。',
   },
   {
     id: 'alipay_manual', label: '支付宝3', badge: '备用通道', icon: 'wallet', tone: 'muted',
