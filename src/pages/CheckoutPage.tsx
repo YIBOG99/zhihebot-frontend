@@ -242,7 +242,7 @@ export function CheckoutPage() {
         _challenge_id: captchaOn ? captcha!.id : null,
         // 大小写不敏感：统一转大写后提交，与服务端哈希口径一致
         _challenge_answer: captchaOn ? captchaAnswer.trim().toUpperCase() : null,
-      }).select().single();
+      } as never).select().single();
       if (error) throw error;
       if (!data?.ok) throw new Error(data?.message ?? '提交失败，请重试');
       console.log('[Checkout] order created via rpc:', orderNo, '| amount =', total, '| discount =', data.discount);
