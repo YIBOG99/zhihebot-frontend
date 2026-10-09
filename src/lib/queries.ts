@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { supabase, supabaseUrl, projectUrlId } from '@/supabase/client';
+import { supabase, supabaseUrl, projectUrlId, supabaseConfigured } from '@/supabase/client';
 import type { Category, Product, ContentRow, FaqRow, SiteSettings, PaymentChannels, BrandingConfig, DashboardData, BossSalesRow, ProductDraft, BlockedCustomer, SuspectBuyer, RateLimitWhitelistRow, RateLimitBlockRow } from './types';
 import { DEMO_CATEGORIES, DEMO_PRODUCTS, DEMO_CONTENTS, DEMO_FAQS, DEMO_SITE_SETTINGS } from './demo-data';
 
@@ -354,11 +354,12 @@ export function useCategories() {
   return useQuery({
     queryKey: ['categories'],
     queryFn: async () => {
-      if (PUBLIC_SNAPSHOT_MODE) return DEMO_CATEGORIES;
+      if (PUBLIC_SNAPSHOT_MODE || !supabaseConfigured) return DEMO_CATEGORIES;
       try {
         const { data, error } = await supabase.from('categories').select('*').order('sort_order');
         if (error) throw error;
-        return data as Category[];
+        const remote = (data ?? []) as Category[];
+        return remote.length ? remote : DEMO_CATEGORIES;
       } catch (error) {
         console.warn('[useCategories] remote failed, falling back to exported snapshot:', error);
         return DEMO_CATEGORIES;
@@ -372,13 +373,14 @@ export function useProducts(categorySlug?: string) {
   return useQuery({
     queryKey: ['products', categorySlug ?? 'all'],
     queryFn: async () => {
-      if (PUBLIC_SNAPSHOT_MODE) return categorySlug ? DEMO_PRODUCTS.filter((p) => p.category_slug === categorySlug) : DEMO_PRODUCTS;
+      if (PUBLIC_SNAPSHOT_MODE || !supabaseConfigured) return categorySlug ? DEMO_PRODUCTS.filter((p) => p.category_slug === categorySlug) : DEMO_PRODUCTS;
       try {
         let q = supabase.from('products').select('*').eq('is_active', true).order('sort_order');
         if (categorySlug) q = q.eq('category_slug', categorySlug);
         const { data, error } = await q;
         if (error) throw error;
-        return data as unknown as Product[];
+        const remote = (data ?? []) as unknown as Product[];
+        return remote.length ? remote : (categorySlug ? DEMO_PRODUCTS.filter((p) => p.category_slug === categorySlug) : DEMO_PRODUCTS);
       } catch (error) {
         console.warn('[useProducts] remote failed, falling back to exported snapshot:', error);
         return categorySlug ? DEMO_PRODUCTS.filter((p) => p.category_slug === categorySlug) : DEMO_PRODUCTS;
@@ -393,7 +395,7 @@ export function useProduct(id: string) {
     queryKey: ['product', id],
     queryFn: async () => {
       const local = DEMO_PRODUCTS.find((p) => p.id === id);
-      if (PUBLIC_SNAPSHOT_MODE) return local;
+      if (PUBLIC_SNAPSHOT_MODE || !supabaseConfigured) return local;
       try {
         const { data, error } = await supabase.from('products').select('*').eq('id', id).single();
         if (error) throw error;
@@ -419,7 +421,8 @@ export function useContents(kind?: ContentRow['kind']) {
         if (kind) q = q.eq('kind', kind);
         const { data, error } = await q;
         if (error) throw error;
-        return data as ContentRow[];
+        const remote = (data ?? []) as ContentRow[];
+        return remote.length ? remote : local;
       } catch (error) {
         console.warn('[useContents] remote failed, falling back to exported snapshot:', error);
         return local;
