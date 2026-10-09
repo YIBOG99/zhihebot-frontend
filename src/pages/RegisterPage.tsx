@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { Loader2, Mail, Lock, User, KeyRound, ArrowLeft, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '@/supabase/client';
+import { supabase, supabaseConfigured } from '@/supabase/client';
 import { BrandLogo, useBrandName } from '@/components/BrandLogo';
 import { captureReferralCode, readPendingReferralCode, bindPendingReferral } from '@/lib/referral';
 
@@ -53,6 +53,7 @@ export function RegisterPage() {
     const mail = email.trim().toLowerCase();
     if (!EMAIL_RE.test(mail)) { toast.error('请输入正确的邮箱地址'); return; }
     if (password.length < 6) { toast.error('密码至少 6 位'); return; }
+    if (!supabaseConfigured) { toast.error('注册服务尚未配置：请为网站部署设置 VITE_SUPABASE_URL 和 VITE_SUPABASE_ANON_KEY'); return; }
     setLoading(true);
     try {
       const profileUsername = resolveProfileUsername(username, mail);
