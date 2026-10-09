@@ -75,7 +75,7 @@ export const PAY_CHANNELS: ChannelMeta[] = [
     desc: '跳转到微信收款页，扫描店主收款码按金额付款并备注订单号，核账后发卡。',
   },
   {
-    id: 'usdt', label: 'USDT', badge: 'TRC20', icon: 'coins', tone: 'warning',
+    id: 'usdt', label: 'USDT', badge: '链上转账', icon: 'coins', tone: 'warning',
     hasFee: false,
     desc: '复制收款地址后在交易所提币，链上确认后店主核账发卡（通常需数分钟至数小时）。',
   },
