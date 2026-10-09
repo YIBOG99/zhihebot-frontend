@@ -106,7 +106,7 @@ export async function switchOrderChannel(
     _order_id: orderId,
     _method: method,
     _lookup_password_hash: pwHash ?? null,
-  });
+  } as never);
   if (error) {
     console.error('[switchOrderChannel] transport error:', error.code, error.message);
     return { ok: false, message: `${error.code ?? ''} ${error.message}`.trim(), amount: 0 };
