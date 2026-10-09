@@ -5,35 +5,32 @@ import { toast } from 'sonner';
 import { supabase, supabaseUrl, supabaseAnonKey, projectUrlId } from '@/supabase/client';
 import { BrandLogo, useBrandName } from '@/components/BrandLogo';
 
-/** 输入含 @ 视为完整邮箱原样提交；否则按用户名拼接虚拟邮箱域 */
-function toIdentifier(raw: string): string {
-  const v = raw.trim().toLowerCase();
-  return v.includes('@') ? v : `${v}@meoo.local`;
-}
-
-/** 用户名 → 真实登录邮箱：先走服务端映射（新注册账号 auth 邮箱是真实邮箱，拼域名无法命中），失败回退拼域名 */
-async function resolveLoginEmail(identifier: string): Promise<string> {
-  // 真实邮箱（非虚拟域）直接返回，无需解析
-  if (identifier.includes('@') && !identifier.endsWith('@meoo.local')) return identifier;
-  const username = identifier.replace(/@meoo\.local$/, '');
-  try {
-    const res = await fetch(`${supabaseUrl}/functions/v1/login-lookup`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        apikey: supabaseAnonKey,
-        Authorization: `Bearer ${supabaseAnonKey}`,
-        'OneDay-App-Id': projectUrlId,
-      },
-      body: JSON.stringify({ username }),
-    });
-    const j = (await res.json()) as { ok?: boolean; email?: string };
-    // 不在浏览器控制台记录用户名与邮箱映射，避免暴露账号关联信息。
-    if (j.ok && j.email) return j.email.toLowerCase();
-  } catch (e) {
-    console.warn('[LoginPage] login-lookup 异常，回退拼域名:', e);
+/** 真实邮箱走 Supabase Auth；用户名登录由服务端校验凭据，并只返回会话令牌。 */
+async function signInWithUsername(username: string, password: string) {
+  const { supabaseUrl, supabaseAnonKey, projectUrlId } = await import('@/supabase/client');
+  const res = await fetch(`${supabaseUrl}/functions/v1/login-lookup`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      apikey: supabaseAnonKey,
+      Authorization: `Bearer ${supabaseAnonKey}`,
+      'OneDay-App-Id': projectUrlId,
+    },
+    body: JSON.stringify({ username, password }),
+  });
+  const result = (await res.json().catch(() => ({}))) as {
+    ok?: boolean; message?: string; access_token?: string; refresh_token?: string;
+  };
+  if (!res.ok || !result.ok || !result.access_token || !result.refresh_token) {
+    throw new Error(result.message || '用户名或密码不正确');
   }
-  return `${username}@meoo.local`;
+  const { data, error } = await supabase.auth.setSession({
+    access_token: result.access_token,
+    refresh_token: result.refresh_token,
+  });
+  if (error) throw error;
+  if (!data.session || !data.user) throw new Error('登录状态未能建立，请重试');
+  return data;
 }
 
 /** GoTrue 英文错误 → 中文可读文案 */
@@ -60,15 +57,19 @@ export function LoginPage() {
     if (password.length < 6) { toast.error('密码至少 6 位'); return; }
     setLoading(true);
     try {
-      const identifier = toIdentifier(username);
-      const loginEmail = await resolveLoginEmail(identifier);
-      let { data: signInData, error } = await supabase.auth.signInWithPassword({ email: loginEmail, password });
-      // 兜底：服务端映射出的邮箱登录失败时，再试一次传统拼域名方式（覆盖老 @meoo.local 账号）
-      if (error && loginEmail !== identifier) {
-        console.warn('[LoginPage] 映射邮箱登录失败，回退拼域名重试:', error.message);
-        ({ data: signInData, error } = await supabase.auth.signInWithPassword({ email: identifier, password }));
+      const identifier = username.trim();
+      let signInData;
+      if (identifier.includes('@') && !identifier.toLowerCase().endsWith('@meoo.local')) {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: identifier.toLowerCase(),
+          password,
+        });
+        if (error) throw error;
+        signInData = data;
+      } else {
+        const loginUsername = identifier.replace(/@meoo\\.local$/i, '');
+        signInData = await signInWithUsername(loginUsername, password);
       }
-      if (error) throw error;
       toast.success('登录成功');
       // 管理员直接进后台，普通用户进个人中心
       const uid = signInData.user?.id ?? '';
