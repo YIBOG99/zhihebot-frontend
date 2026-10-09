@@ -74,7 +74,7 @@
 
 ## 当前独立上线判定
 
-- CI 验证：最近可查询到的 GitHub Actions 成功记录对应较早提交 `6c45c7d0e05c2d27a45729f443c8a63af28dddd4`；当前最新提交 `caf0f347caf7986710bcc1a89ee8bb53f9ad841c` 尚无对应 workflow/checks，因此当前最新代码未经过 CI 的 typecheck/build 复验。
+- CI 验证：当前开发分支最新提交 `f6ba40e09463a5b3d756fe17d2b9d41bb959a72b` 的 GitHub Actions `build-and-typecheck` 检查已通过（TypeScript typecheck 与 production build 均成功；运行记录：[37972518391](https://github.com/YIBOG99/zhihebot-frontend/actions/runs/37972518391)、[37972510947](https://github.com/YIBOG99/zhihebot-frontend/actions/runs/37972510947)）。这仅证明前端静态检查/构建通过，不代表数据库迁移、Supabase Edge Functions、真实登录或交易链路已验收。
 - 新 Supabase 项目初始化：未执行，迁移链未在空数据库验证。
 - Edge Functions：只做静态源码审查，尚未部署或端到端测试。
 - AI 客服：相关入口与旧外部上游函数已从当前开发分支移除；之前的独立后端 PR 已合并，但后续开发分支包含额外未合并提交。线上页面/部署版本仍需单独核实。
