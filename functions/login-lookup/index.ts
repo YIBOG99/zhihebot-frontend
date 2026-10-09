@@ -87,20 +87,7 @@ Deno.serve(async (req) => {
     if (candidates.length === 0) {
       // Case-insensitive lookup stays bounded. Escape LIKE metacharacters so usernames
       // containing %, _ or backslash cannot be treated as a query pattern.
-      const escapedUsername = raw.replace(/[\\%_]/g, '\\    let candidates = (exactRows ?? []) as Array<{ email: string | null; username: string | null }>;
-    if (candidates.length === 0) {
-      // Legacy usernames may differ only by case. Reject ambiguity instead of choosing
-      // an arbitrary account when the old case-sensitive unique constraint allows both.
-      const { data: allRows, error: allError } = await admin.from('profiles').select('email, username');
-      if (allError) {
-        console.error('[login-lookup] case-insensitive lookup failed:', allError.code);
-        return json({ ok: false, message: '登录服务暂不可用，请稍后重试' }, 503);
-      }
-      candidates = ((allRows ?? []) as Array<{ email: string | null; username: string | null }>)
-        .filter((row) => (row.username ?? '').toLowerCase() === lower);
-    }
-
-    if (candidates.length !== 1) return invalidCredentials();');
+      const escapedUsername = raw.replace(/[\\%_]/g, (character) => '\\' + character);
       const { data: foldedRows, error: foldedError } = await admin
         .from('profiles').select('email, username').ilike('username', escapedUsername).limit(2);
       if (foldedError) {
