@@ -323,9 +323,9 @@ function OrdersTab() {
       console.log('[Admin orders] confirmPayment rpc result =', JSON.stringify(r));
       if (!r.ok) {
         toast.error(r.message);
-      } else if (r.message.includes('暂无可用卡密')) {
+      } else if (r.message.includes('暂无可用卡密') || r.message.includes('库存不足') || r.message.includes('待补发')) {
         // 收款已生效、仅缺卡密：引导去卡密库补货，而非报失败
-        toast.warning(r.message, { description: '可切到「卡密库」导入卡密后再次点击确认收款完成发货。' });
+        toast.warning(r.message, { description: '可切到「卡密库」导入足量卡密后再次点击「确认收款」重试发货。' });
       } else {
         toast.success(r.message);
       }
