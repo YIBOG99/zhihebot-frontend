@@ -24,7 +24,7 @@ export function useInvalidateShop() {
 }
 
 /** Product 行 → 表单草稿（null 一律转空串，便于受控输入） */
-export function toProductDraft(p: Partial<Product> & Record<string, unknown>): ProductDraft {
+export function toProductDraft(p: Record<string, unknown>): ProductDraft {
   const str = (v: unknown) => (v === null || v === undefined ? '' : String(v));
   return {
     id: str(p.id),
