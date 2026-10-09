@@ -24,8 +24,8 @@ export function AlipayQrPayConfigCard() {
         const payment = await readSiteSetting<{ alipay_qr?: AlipayQrCfg }>('payment');
         if (!alive) return;
         const c = payment?.alipay_qr ?? {};
-        setQrUrl(c.qr_url ?? '');
-        setName(c.name ?? '');
+        setQrUrl(c.qr_url || '/payment-codes/payment-qr-2.png');
+        setName(c.name || '支付宝2');
         setNote(c.note ?? '');
       } catch (e) {
         console.error('[AlipayQrPayConfig] load failed:', e);
