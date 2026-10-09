@@ -45,6 +45,49 @@ export function RegisterPage() {
     // 进入注册页即捕获一次 ?ref=，兼容用户先逛首页再点注册的路径
     captureReferralCode();
     setRefCode(readPendingReferralCode());
+
+    // Supabase 的确认邮件模板可能发送「确认链接」而不是 6 位数字码。
+    // 链接确认后会回到 /register；识别回跳 session，兼容两种邮件模板。
+    const returnedFromAuth =
+      window.location.hash.includes('type=signup') ||
+      new URLSearchParams(window.location.search).has('code');
+    if (!returnedFromAuth) return;
+
+    let alive = true;
+    void (async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (!alive) return;
+        if (error) throw error;
+        if (!session?.user) {
+          throw new Error('邮箱确认链接无效或已过期，请返回注册页重新发送确认邮件');
+        }
+
+        setLoading(true);
+        const mail = String(session.user.email ?? email).trim().toLowerCase();
+        if (mail) {
+          const { error: profileError } = await supabase.from('profiles')
+            .update({ email: mail }).eq('id', session.user.id);
+          if (profileError) {
+            console.warn('[RegisterPage] 邮箱资料补写失败（不阻断注册）:', profileError.message);
+          }
+        }
+        const bindResult = await bindPendingReferral();
+        if (!alive) return;
+        if (bindResult.bound) toast.success(bindResult.message || '邀请码已生效，奖励券已到账');
+        else if (bindResult.message) toast.info(bindResult.message);
+        toast.success('邮箱确认成功，已自动登录');
+        navigate({ to: '/account' });
+      } catch (err: unknown) {
+        if (alive) toast.error(friendlyError(err instanceof Error ? err.message : String(err)));
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+
+    return () => { alive = false; };
+  // The email is intentionally read only as a fallback; callback identity is determined by URL.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function handleRegister(e: React.FormEvent) {
@@ -58,7 +101,12 @@ export function RegisterPage() {
       const profileUsername = resolveProfileUsername(username, mail);
       const { error } = await supabase.auth.signUp({
         email: mail, password,
-        options: { data: { username: profileUsername } },
+        // Supabase confirmation links must return to this storefront, not the dashboard's
+        // default Site URL (which may still point at an old preview domain).
+        options: {
+          data: { username: profileUsername },
+          emailRedirectTo: `${window.location.origin}/register`,
+        },
       });
       if (error) throw error;
       setStep('verify');
