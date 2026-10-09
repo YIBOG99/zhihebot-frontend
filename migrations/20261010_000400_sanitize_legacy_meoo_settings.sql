@@ -50,6 +50,9 @@ SET value = jsonb_set(
 WHERE key = 'announcement'
   AND value->>'official_url' = 'nl8068w5.meoo.info';
 
+-- AI customer support was explicitly retired from this independent storefront.
+DELETE FROM public.site_settings WHERE key = 'ai_support';
+
 -- Empty values are intentionally not real payment settings. The operator must upload the
 -- current QR codes, enter merchant-approved payment URLs and verify the USDT network/address
 -- in /admin before accepting payments.
