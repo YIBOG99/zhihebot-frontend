@@ -19,8 +19,8 @@ npm run typecheck
 
 ## 部署与后端
 
-- 前台默认使用 `VITE_PUBLIC_SNAPSHOT_MODE=true`，可以只展示仓库内的公开内容快照。
-- 要启用真实远端数据、登录与管理操作，需要配置自己的 Supabase URL/anon key，并将 `VITE_PUBLIC_SNAPSHOT_MODE=false`。
+- 前台默认从本项目 Supabase 读取公开数据；只有显式设置 `VITE_PUBLIC_SNAPSHOT_MODE=true` 时才展示仓库内的只读快照。
+- 生产环境必须配置自己的 Supabase URL/anon key，并保持 `VITE_PUBLIC_SNAPSHOT_MODE=false`。缺少后端配置时，公开页面可能回退到快照，但登录、建单及后台操作不可用。
 - 管理后台入口是 `/admin`，需要 Supabase Auth 用户与 `public.user_roles` 中的 admin 角色。
 - `/boss` 是独立的老板数据看板，不等同于商城管理后台。
 - `wrangler.jsonc` 使用 `dist/` 作为静态资源目录。
