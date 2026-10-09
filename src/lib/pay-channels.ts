@@ -6,6 +6,7 @@ export type PayChannel = 'balance' | 'alipay' | 'wechat' | 'alipay_qr' | 'alipay
 
 /** 静态收款类通道的独立收银页路径（URL 只带 order + amount，页面自行回读时限） */
 export const CASHIER_PATH: Partial<Record<PayChannel, string>> = {
+  alipay: '/pay/alipay-qr',
   wechat: '/pay/wechat',
   alipay_qr: '/pay/alipay-qr',
   alipay_manual: '/pay/alipay-manual',
@@ -54,9 +55,9 @@ export const PAY_CHANNELS: ChannelMeta[] = [
     desc: '直接用账户余额抵扣，免渠道手续费，付款后立即自动发放卡密。余额不足时请先充值。',
   },
   {
-    id: 'alipay', label: '支付宝1', badge: '秒到账 · 自动发货', icon: 'qrcode', tone: 'info',
+    id: 'alipay', label: '支付宝1', badge: '深链优先 · 人工核账', icon: 'qrcode', tone: 'info',
     hasFee: true, recommended: true,
-    desc: '生成订单专属二维码，手机付款后云端实时核验到账并自动发放卡密，全程无需等待人工核账。',
+    desc: '使用后台单独上传的支付宝收款码/收款链接；可识别有效收款链接时支持手机唤起支付宝，收款后由店主核账发卡。',
   },
   {
     id: 'alipay_qr', label: '支付宝2', badge: '个人收款码 · 人工核账', icon: 'qrcode', tone: 'info',
@@ -104,7 +105,7 @@ export function isChannelConfigured(id: PayChannel, payment?: PaymentChannels): 
     case 'alipay_manual': return Boolean(payment?.alipay?.qr_url);
     case 'usdt': return Boolean(payment?.usdt?.address);
     // 在线通道无法在前台判断签约状态，交给 PayQrPanel 出码时反馈
-    case 'alipay': return true;
+    case 'alipay': return Boolean(payment?.alipay_primary?.qr_url);
   }
 }
 
