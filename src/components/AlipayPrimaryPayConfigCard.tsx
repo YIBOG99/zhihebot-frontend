@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { QrCode, Loader2, AlertCircle } from 'lucide-react';
 import { QrSourceField } from '@/components/QrSourceField';
+import { isAlipayPayLink } from '@/lib/alipay-deeplink';
 import { readSiteSetting, patchSiteSetting, useInvalidateSettings } from '@/lib/queries';
 
 interface AlipayPrimaryCfg { qr_url?: string; pay_url?: string; name?: string; note?: string }
@@ -38,6 +39,10 @@ export function AlipayPrimaryPayConfigCard() {
   }, []);
 
   async function save() {
+    if (payUrl.trim() && !isAlipayPayLink(payUrl.trim())) {
+      toast.error('支付宝付款链接必须是有效的支付宝收款链接；普通网页地址不能用于深链唤起。请清空该字段并保留收款码，或核对链接。');
+      return;
+    }
     setSaving(true);
     try {
       await patchSiteSetting('payment', {
