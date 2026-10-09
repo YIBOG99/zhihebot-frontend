@@ -66,13 +66,15 @@ Deno.serve(async (req) => {
     const row = candidates[0];
     const profileEmail = String(row.email ?? '').trim().toLowerCase();
     // The fallback is for legacy records whose profile email is still null.
-    const legacyEmail = `${raw.toLowerCase().replace(/@meoo\\.local$/, '')}@meoo.local`;
-    const loginEmails = [...new Set([profileEmail, legacyEmail].filter(Boolean))];
+    const legacyEmail = `${raw.toLowerCase().replace(/@meoo\.local$/, '')}@meoo.local`;
+    // A virtual address is only a fallback when there is no real profile email;
+    // never try a second account after a known email/password pair failed.
+    const loginEmails = profileEmail ? [profileEmail] : [legacyEmail];
     const authClient = createClient(SUPABASE_URL, ANON_KEY, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
 
-    let session = null;
+    let session: { access_token: string; refresh_token: string; expires_at?: number; token_type: string } | null = null;
     for (const email of loginEmails) {
       const { data, error } = await authClient.auth.signInWithPassword({ email, password });
       if (!error && data.session) {
