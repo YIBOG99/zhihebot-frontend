@@ -484,7 +484,7 @@ export function CheckoutPage() {
         {!payExpired && payChannel === 'alipay_qr' && (
           <div className="mt-6 space-y-3">
             <div className="rounded-xl border border-border bg-card p-5">
-              <p className="text-sm text-muted-foreground">点击下方按钮进入支付宝收银页，页面展示收款二维码、应付金额与倒计时；本通道支付时限为 10 分钟，超时二维码将自动失效。</p>
+              <p className="text-sm text-muted-foreground">点击下方按钮进入支付宝2收银页，页面展示收款码、应付金额与倒计时。注意：静态个人收款码本身不会自动失效，订单是否过期以订单状态和服务端截止时间为准。</p>
               <button onClick={() => navigate({ to: CASHIER_PATH.alipay_qr!, search: { order: result.orderNo, amount: String(result.amount), product: product.title } as never })}
                 className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-info py-3 text-sm font-bold text-primary-foreground transition-colors hover:bg-info/85 active:scale-[0.99]">
                 <QrCode size={15} /> 前往支付宝收银页
