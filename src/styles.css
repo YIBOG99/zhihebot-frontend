@@ -99,7 +99,7 @@
 
 /* ── CDN 素材常量（系统生成，统一引用） ─────────────── */
 :root {
-  --img-texture-grid: url("https://g.cdn.meoo.host/s5lynl8068w5/ai-images/texture-grid.png?auth_key=b79ecf4358e715c1fb27c8476ae594e960bda42786cba884ed8c994ff567899e");
+  --img-texture-grid: none;
 }
 
 /* 全局基础 */
@@ -131,8 +131,8 @@ body::before {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background-image: var(--img-texture-grid);
-  background-size: 480px 480px;
+  background-image: linear-gradient(to right, oklch(0.8 0.13 200 / 0.055) 1px, transparent 1px), linear-gradient(to bottom, oklch(0.8 0.13 200 / 0.055) 1px, transparent 1px);
+  background-size: 56px 56px;
   opacity: 0.05;
   mask-image: radial-gradient(1200px 800px at 50% 0%, black, transparent 85%);
   -webkit-mask-image: radial-gradient(1200px 800px at 50% 0%, black, transparent 85%);
