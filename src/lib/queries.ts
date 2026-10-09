@@ -4,10 +4,10 @@ import type { Category, Product, ContentRow, FaqRow, SiteSettings, PaymentChanne
 import { DEMO_CATEGORIES, DEMO_PRODUCTS, DEMO_CONTENTS, DEMO_FAQS, DEMO_SITE_SETTINGS } from './demo-data';
 
 /**
- * 独立前台阶段：默认使用导出快照渲染，避免商城 UI 依赖原 Meoo 数据库。
- * 未来新后端就绪后，将 VITE_PUBLIC_SNAPSHOT_MODE=false 即可切回远端公开数据。
+ * 独立商城：默认从本项目 Supabase 读取数据。仅当显式设置 VITE_PUBLIC_SNAPSHOT_MODE=true
+ * 时才启用仓库快照预览，避免生产环境误把演示快照当作实时商品、库存与支付配置。
  */
-const PUBLIC_SNAPSHOT_MODE = import.meta.env.VITE_PUBLIC_SNAPSHOT_MODE !== 'false';
+const PUBLIC_SNAPSHOT_MODE = import.meta.env.VITE_PUBLIC_SNAPSHOT_MODE === 'true';
 
 
 /** 商品图片存储桶（storage.buckets.id，公开可读、仅管理员可写） */
