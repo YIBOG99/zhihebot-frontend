@@ -219,7 +219,7 @@ export async function callAlipayPay(action: 'create' | 'query', orderId: string)
 export interface BlockRpcResult { ok: boolean; message: string }
 
 async function callBlockRpc(fn: 'customer_block' | 'customer_unblock', args: Record<string, unknown>): Promise<BlockRpcResult> {
-  const { data, error } = await supabase.rpc(fn, args);
+  const { data, error } = await supabase.rpc(fn, args as never);
   if (error) {
     console.error(`[callBlockRpc:${fn}] transport error:`, error.code, error.message);
     return { ok: false, message: `${error.code ?? ''} ${error.message}`.trim() };
