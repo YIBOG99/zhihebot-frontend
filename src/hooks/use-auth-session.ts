@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/supabase/client';
 
-export type AuthUser = { id: string; username: string };
+export type AuthUser = { id: string; username: string; email: string | null };
 
 /** session.user 上可能出现的验证时间字段：顶层是权威值，user_metadata 里的是历史快照副本 */
 type SessionUser = {
