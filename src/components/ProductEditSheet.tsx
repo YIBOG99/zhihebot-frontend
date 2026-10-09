@@ -20,7 +20,7 @@ const STOCK_OPTIONS = [
 /** 商品级支付方式白名单（与 pay-channels.ts 的 PAY_CHANNELS 一一对应，漏项即「后台能勾但前台无入口」） */
 const PAYMENT_OPTIONS = [
   { value: 'balance', label: '账户余额支付' },
-  { value: 'alipay', label: '支付宝1（在线扫码·自动发货）' },
+  { value: 'alipay', label: '支付宝1（收款码/链接·人工核账）' },
   { value: 'alipay_qr', label: '支付宝2（个人收款码）' },
   { value: 'alipay_manual', label: '支付宝3（人工转账）' },
   { value: 'wechat', label: '微信收款' },
