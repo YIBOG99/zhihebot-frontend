@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from '@tanstack/react-router';
 import { Loader2, User, Lock, Mail } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase, supabaseUrl, supabaseAnonKey, projectUrlId } from '@/supabase/client';
+import { supabase, supabaseUrl, supabaseAnonKey, projectUrlId, supabaseConfigured } from '@/supabase/client';
 import { BrandLogo, useBrandName } from '@/components/BrandLogo';
 
 /** 真实邮箱走 Supabase Auth；用户名登录由服务端校验凭据，并只返回会话令牌。 */
@@ -54,6 +54,7 @@ export function LoginPage() {
     e.preventDefault();
     if (!username.trim()) { toast.error('请输入用户名或邮箱'); return; }
     if (password.length < 6) { toast.error('密码至少 6 位'); return; }
+    if (!supabaseConfigured) { toast.error('登录服务尚未配置：请为网站部署设置 VITE_SUPABASE_URL 和 VITE_SUPABASE_ANON_KEY'); return; }
     setLoading(true);
     try {
       const identifier = username.trim();
