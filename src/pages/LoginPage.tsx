@@ -57,21 +57,21 @@ export function LoginPage() {
     setLoading(true);
     try {
       const identifier = username.trim();
-      let signInData;
+      let uid = '';
       if (identifier.includes('@') && !identifier.toLowerCase().endsWith('@meoo.local')) {
         const { data, error } = await supabase.auth.signInWithPassword({
           email: identifier.toLowerCase(),
           password,
         });
         if (error) throw error;
-        signInData = data;
+        uid = data.user?.id ?? '';
       } else {
-        const loginUsername = identifier.replace(/@meoo\\.local$/i, '');
-        signInData = await signInWithUsername(loginUsername, password);
+        const loginUsername = identifier.replace(/@meoo\.local$/i, '');
+        const result = await signInWithUsername(loginUsername, password);
+        uid = result.user.id;
       }
       toast.success('登录成功');
       // 管理员直接进后台，普通用户进个人中心
-      const uid = signInData.user?.id ?? '';
       let isAdmin = false;
       try {
         const { data, error: roleErr } = await supabase.rpc('has_role', { _user_id: uid, _role: 'admin' });
