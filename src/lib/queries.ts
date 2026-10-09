@@ -289,7 +289,7 @@ export function useInvalidateBlocklist() {
 
 /** 白名单 RPC 结果（rate_limit_whitelist_add / _remove 标量 TEXT 返回：NULL=成功） */
 async function callWhitelistRpc(fn: 'rate_limit_whitelist_add' | 'rate_limit_whitelist_remove', args: Record<string, unknown>): Promise<BlockRpcResult> {
-  const { data, error } = await supabase.rpc(fn, args);
+  const { data, error } = await supabase.rpc(fn, args as never);
   if (error) {
     console.error(`[callWhitelistRpc:${fn}] transport error:`, error.code, error.message);
     return { ok: false, message: `${error.code ?? ''} ${error.message}`.trim() };
