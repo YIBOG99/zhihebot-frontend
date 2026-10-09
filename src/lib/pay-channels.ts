@@ -1,6 +1,7 @@
 // 支付通道元数据：结算页、续付页、商品详情标签与后台勾选清单共用同一套定义，
 // 避免多处各抄一份导致「后台能勾但前台无入口」（见 AGENTS.md 三处映射教训）。
 import type { PaymentChannels } from '@/lib/types';
+import { isAlipayPayLink } from '@/lib/alipay-deeplink';
 
 export type PayChannel = 'balance' | 'alipay' | 'wechat' | 'alipay_qr' | 'alipay_manual' | 'usdt';
 
@@ -84,7 +85,7 @@ export const PAY_CHANNELS: ChannelMeta[] = [
 /**
  * 商品级支付方式白名单（products.payment_methods）→ 通道 id。
  * 取值同时出现在 ProductEditSheet 的 PAYMENT_OPTIONS、商品详情标签与本表，漏任一处会出现
- * 「后台能勾但前台无入口」。未识别的值一律当 usdt 处理（历史上 manual/usdt 曾共用一个视图）。
+ * 「后台能勾但前台无入口」。兼容历史 manual 别名为支付宝3；其余未知值回退为 USDT。
  */
 export function toChannelId(raw: string): PayChannel {
   const v = (raw ?? '').trim().toLowerCase();
@@ -93,7 +94,6 @@ export function toChannelId(raw: string): PayChannel {
   if (v === 'wechat' || v === 'weixin') return 'wechat';
   if (v === 'alipay_qr') return 'alipay_qr';
   if (v === 'alipay_manual' || v === 'manual') return 'alipay_manual';
-  if (v === 'usdt') return 'usdt';
   return 'usdt';
 }
 
@@ -106,7 +106,7 @@ export function isChannelConfigured(id: PayChannel, payment?: PaymentChannels): 
     case 'alipay_manual': return Boolean(payment?.alipay?.qr_url || payment?.alipay?.account);
     case 'usdt': return Boolean(payment?.usdt?.address);
     // 在线通道无法在前台判断签约状态，交给 PayQrPanel 出码时反馈
-    case 'alipay': return Boolean(payment?.alipay_primary?.qr_url || payment?.alipay_primary?.pay_url);
+    case 'alipay': return Boolean(payment?.alipay_primary?.qr_url || isAlipayPayLink(payment?.alipay_primary?.pay_url ?? ''));
   }
 }
 
