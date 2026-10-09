@@ -1,55 +1,32 @@
-# Meoo 项目开发指南
+# 知禾机器人商城（独立部署版）
 
-本项目从 [Meoo](https://meoo.space) 平台导出，修改后可重新导入。
-以下规则确保项目能被平台正确识别和恢复，请在使用本地 AI 工具（Cursor / Copilot / Claude Code 等）开发时遵守。
+本项目是独立运行的 React + Vite 商城前端。源码最初由其他平台导出，但当前部署不依赖该平台；请使用自己的 Supabase 后端和 Cloudflare 静态托管。
 
-## 启动项目
+## 本地开发
 
 ```bash
-pnpm install
-pnpm dev
+npm install
+cp .env.example .env.local
+npm run dev
 ```
 
-开发服务器端口：**3015**（`http://localhost:3015`）
+开发服务器默认端口为 `3015`。生产构建与类型检查：
 
-## 开发约束
+```bash
+npm run build
+npm run typecheck
+```
 
-- **技术栈**：react + vite，不要更换框架或构建工具（如切换为 Angular / Svelte），否则导入时会被拒绝
-- **不要删除以下文件**：`meoo-manifest.json`、`meoo-cloud-snapshot.json`（重新导入时需要；同名隐藏文件为平台兼容副本）
+## 部署与后端
 
-## 云服务（Supabase）
+- 前台默认使用 `VITE_PUBLIC_SNAPSHOT_MODE=true`，可以只展示仓库内的公开内容快照。
+- 要启用真实远端数据、登录与管理操作，需要配置自己的 Supabase URL/anon key，并将 `VITE_PUBLIC_SNAPSHOT_MODE=false`。
+- 管理后台入口是 `/admin`，需要 Supabase Auth 用户与 `public.user_roles` 中的 admin 角色。
+- `/boss` 是独立的老板数据看板，不等同于商城管理后台。
+- `wrangler.jsonc` 使用 `dist/` 作为静态资源目录。
 
-### 数据库
+请先阅读 [独立后端部署与后台启用指南](docs/INDEPENDENT_BACKEND.md)，按顺序部署数据库迁移与 Edge Functions，并完成后台验收后再开放交易。
 
-- `src/supabase/client.ts` — Supabase 客户端配置，**不要删除或重命名此文件**（平台靠它检测云服务状态）
-- 修改数据库结构时，在 `migrations/` 目录下**新增** `.sql` 文件，不要修改或删除已有的 migration 文件
-- 命名格式：`YYYYMMDD_HHmmss_name.sql`，name 为纯小写 snake_case（如 `20260605_120000_add_orders_table.sql`）
-- 平台按文件名字典序执行，时间戳前缀保证顺序
-- **必须使用幂等语法**：`CREATE TABLE IF NOT EXISTS`、`CREATE OR REPLACE FUNCTION`、`DROP ... IF EXISTS` + `CREATE`，因为导入时所有 migration 会重新执行
-- SQL 内容为纯 DDL（CREATE / ALTER / DROP），整个文件作为一条语句执行
+## 安全提醒
 
-### Edge Functions
-
-- 云函数放在 `functions/<函数名>/index.ts`
-- 每个函数一个目录，入口必须是 `index.ts`
-- 导入后平台会自动部署所有检测到的云函数
-
-### 环境变量
-
-- 系统变量（`SUPABASE_URL`、`SUPABASE_ANON_KEY` 等）导入后自动配置，无需手动管理
-- 自定义环境变量（如第三方 API Key）导入后需要在平台上重新设置
-
-## 导入回平台
-
-1. 将项目打包为 ZIP（排除 `node_modules`、`.git`、`dist` 目录）
-2. 在 Meoo 首页点击输入框的「+」→「导入项目」
-3. 上传 ZIP → 平台自动验证 → 创建新项目
-4. 点击「确认开启云服务」一键恢复数据库和云函数
-
-## 独立前台复刻模式
-
-本版本默认启用 `VITE_PUBLIC_SNAPSHOT_MODE=true`。商品、分类、选购指南、教程、FAQ、品牌与站点公告会优先使用从导出工程整理出的只读快照，因此前台无需依赖原 Meoo 数据库即可渲染。
-
-当新的独立后端准备好后，将 `VITE_PUBLIC_SNAPSHOT_MODE=false`，再配置 `VITE_SUPABASE_URL`、`VITE_SUPABASE_ANON_KEY` 与 `VITE_ONEDAY_APP_ID`，即可切回远端公开数据。
-
-注意：本版本的下单、登录、支付、卡密发放与管理后台仍属于后端接入阶段；不要把原 `.env`、服务端密钥或支付宝私钥提交到仓库。
+不要提交 `.env.local`、service-role key、支付商户私钥或 webhook 密钥。任何 `VITE_*` 环境变量都会被打包到浏览器端，只能放可公开的配置值。
