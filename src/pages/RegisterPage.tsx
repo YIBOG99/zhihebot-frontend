@@ -83,10 +83,11 @@ export function RegisterPage() {
       // session 同步后再建档，避免 RLS 下 auth.uid() 为空导致 403
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError || !user) throw new Error('登录状态尚未同步，请稍后重试');
-      const { error: upErr } = await supabase.from('profiles').upsert(
-        { id: user.id, username: pendingUsername, email: mail }, { onConflict: 'id' },
-      );
-      if (upErr) console.warn('[RegisterPage] 资料补写失败（不阻断注册）:', upErr.message);
+      // Auth trigger 已负责创建 profile 与处理重复用户名；此处只同步已验证邮箱，
+      // 不覆盖触发器为冲突用户名分配的唯一用户名。
+      const { error: upErr } = await supabase.from('profiles')
+        .update({ email: mail }).eq('id', user.id);
+      if (upErr) console.warn('[RegisterPage] 邮箱资料补写失败（不阻断注册）:', upErr.message);
       // 有推荐人则立即归因发奖（服务端校验：仅新注册账号、每人一次）
       const bindResult = await bindPendingReferral();
       if (bindResult.bound) toast.success(bindResult.message || '邀请码已生效，奖励券已到账');
