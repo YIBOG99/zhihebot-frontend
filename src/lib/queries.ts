@@ -397,7 +397,7 @@ export function useProduct(id: string) {
       try {
         const { data, error } = await supabase.from('products').select('*').eq('id', id).single();
         if (error) throw error;
-        return data as Product;
+        return data as unknown as Product;
       } catch (error) {
         console.warn(`[useProduct] remote failed for ${id}, falling back to exported snapshot:`, error);
         return local;
