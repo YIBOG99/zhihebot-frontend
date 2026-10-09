@@ -8,6 +8,7 @@ import { StatsBoard, StatsSkeleton, StatsError } from '@/components/AdminStatsPa
 import { ProductEditSheet } from '@/components/ProductEditSheet';
 import { WechatPayConfigCard } from '@/components/WechatPayConfigCard';
 import { AlipayQrPayConfigCard } from '@/components/AlipayQrPayConfigCard';
+import { AlipayPrimaryPayConfigCard } from '@/components/AlipayPrimaryPayConfigCard';
 import { AlipayManualPayConfigCard } from '@/components/AlipayManualPayConfigCard';
 import { ReferralConfigCard } from '@/components/ReferralConfigCard';
 import { CaptchaConfigCard } from '@/components/CaptchaConfigCard';
@@ -816,7 +817,10 @@ function SettingsTab() {
       {/* 微信收款可视化配置（推荐） */}
       <WechatPayConfigCard />
 
-      {/* 支付宝扫码转账（个人经营码）可视化配置：无需签约，钱进个人账户，人工核账发卡 */}
+      {/* 支付宝1：独立收款码/链接，可用链接时尝试深链唤起支付宝 */}
+      <AlipayPrimaryPayConfigCard />
+
+      {/* 支付宝2：个人经营码收款链接/二维码 */}
       <AlipayQrPayConfigCard />
 
       {/* 支付宝人工转账可视化配置（在线收款审核期间的兜底通道） */}
