@@ -84,3 +84,23 @@
 - 后台手动确认收款的充值单处理：新增 `20261006_052000_order_confirm_recharge.sql`，让管理员确认已到账的充值单时调用 `wallet_credit_recharge` 写入余额，而不是误走商品卡密分配。此 SQL 依赖钱包函数及 `orders.is_recharge` 等对象存在，尚未在测试 Supabase 执行；必须纳入经依赖核验的初始化顺序后再部署。
 
 因此，当前仍应保持真实收款关闭。本文记录的是静态审查发现，不表示已对线上服务实施任何更改。
+
+
+## 独立商城改造新增迁移（2026-10-10）
+
+本分支新增了三份增量迁移，**它们只能放在原始 schema 和所依赖的最终订单/卡密函数都已存在之后执行**。这不是首次初始化脚本，也不能代替对整套迁移链的核验：
+
+1. `20261010_000100_independent_shop_auth_payment_audit.sql`
+   - 为 `profiles.email` 补齐字段并从 Auth 用户回填；
+   - 为 `orders` 增加 `payment_status` / `confirmed_at` 审计字段；
+   - 创建管理员可访问的 `order_refunds` 审计表；
+   - 补齐 Auth 新用户 profile 创建触发器及订单支付确认状态同步触发器。
+2. `20261010_000200_order_assign_card_quantity.sql`
+   - 覆盖最终版 `order_assign_card(TEXT)`，按订单购买数量一次性分配库存；
+   - 库存不足时不消耗部分卡密，订单进入「已收款、待补发」状态；
+   - 保留既有 `auto_whitelist_check` 调用和 RPC 签名。
+3. `20261010_000300_auth_profile_username_conflict.sql`
+   - 避免重复用户名的唯一约束冲突导致 Supabase Auth 注册失败；
+   - 在用户名冲突时为新用户生成带用户 ID 后缀的唯一用户名。
+
+这些迁移已提交到开发分支，但**尚未在可丢弃的 Supabase/PostgreSQL 数据库中执行**。上线前需要验证表/列/FK 与现有最终版函数兼容、迁移执行顺序、并发库存分配、库存不足回滚、重复支付回调幂等、Auth 注册用户名冲突和退款审计 RLS。若此前已经应用某个同名增量迁移，应先检查 schema 当前状态，避免重复执行不幂等 SQL。
