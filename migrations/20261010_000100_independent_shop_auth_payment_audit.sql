@@ -14,6 +14,20 @@ UPDATE public.profiles AS p
 ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS payment_status TEXT NOT NULL DEFAULT 'pending';
 ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS confirmed_at TIMESTAMPTZ;
 
+-- Backfill existing terminal/payment-confirmed orders before enabling the transition trigger.
+UPDATE public.orders
+   SET payment_status = CASE
+     WHEN status IN ('paid_pending_delivery', 'completed') THEN 'confirmed'
+     WHEN status = 'closed' THEN 'cancelled'
+     ELSE 'pending'
+   END,
+   confirmed_at = CASE
+     WHEN status IN ('paid_pending_delivery', 'completed') THEN COALESCE(confirmed_at, updated_at, created_at)
+     ELSE confirmed_at
+   END
+ WHERE payment_status = 'pending'
+   AND status IN ('paid_pending_delivery', 'completed', 'closed');
+
 -- Refund audit trail; the wallet_refund_order RPC continues to perform the actual balance refund.
 CREATE TABLE IF NOT EXISTS public.order_refunds (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -32,6 +46,8 @@ CREATE POLICY order_refunds_admin_all ON public.order_refunds
   FOR ALL
   USING (public.has_role(auth.uid(), 'admin'))
   WITH CHECK (public.has_role(auth.uid(), 'admin'));
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.order_refunds TO authenticated;
+REVOKE ALL ON public.order_refunds FROM anon;
 
 -- Keep profiles complete when Supabase Auth creates a user. The signup page still performs
 -- an idempotent upsert after OTP verification; this trigger covers admin-created users too.
