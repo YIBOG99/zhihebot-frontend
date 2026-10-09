@@ -147,7 +147,7 @@ export async function createProduct(draft: ProductDraft): Promise<void> {
   const { data: exist, error: qErr } = await supabase.from('products').select('id').eq('id', id).maybeSingle();
   if (qErr) throw new Error(`${qErr.code ?? ''} ${qErr.message}`.trim());
   if (exist) throw new Error(`商品 ID「${id}」已存在，请换一个`);
-  const { error } = await supabase.from('products').insert({ id, ...draftToPayload(draft) });
+  const { error } = await supabase.from('products').insert({ id, ...draftToPayload(draft) } as never);
   if (error) {
     console.error('[createProduct] failed:', error.code, error.message);
     throw new Error(`${error.code ?? ''} ${error.message}`.trim());
