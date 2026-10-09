@@ -1,12 +1,12 @@
 {
-“$schema”: “node_modules/wrangler/config-schema.json”,
-“name”: “zhihebot-frontend”,
-“compatibility_date”: “2026-10-09”,
-“assets”: {
-“directory”: “./dist”,
-“not_found_handling”: “single-page-application”
+"$schema": "node_modules/wrangler/config-schema.json",
+"name": "zhihebot-frontend",
+"compatibility_date": "2026-10-09",
+"assets": {
+"directory": "./dist",
+"not_found_handling": "single-page-application"
 },
-“build”: {
-“command”: “npm run build”
+"build": {
+"command": "npm run build"
 }
 }
