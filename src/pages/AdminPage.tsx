@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from '@tanstack/react-router';
-import { Loader2, Package, ShoppingCart, KeyRound, Settings, LayoutDashboard, Search, Pencil, Plus, Ban, ShieldCheck, Mail, Phone, AlertTriangle, ChevronDown, Clock } from 'lucide-react';
+import { Loader2, Package, ShoppingCart, KeyRound, Settings, LayoutDashboard, Search, Pencil, Plus, Ban, ShieldCheck, Mail, Phone, AlertTriangle, ChevronDown, Clock, CreditCard } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/supabase/client';
 import { useIsAdmin } from '@/hooks/use-is-admin';
@@ -10,6 +10,7 @@ import { WechatPayConfigCard } from '@/components/WechatPayConfigCard';
 import { AlipayQrPayConfigCard } from '@/components/AlipayQrPayConfigCard';
 import { AlipayPrimaryPayConfigCard } from '@/components/AlipayPrimaryPayConfigCard';
 import { AlipayManualPayConfigCard } from '@/components/AlipayManualPayConfigCard';
+import { UsdtPayConfigCard } from '@/components/UsdtPayConfigCard';
 import { ReferralConfigCard } from '@/components/ReferralConfigCard';
 import { CaptchaConfigCard } from '@/components/CaptchaConfigCard';
 import { FeeRecommendConfigCard } from '@/components/FeeRecommendConfigCard';
@@ -29,6 +30,7 @@ const TABS = [
   { id: 'cards', label: '卡密库', icon: KeyRound },
   { id: 'blocklist', label: '黑名单', icon: Ban },
   { id: 'ratelimit', label: '频控', icon: ShieldCheck },
+  { id: 'payments', label: '支付设置', icon: CreditCard },
   { id: 'settings', label: '站点设置', icon: Settings },
 ] as const;
 
@@ -72,6 +74,7 @@ export function AdminPage() {
         {tab === 'cards' && <CardsTab />}
         {tab === 'blocklist' && <BlocklistPanel />}
         {tab === 'ratelimit' && <RateLimitPanel />}
+        {tab === 'payments' && <PaymentsTab />}
         {tab === 'settings' && <SettingsTab />}
       </div>
     </div>
@@ -773,6 +776,30 @@ function CardsTab() {
   );
 }
 
+/* ── Payments ── */
+function PaymentsTab() {
+  return (
+    <div className="space-y-5">
+      <div className="rounded-xl border border-border bg-card p-5">
+        <h2 className="text-base font-semibold text-foreground">支付通道配置</h2>
+        <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+          五种通道分别保存、独立启停。个人收款码与 USDT 都采用人工核账；确认到账后再从订单管理执行确认收款/发卡。
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2 text-[11px]">
+          {['支付宝1 · 深链/收款码', '支付宝2 · 个人收款码', '支付宝3 · 账号/收款码', '微信支付 · 收款码', 'USDT · 地址/网络'].map((label) => (
+            <span key={label} className="rounded-full border border-primary/25 bg-primary/5 px-2.5 py-1 text-primary">{label}</span>
+          ))}
+        </div>
+      </div>
+      <AlipayPrimaryPayConfigCard />
+      <AlipayQrPayConfigCard />
+      <AlipayManualPayConfigCard />
+      <WechatPayConfigCard />
+      <UsdtPayConfigCard />
+    </div>
+  );
+}
+
 /* ── Settings ── */
 function SettingsTab() {
   const [settings, setSettings] = useState<Record<string, string>>({});
@@ -813,18 +840,6 @@ function SettingsTab() {
 
       {/* 首页公告弹窗可视化配置（推荐） */}
       <AnnouncementConfigCard />
-
-      {/* 微信收款可视化配置（推荐） */}
-      <WechatPayConfigCard />
-
-      {/* 支付宝1：独立收款码/链接，可用链接时尝试深链唤起支付宝 */}
-      <AlipayPrimaryPayConfigCard />
-
-      {/* 支付宝2：个人经营码收款链接/二维码 */}
-      <AlipayQrPayConfigCard />
-
-      {/* 支付宝人工转账可视化配置（在线收款审核期间的兜底通道） */}
-      <AlipayManualPayConfigCard />
 
       {/* 邀请好友返券配置（面额/门槛/开关） */}
       <ReferralConfigCard />
