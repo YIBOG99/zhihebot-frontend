@@ -86,6 +86,22 @@ export function RegisterPage() {
       const { error: upErr } = await supabase.from('profiles')
         .update({ email: mail }).eq('id', user.id);
       if (upErr) console.warn('[RegisterPage] 邮箱资料补写失败（不阻断注册）:', upErr.message);
+
+      // 触发器可能因用户名重复追加短后缀。同步 Auth metadata，让登录后界面显示可实际登录的规范用户名。
+      const requestedUsername = String(user.user_metadata?.username ?? '').trim();
+      const { data: savedProfile, error: profileReadError } = await supabase.from('profiles')
+        .select('username').eq('id', user.id).maybeSingle();
+      if (profileReadError) {
+        console.warn('[RegisterPage] 规范用户名读取失败，仍保留邮箱登录:', profileReadError.message);
+      } else if (savedProfile?.username && savedProfile.username !== requestedUsername) {
+        const { error: metadataError } = await supabase.auth.updateUser({
+          data: { username: savedProfile.username },
+        });
+        if (!metadataError) {
+          toast.info(`用户名已调整为「${savedProfile.username}」，请使用此用户名或邮箱登录`);
+        }
+      }
+
       // 有推荐人则立即归因发奖（服务端校验：仅新注册账号、每人一次）
       const bindResult = await bindPendingReferral();
       if (bindResult.bound) toast.success(bindResult.message || '邀请码已生效，奖励券已到账');
