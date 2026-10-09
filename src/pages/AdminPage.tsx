@@ -650,9 +650,12 @@ function RefundAuditPanel() {
     setSaving(true);
     try {
       const { data: order, error: orderError } = await supabase.from('orders')
-        .select('id, amount').eq('id', id).maybeSingle();
+        .select('id, amount, status, payment_status').eq('id', id).maybeSingle();
       if (orderError) throw orderError;
       if (!order) throw new Error('未找到对应订单，请核对订单号');
+      if (order.payment_status !== 'confirmed' && !['paid_pending_delivery', 'completed'].includes(order.status)) {
+        throw new Error('订单尚未确认收款，不允许登记退款；请先核实实际到账情况');
+      }
       const { data: existingRefunds, error: refundQueryError } = await supabase.from('order_refunds')
         .select('amount').eq('order_id', id);
       if (refundQueryError) throw refundQueryError;
