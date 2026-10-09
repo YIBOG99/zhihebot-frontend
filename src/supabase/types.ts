@@ -403,6 +403,8 @@ export type Database = {
           note: string | null
           payment_method: string | null
           payment_ref: string | null
+          payment_status: string
+          confirmed_at: string | null
           product_id: string | null
           product_snapshot: Json
           quantity: number | null
@@ -431,6 +433,10 @@ export type Database = {
           note?: string | null
           payment_method?: string | null
           payment_ref?: string | null
+          payment_status?: string
+          confirmed_at?: string | null
+          payment_status?: string
+          confirmed_at?: string | null
           product_id?: string | null
           product_snapshot: Json
           quantity?: number | null
@@ -573,6 +579,43 @@ export type Database = {
             columns: ["category_slug"]
             referencedRelation: "categories"
             referencedColumns: ["slug"]
+          },
+        ]
+      }
+      order_refunds: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          id: string
+          order_id: string
+          reason: string | null
+          refund_method: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          order_id: string
+          reason?: string | null
+          refund_method?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          order_id?: string
+          reason?: string | null
+          refund_method?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_refunds_order_id_fkey"
+            columns: ["order_id"]
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
           },
         ]
       }
