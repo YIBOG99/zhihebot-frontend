@@ -12,8 +12,6 @@ export const Route = createFileRoute('/_layout')({
       <Outlet />
       <SiteFooter />
       <AnnouncementDialog />
-      {/* AI 客服浮层：只在前台布局内渲染，/admin、/boss 是独立顶层路由故天然不显示 */}
-      <AiAssistantWidget />
     </div>
   ),
 });
