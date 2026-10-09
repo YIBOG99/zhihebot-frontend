@@ -2,7 +2,6 @@ import { createFileRoute, Outlet } from '@tanstack/react-router';
 import { SiteHeader } from '@/components/SiteHeader';
 import { SiteFooter } from '@/components/SiteFooter';
 import { AnnouncementDialog } from '@/components/AnnouncementDialog';
-import { AiAssistantWidget } from '@/components/AiAssistantWidget';
 import { SiteAnnouncementBar } from '@/components/SiteAnnouncementBar';
 
 export const Route = createFileRoute('/_layout')({
