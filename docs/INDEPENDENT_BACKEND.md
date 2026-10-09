@@ -18,21 +18,13 @@
 2. 从项目设置中复制 Project URL 与 anon/public key。
 3. **不要把 `migrations/` 目录中的所有 SQL 一次性全选执行。** 该目录包含重复版本、函数签名升级和非幂等的策略创建语句；其中种子数据还含有旧收款配置与旧站点地址。先按 [数据库迁移审计说明](DATABASE_MIGRATION_AUDIT.md) 选择并验证迁移，再初始化数据库。
 4. 在 Supabase Authentication 中启用所需登录方式，并配置正式站点的 Site URL 与 Redirect URLs。
-5. 创建自己的管理员登录用户。完成注册后，在 SQL Editor 执行以下语句，将邮箱对应的 Auth 用户授予管理员角色（把邮箱替换为你自己的登录邮箱）：
+5. 按唯一管理员启用流程创建管理员。当前分支的 `20261010_000500_single_admin_allowlist.sql` 将管理员角色限制在指定邮箱，并会撤销其他账号已有的 admin 角色。请先阅读 [管理员启用说明](ADMIN_BOOTSTRAP.md)，先用该邮箱在 `/register` 注册并验证邮箱，再在 Supabase SQL Editor 中按说明授予 admin；不要套用任意邮箱的通用 SQL。迁移应用前务必核实目标 Auth 用户、角色数据和团队权限要求。
 
-```sql
-insert into public.user_roles (user_id, role)
-select id, 'admin'::public.app_role
-from auth.users
-where lower(email) = lower('替换为你的管理员邮箱')
-on conflict (user_id, role) do nothing;
-```
-
-执行前确认 `public.user_roles` 与 `public.app_role` 已由仓库迁移创建。不要把 service-role key 放进前端环境变量。
+不要把 service-role key 放进前端环境变量。
 
 ## 当前目标 Supabase 项目
 
-本次目标项目 URL 已指定为 `https://aqoryvygjavngcgkmuom.supabase.co`。将此 URL 与对应的 publishable/anon 公钥配置到前端部署平台的环境变量：
+部署目标项目 URL 为 `https://aqoryvygjavngcgkmuom.supabase.co`（请在发布前登录 Supabase Dashboard 再次核对项目归属）。将此 URL 与该项目自己的 publishable/anon 公钥配置到前端部署平台的环境变量：
 
 - `VITE_SUPABASE_URL=https://aqoryvygjavngcgkmuom.supabase.co`
 - `VITE_SUPABASE_ANON_KEY`：使用该项目提供的 publishable key
