@@ -37,7 +37,6 @@ export function RegisterPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
-  const [pendingUsername, setPendingUsername] = useState('');
   const [loading, setLoading] = useState(false);
   /** 好友分享链接带来的邀请码（?ref=XXX），注册成功后自动核销发奖 */
   const [refCode, setRefCode] = useState<string | null>(null);
@@ -57,7 +56,6 @@ export function RegisterPage() {
     setLoading(true);
     try {
       const profileUsername = resolveProfileUsername(username, mail);
-      setPendingUsername(profileUsername);
       const { error } = await supabase.auth.signUp({
         email: mail, password,
         options: { data: { username: profileUsername } },
