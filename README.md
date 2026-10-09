@@ -25,7 +25,7 @@ npm run typecheck
 - `/boss` 是独立的老板数据看板，不等同于商城管理后台。
 - `wrangler.jsonc` 使用 `dist/` 作为静态资源目录。
 
-请先阅读 [独立后端部署与后台启用指南](docs/INDEPENDENT_BACKEND.md)，按顺序部署数据库迁移与 Edge Functions，并完成后台验收后再开放交易。
+请先阅读 [独立后端部署与后台启用指南](docs/INDEPENDENT_BACKEND.md) 与 [管理员账号启用步骤](docs/ADMIN_BOOTSTRAP.md)，按顺序部署数据库迁移与 Edge Functions，并完成后台验收后再开放交易。
 
 ## 安全提醒
 
