@@ -14,7 +14,6 @@ import { CaptchaConfigCard } from '@/components/CaptchaConfigCard';
 import { FeeRecommendConfigCard } from '@/components/FeeRecommendConfigCard';
 import { AnnouncementConfigCard } from '@/components/AnnouncementConfigCard';
 import { BrandConfigCard } from '@/components/BrandConfigCard';
-import { AiSupportConfigCard } from '@/components/AiSupportConfigCard';
 import { BlocklistPanel } from '@/components/admin/BlocklistPanel';
 import { RateLimitPanel } from '@/components/admin/RateLimitPanel';
 import { useAdminDashboard, callOrderRpc, useInvalidateShop, toProductDraft, emptyProductDraft, genProductId, blockCustomer, unblockCustomer, useBlockedCustomers, useSuspectBuyers, useInvalidateBlocklist } from '@/lib/queries';
@@ -833,7 +832,6 @@ function SettingsTab() {
       <CaptchaConfigCard />
 
       {/* AI 客服配置（开关/话术/知识库） */}
-      <AiSupportConfigCard />
 
       {/* 原始 JSON 编辑（高级） */}
       {Object.entries(settings).map(([key, val]) => (
