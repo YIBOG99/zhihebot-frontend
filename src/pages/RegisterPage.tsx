@@ -105,7 +105,7 @@ export function RegisterPage() {
         // default Site URL (which may still point at an old preview domain).
         options: {
           data: { username: profileUsername },
-          emailRedirectTo: `${window.location.origin}/register`,
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
       if (error) throw error;
