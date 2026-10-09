@@ -1,0 +1,69 @@
+-- 游客下单建单函数：以 SECURITY DEFINER 绕过 orders 表 RLS，
+-- 前端通过 rpc('order_create', ...) 调用，返回新订单 id 供后续支付/查单使用。
+CREATE OR REPLACE FUNCTION public.order_create(
+  _id TEXT,
+  _product_id TEXT,
+  _product_snapshot JSONB,
+  _quantity INT,
+  _contact_email TEXT,
+  _contact_phone TEXT,
+  _lookup_password_hash TEXT,
+  _note TEXT,
+  _amount NUMERIC
+)
+RETURNS TABLE (ok BOOLEAN, order_id TEXT, message TEXT)
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
+AS $$
+DECLARE
+  p RECORD;
+  total NUMERIC(10,2);
+BEGIN
+  IF _id IS NULL OR _id !~ '^ZH\d{8}[A-Z0-9]{6}$' THEN
+    RETURN QUERY SELECT false, NULL::TEXT, '订单号格式不正确';
+    RETURN;
+  END IF;
+  IF _lookup_password_hash IS NULL OR length(_lookup_password_hash) <> 64 THEN
+    RETURN QUERY SELECT false, NULL::TEXT, '查询密码无效';
+    RETURN;
+  END IF;
+  IF (_contact_email IS NULL OR btrim(_contact_email) = '')
+     AND (_contact_phone IS NULL OR btrim(_contact_phone) = '') THEN
+    RETURN QUERY SELECT false, NULL::TEXT, '请至少填写邮箱或手机号';
+    RETURN;
+  END IF;
+
+  SELECT * INTO p FROM public.products WHERE id = _product_id AND is_active = true;
+  IF NOT FOUND THEN
+    RETURN QUERY SELECT false, NULL::TEXT, '商品不存在或已下架';
+    RETURN;
+  END IF;
+
+  IF _quantity IS NULL OR _quantity < 1 OR _quantity > 10 THEN
+    RETURN QUERY SELECT false, NULL::TEXT, '购买数量需在 1-10 之间';
+    RETURN;
+  END IF;
+  total := round(p.price * _quantity, 2);
+  IF _amount IS NULL OR abs(_amount - total) > 0.01 THEN
+    RETURN QUERY SELECT false, NULL::TEXT, '金额校验不通过，请刷新后重试';
+    RETURN;
+  END IF;
+
+  INSERT INTO public.orders (
+    id, product_id, product_snapshot, quantity, contact_email, contact_phone,
+    lookup_password_hash, note, amount, status
+  ) VALUES (
+    _id, _product_id, _product_snapshot, _quantity,
+    nullif(btrim(coalesce(_contact_email, '')), ''),
+    nullif(btrim(coalesce(_contact_phone, '')), ''),
+    _lookup_password_hash,
+    nullif(btrim(coalesce(_note, '')), ''),
+    total, 'pending_payment'
+  );
+  RETURN QUERY SELECT true, _id, NULL::TEXT;
+EXCEPTION WHEN unique_violation THEN
+  RETURN QUERY SELECT false, NULL::TEXT, '订单号重复，请重试';
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.order_create(TEXT, TEXT, JSONB, INT, TEXT, TEXT, TEXT, TEXT, NUMERIC) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.order_create(TEXT, TEXT, JSONB, INT, TEXT, TEXT, TEXT, TEXT, NUMERIC) TO anon, authenticated;
