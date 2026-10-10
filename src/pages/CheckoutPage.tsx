@@ -675,7 +675,7 @@ export function CheckoutPage() {
           )}
 
           {/* 人机安全校验：验证码由服务端生成并只存哈希，提交时由 order_create RPC 内核验，一次有效 */}
-          {settings?.captcha?.enabled !== false && (
+          {true && (
             <div className="rounded-xl border border-primary/25 bg-primary/5 p-4">
               <p className="mb-3 inline-flex items-center gap-1.5 text-xs font-semibold text-foreground">
                 <ShieldCheck size={13} className="text-primary" /> 安全校验
