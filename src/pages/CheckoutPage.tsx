@@ -255,7 +255,7 @@ export function CheckoutPage() {
       // 走 SECURITY DEFINER RPC 建单：绕过 orders 表 SELECT RLS 回读限制，
       // 由服务端统一校验商品/数量/金额并落库，返回订单号。
       // ⚠️ 此处不传 _payment_method —— 支付方式在订单创建后的选择屏才决定。
-      const { data, error } = await supabase.rpc('order_create', {
+      const { data: rpcData, error } = await supabase.rpc('order_create', {
         _id: orderNo, _product_id: product!.id, _product_snapshot: snapshot,
         _quantity: quantity, _contact_email: email || null, _contact_phone: phone || null,
         _lookup_password_hash: hash, _note: note || null, _amount: total,
@@ -263,9 +263,25 @@ export function CheckoutPage() {
         // 本地验证码不使用远程 challenge；服务端仍执行联系方式频控。
         _challenge_id: null,
         _challenge_answer: null,
-      } as never).select().single();
-      if (error) throw error;
-      if (!data?.ok) throw new Error(data?.message ?? '提交失败，请重试');
+      } as never);
+      if (error) {
+        console.error('[Checkout] order_create RPC transport error:', {
+          code: error.code, message: error.message, details: error.details, hint: error.hint,
+        });
+        throw new Error(
+          `订单接口错误[${error.code || 'UNKNOWN'}]：${error.message || '数据库拒绝创建订单'}${error.details ? `；${error.details}` : ''}`,
+        );
+      }
+      // TABLE-returning RPCs may serialize as either a row object or an array.
+      // Do not chain .select().single() onto rpc(): some PostgREST versions reject it.
+      const data = (Array.isArray(rpcData) ? rpcData[0] : rpcData) as
+        | { ok?: boolean; message?: string | null; discount?: number | string }
+        | null;
+      if (!data || data.ok !== true) {
+        const reason = data?.message?.trim();
+        console.error('[Checkout] order_create rejected:', { orderNo, response: rpcData });
+        throw new Error(reason || '订单接口未返回成功结果。请检查线上 order_create 数据库函数及迁移是否已部署。');
+      }
       console.log('[Checkout] order created via rpc:', orderNo, '| amount =', total, '| discount =', data.discount);
       // 记住本次联系方式与查询密码，下次下单免填
       saveBuyerInfo({ pwHash: hash, password: savedHash && lookupPw === MASK ? '•'.repeat(8) : lookupPw, email, phone });
