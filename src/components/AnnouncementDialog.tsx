@@ -167,7 +167,7 @@ export function AnnouncementDialog() {
 
             {/* 渠道按钮 */}
             {links.length > 0 && (
-              <div className="mt-5 space-y-3">
+              <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
                 {links.map((l, i) => <LinkButton key={`${l.label}-${i}`} link={l} onQr={setQrLink} />)}
               </div>
             )}
