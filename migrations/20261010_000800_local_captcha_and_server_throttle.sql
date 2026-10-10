@@ -1,5 +1,15 @@
--- Local checkout captcha replaces the remote challenge endpoint.
--- Retain server-side throttling for pending orders by contact.
+-- The browser now verifies a simple local code. Disable the legacy server-side
+-- challenge requirement, but retain a database-level contact throttle.
+-- UPSERT is important: UPDATE-only would silently do nothing if the setting row
+-- is missing, leaving the older order_create RPC to reject every local-code order.
+INSERT INTO public.site_settings (key, value)
+VALUES ('captcha', '{"enabled": false, "cap_max": 5, "cap_window_minutes": 60}'::jsonb)
+ON CONFLICT (key) DO UPDATE
+SET value = jsonb_set(
+  jsonb_set(COALESCE(public.site_settings.value, '{}'::jsonb), '{enabled}', 'false'::jsonb, true),
+  '{cap_max}', COALESCE(public.site_settings.value->'cap_max', '5'::jsonb), true
+);
+
 CREATE OR REPLACE FUNCTION public.enforce_order_contact_throttle()
 RETURNS TRIGGER
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
@@ -30,9 +40,7 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+
 DROP TRIGGER IF EXISTS orders_contact_throttle ON public.orders;
 CREATE TRIGGER orders_contact_throttle BEFORE INSERT ON public.orders
 FOR EACH ROW EXECUTE FUNCTION public.enforce_order_contact_throttle();
-
-UPDATE public.site_settings SET value = jsonb_set(COALESCE(value, '{}'::jsonb), '{enabled}', 'false'::jsonb, true)
-WHERE key = 'captcha';
