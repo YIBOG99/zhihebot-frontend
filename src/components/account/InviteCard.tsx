@@ -99,7 +99,7 @@ export function InviteCard({ referral }: Props) {
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/25 bg-primary/5 p-3">
           <div>
             <p className="text-[11px] text-muted-foreground">我的邀请码（也可手动告知好友）</p>
-            <p className="mt-0.5 font-mono text-xl font-bold tracking-[0.2em] text-primary">{inviteCode || (loading ? '邀请码加载中…' : '暂未获取到邀请码')}</p>
+            <p className="mt-0.5 font-mono text-xl font-bold tracking-[0.2em] text-primary">{inviteCode || (loading ? '邀请码加载中…' : inviteCodeFailed ? '邀请码加载失败' : '暂无邀请码')}</p>
             {!loading && !inviteCode && <button type="button" onClick={refresh} className="mt-1 text-xs text-primary underline underline-offset-2">点击重试</button>}
           </div>
           <button onClick={() => doCopy('code', inviteCode ?? '')} disabled={!inviteCode}
