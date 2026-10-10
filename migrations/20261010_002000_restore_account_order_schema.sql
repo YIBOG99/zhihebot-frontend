@@ -177,8 +177,8 @@ BEGIN
   timeline=COALESCE(timeline,'[]'::jsonb)||jsonb_build_object('at',now(),'label','自动发货完成') WHERE id=o.id;
  RETURN QUERY SELECT true,'已完成自动发货'::TEXT;
 END $$;
-REVOKE ALL ON FUNCTION public.order_assign_card(TEXT) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.order_assign_card(TEXT) TO authenticated;
+REVOKE ALL ON FUNCTION public.order_assign_card(TEXT) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.order_assign_card(TEXT) TO service_role;
 
 DROP FUNCTION IF EXISTS public.order_create(TEXT,TEXT,JSONB,INT,TEXT,TEXT,TEXT,TEXT,NUMERIC,TEXT,TEXT,TEXT,TEXT);
 CREATE OR REPLACE FUNCTION public.order_create(
