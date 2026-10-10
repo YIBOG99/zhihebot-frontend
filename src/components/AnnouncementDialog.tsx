@@ -6,7 +6,7 @@ import { useSiteSettings, useBranding } from '@/lib/queries';
 import { BrandLogo } from '@/components/BrandLogo';
 import { ChannelQrOverlay } from '@/components/ChannelQrOverlay';
 import { isSnoozed, setSnooze } from '@/lib/announcement-snooze';
-import { launchChannel } from '@/lib/channel-launch';
+import { isMobileDevice, launchChannel } from '@/lib/channel-launch';
 import type { AnnouncementConfig, AnnouncementLink, LinkAction } from '@/lib/types';
 
 /** 渠道按钮可选图标（白名单，避免任意字符串映射组件） */
@@ -53,6 +53,19 @@ function LinkButton({ link, onQr }: { link: AnnouncementLink; onQr: (l: Announce
         <span className="truncate">{link.label}</span>
         {link.description && <span className="text-[11px] font-normal leading-4 text-muted-foreground">{link.description}</span>}
       </button>
+    );
+  }
+
+  // QQ 官方 universal-share 必须由真实用户手势直接点击链接，避免 JS 跳转被 iOS Universal Links 拦截。
+  if (action === 'qq_group' && link.url.trim().startsWith('https://qun.qq.com/universal-share/')) {
+    return (
+      <a href={link.url} target={isMobileDevice() ? '_self' : '_blank'} rel="noopener noreferrer" className={cls}>
+        <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.12] text-primary transition-transform group-hover:scale-105">
+          <Icon size={20} />
+        </span>
+        <span className="truncate">{link.label}</span>
+        {link.description && <span className="text-[11px] font-normal leading-4 text-muted-foreground">{link.description}</span>}
+      </a>
     );
   }
 
