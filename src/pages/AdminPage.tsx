@@ -101,7 +101,10 @@ function LoadFail({ msg, onRetry }: { msg: string; onRetry?: () => void }) {
 function OverviewTab() {
   const dash = useAdminDashboard(30);
   if (dash.isLoading) return <StatsSkeleton />;
-  if (dash.isError || !dash.data) return <StatsError />;
+  if (dash.isError || !dash.data) {
+    const msg = dash.error instanceof Error ? dash.error.message : '管理员看板数据不可用';
+    return <LoadFail msg={msg} onRetry={() => { void dash.refetch(); }} />;
+  }
   return <StatsBoard data={dash.data} />;
 }
 
