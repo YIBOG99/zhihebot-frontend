@@ -546,7 +546,10 @@ export function useBranding(): BrandingConfig {
 export function useAdminDashboard(days = 30) {
   return useQuery({
     queryKey: ['admin-dashboard', days],
-    refetchInterval: 60_000,
+    // Keep the overview fresh while the admin is watching it; focus refetch also
+    // picks up payments confirmed in another tab or by an automated payment callback.
+    refetchInterval: 15_000,
+    refetchOnWindowFocus: true,
     queryFn: async () => {
       const { data, error } = await supabase.rpc('admin_dashboard', { _days: days });
       if (error) throw error;
