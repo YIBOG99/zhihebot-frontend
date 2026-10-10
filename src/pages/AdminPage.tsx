@@ -18,6 +18,7 @@ import { AnnouncementConfigCard } from '@/components/AnnouncementConfigCard';
 import { BrandConfigCard } from '@/components/BrandConfigCard';
 import { BlocklistPanel } from '@/components/admin/BlocklistPanel';
 import { RateLimitPanel } from '@/components/admin/RateLimitPanel';
+import { CapacityOverviewPanel } from '@/components/admin/CapacityOverviewPanel';
 import { useAdminDashboard, callOrderRpc, useInvalidateShop, toProductDraft, emptyProductDraft, genProductId, blockCustomer, unblockCustomer, useBlockedCustomers, useSuspectBuyers, useInvalidateBlocklist } from '@/lib/queries';
 import { refundOrderToBalance } from '@/lib/wallet';
 import type { OrderRow, Product, CardSecretRow, Category, ProductDraft, BlockedCustomer, SuspectBuyer } from '@/lib/types';
@@ -105,7 +106,7 @@ function OverviewTab() {
     const msg = dash.error instanceof Error ? dash.error.message : '管理员看板数据不可用';
     return <LoadFail msg={msg} onRetry={() => { void dash.refetch(); }} />;
   }
-  return <StatsBoard data={dash.data} />;
+  return <><StatsBoard data={dash.data} /><CapacityOverviewPanel /></>;
 }
 
 /* ── Orders ── */
