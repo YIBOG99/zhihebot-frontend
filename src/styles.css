@@ -14,30 +14,30 @@
   --muted-foreground: oklch(0.58 0.02 250);
 
   /* 主色：翠绿 emerald（品牌识别保留） */
-  --primary: oklch(0.75 0.17 162);
-  --primary-foreground: oklch(0.13 0.02 162);
-  --primary-hover: oklch(0.68 0.16 162);
+  --primary: oklch(0.75 0.17 288);
+  --primary-foreground: oklch(0.13 0.02 288);
+  --primary-hover: oklch(0.68 0.16 288);
 
   /* 霓虹辅助色对：能量青 + 紫罗兰（冷暖撞色制造科技张力） */
   --neon-cyan: oklch(0.8 0.13 200);
   --neon-violet: oklch(0.68 0.19 288);
   /* 渐变描边/光晕用的三色能量带 */
   --glow-band: linear-gradient(120deg, var(--primary), var(--neon-cyan) 45%, var(--neon-violet));
-  --glow-band-soft: linear-gradient(120deg, oklch(0.75 0.17 162 / 0.5), oklch(0.8 0.13 200 / 0.35) 50%, oklch(0.68 0.19 288 / 0.4));
+  --glow-band-soft: linear-gradient(120deg, oklch(0.75 0.17 288 / 0.5), oklch(0.8 0.13 200 / 0.35) 50%, oklch(0.68 0.19 288 / 0.4));
 
   /* 辅助色 */
-  --accent: oklch(0.75 0.17 162);
-  --accent-foreground: oklch(0.13 0.02 162);
+  --accent: oklch(0.75 0.17 288);
+  --accent-foreground: oklch(0.13 0.02 288);
   --secondary: oklch(0.22 0.018 255);
   --secondary-foreground: oklch(0.9 0.01 250);
 
   /* 边框/输入：边框带一点冷光感 */
   --border: oklch(0.29 0.02 255);
   --input: oklch(0.22 0.018 255);
-  --ring: oklch(0.75 0.17 162);
+  --ring: oklch(0.75 0.17 288);
 
   /* 状态色 */
-  --success: oklch(0.75 0.17 162);
+  --success: oklch(0.75 0.17 288);
   --warning: oklch(0.78 0.15 85);
   --danger: oklch(0.66 0.21 25);
   --info: oklch(0.72 0.14 230);
@@ -114,7 +114,7 @@ body {
   background:
     /* 环境光斑：左上翠绿、右上青、下方紫罗兰，缓慢漂移 */
     radial-gradient(1100px 620px at 88% -8%, oklch(0.8 0.13 200 / 0.09), transparent 60%),
-    radial-gradient(900px 520px at -8% 12%, oklch(0.75 0.17 162 / 0.08), transparent 55%),
+    radial-gradient(900px 520px at -8% 12%, oklch(0.75 0.17 288 / 0.08), transparent 55%),
     radial-gradient(1000px 700px at 50% 115%, oklch(0.68 0.19 288 / 0.07), transparent 60%),
     var(--background);
   background-attachment: fixed;
@@ -193,12 +193,12 @@ a { color: inherit; text-decoration: none; }
 
 /* 内发光统计格 */
 .stat-glow {
-  box-shadow: inset 0 0 24px oklch(0.75 0.17 162 / 0.06), 0 0 0 1px oklch(0.75 0.17 162 / 0.08);
+  box-shadow: inset 0 0 24px oklch(0.75 0.17 288 / 0.06), 0 0 0 1px oklch(0.75 0.17 288 / 0.08);
 }
 
 /* 收款码绿框：独立收银页二维码容器的描边 + 外发光（过期态由组件切回普通边框） */
 .qr-frame-green {
-  box-shadow: 0 0 0 1px oklch(0.75 0.17 162 / 0.35), 0 0 24px oklch(0.75 0.17 162 / 0.12);
+  box-shadow: 0 0 0 1px oklch(0.75 0.17 288 / 0.35), 0 0 24px oklch(0.75 0.17 288 / 0.12);
 }
 
 /* ── 支付宝扫码转账收银页：白底浅色主题（仅本页生效，全站深色不受影响） ──
@@ -216,15 +216,15 @@ a { color: inherit; text-decoration: none; }
   --muted: oklch(0.72 0.02 250);
   --muted-foreground: oklch(0.52 0.02 250);
 
-  --primary: oklch(0.62 0.17 162);
+  --primary: oklch(0.62 0.17 288);
   --primary-foreground: oklch(0.99 0.005 160);
-  --primary-hover: oklch(0.55 0.16 162);
+  --primary-hover: oklch(0.55 0.16 288);
 
-  --accent: oklch(0.62 0.17 162);
+  --accent: oklch(0.62 0.17 288);
   --secondary: oklch(0.94 0.008 250);
   --border: oklch(0.88 0.008 250);
   --input: oklch(0.97 0.005 250);
-  --ring: oklch(0.62 0.17 162);
+  --ring: oklch(0.62 0.17 288);
 
   /* 白底专用高对比状态色 */
   --success: oklch(0.58 0.16 155);
@@ -276,7 +276,7 @@ a { color: inherit; text-decoration: none; }
   gap: 2px;
   font-weight: 700;
   color: var(--primary);
-  text-shadow: 0 0 18px oklch(0.75 0.17 162 / 0.35);
+  text-shadow: 0 0 18px oklch(0.75 0.17 288 / 0.35);
 }
 .price-tag .currency { font-size: 0.75em; }
 .price-tag .original {
@@ -298,7 +298,7 @@ a { color: inherit; text-decoration: none; }
   border-radius: 999px;
   font-weight: 500;
 }
-.stock-badge.many { background: oklch(0.75 0.17 162 / 0.15); color: var(--success); }
+.stock-badge.many { background: oklch(0.75 0.17 288 / 0.15); color: var(--success); }
 .stock-badge.some { background: oklch(0.78 0.15 85 / 0.15); color: var(--warning); }
 .stock-badge.few  { background: oklch(0.66 0.21 25 / 0.15); color: var(--danger); }
 
@@ -383,10 +383,10 @@ a { color: inherit; text-decoration: none; }
 }
 .product-card:hover {
   transform: translateY(-4px);
-  border-color: oklch(0.75 0.17 162 / 0.45);
+  border-color: oklch(0.75 0.17 288 / 0.45);
   box-shadow:
     0 0 0 1px oklch(0.8 0.13 200 / 0.12),
-    0 16px 44px oklch(0.75 0.17 162 / 0.16),
+    0 16px 44px oklch(0.75 0.17 288 / 0.16),
     0 4px 16px oklch(0 0 0 / 0.5);
 }
 .product-card .cover-img {
@@ -426,14 +426,14 @@ a { color: inherit; text-decoration: none; }
   width: 4px;
   border-radius: 2px;
   background: var(--glow-band);
-  box-shadow: 0 0 10px oklch(0.75 0.17 162 / 0.5);
+  box-shadow: 0 0 10px oklch(0.75 0.17 288 / 0.5);
 }
 
 /* 分区渐隐分隔线（替代生硬 border） */
 .hr-glow {
   height: 1px;
   border: none;
-  background: linear-gradient(to right, transparent, oklch(0.75 0.17 162 / 0.35), oklch(0.68 0.19 288 / 0.25), transparent);
+  background: linear-gradient(to right, transparent, oklch(0.75 0.17 288 / 0.35), oklch(0.68 0.19 288 / 0.25), transparent);
 }
 
 /* 页头吸底发光线 */
@@ -446,7 +446,7 @@ a { color: inherit; text-decoration: none; }
   bottom: -1px;
   height: 1px;
   pointer-events: none;
-  background: linear-gradient(to right, transparent 8%, oklch(0.75 0.17 162 / 0.4) 35%, oklch(0.68 0.19 288 / 0.3) 65%, transparent 92%);
+  background: linear-gradient(to right, transparent 8%, oklch(0.75 0.17 288 / 0.4) 35%, oklch(0.68 0.19 288 / 0.3) 65%, transparent 92%);
 }
 
 /* Markdown 内容区 */
@@ -504,7 +504,7 @@ a { color: inherit; text-decoration: none; }
   --neon-cyan: #4de5ff;
   --neon-violet: #a58bff;
   --glow-band: linear-gradient(110deg, #54f2c2, #4de5ff 48%, #a58bff);
-  --glow-band-soft: linear-gradient(110deg, rgba(84,242,194,.28), rgba(77,229,255,.18) 48%, rgba(165,139,255,.24));
+  --glow-band-soft: linear-gradient(110deg, rgba(168,85,247,.28), rgba(192,132,252,.18) 48%, rgba(165,139,255,.24));
   --accent: #54f2c2;
   --accent-foreground: #04130f;
   --secondary: #122039;
@@ -524,8 +524,8 @@ a { color: inherit; text-decoration: none; }
   color-scheme: dark;
   color: var(--foreground);
   background:
-    radial-gradient(900px 480px at 10% 0%, rgba(84,242,194,.075), transparent 62%),
-    radial-gradient(900px 520px at 100% 12%, rgba(77,229,255,.08), transparent 58%),
+    radial-gradient(900px 480px at 10% 0%, rgba(168,85,247,.075), transparent 62%),
+    radial-gradient(900px 520px at 100% 12%, rgba(192,132,252,.08), transparent 58%),
     radial-gradient(900px 600px at 55% 100%, rgba(165,139,255,.065), transparent 60%),
     var(--background);
   position: relative;
@@ -538,8 +538,8 @@ a { color: inherit; text-decoration: none; }
   z-index: -1;
   pointer-events: none;
   background-image:
-    linear-gradient(rgba(77,229,255,.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(77,229,255,.045) 1px, transparent 1px);
+    linear-gradient(rgba(192,132,252,.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(192,132,252,.045) 1px, transparent 1px);
   background-size: 44px 44px;
   mask-image: linear-gradient(to bottom, rgba(0,0,0,.7), transparent 76%);
   -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,.7), transparent 76%);
@@ -768,43 +768,43 @@ a { color: inherit; text-decoration: none; }
 }
 .storefront-shell .hero-kicker {
   border: 1px solid rgba(84, 242, 194, .3);
-  background: linear-gradient(100deg, rgba(84,242,194,.1), rgba(77,229,255,.055));
-  box-shadow: inset 0 0 18px rgba(84,242,194,.035), 0 0 24px rgba(84,242,194,.05);
+  background: linear-gradient(100deg, rgba(168,85,247,.1), rgba(192,132,252,.055));
+  box-shadow: inset 0 0 18px rgba(168,85,247,.035), 0 0 24px rgba(168,85,247,.05);
 }
 .storefront-shell .hero-gradient-text {
   background-image: linear-gradient(100deg, #f3fff9 0%, #54f2c2 30%, #4de5ff 65%, #b4a0ff 100%);
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
-  filter: drop-shadow(0 0 24px rgba(77,229,255,.12));
+  filter: drop-shadow(0 0 24px rgba(192,132,252,.12));
 }
 .storefront-shell .home-primary-btn {
-  border: 1px solid rgba(84,242,194,.65);
+  border: 1px solid rgba(168,85,247,.65);
   background: linear-gradient(105deg, #54f2c2, #4de5ff);
   color: #041018;
-  box-shadow: 0 0 24px rgba(84,242,194,.22), inset 0 1px rgba(255,255,255,.55);
+  box-shadow: 0 0 24px rgba(168,85,247,.22), inset 0 1px rgba(255,255,255,.55);
   transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
 }
 .storefront-shell .home-primary-btn:hover {
   transform: translateY(-2px);
   filter: saturate(1.15);
-  box-shadow: 0 0 34px rgba(84,242,194,.35), 0 0 70px rgba(77,229,255,.12);
+  box-shadow: 0 0 34px rgba(168,85,247,.35), 0 0 70px rgba(192,132,252,.12);
 }
 .storefront-shell .home-secondary-btn {
   border: 1px solid rgba(105,180,225,.28);
   background: rgba(10,20,38,.76);
-  box-shadow: inset 0 0 18px rgba(77,229,255,.035);
+  box-shadow: inset 0 0 18px rgba(192,132,252,.035);
 }
 .storefront-shell .orbit-ring {
-  border-color: rgba(77,229,255,.22);
-  box-shadow: 0 0 32px rgba(77,229,255,.08), inset 0 0 32px rgba(84,242,194,.035);
+  border-color: rgba(192,132,252,.22);
+  box-shadow: 0 0 32px rgba(192,132,252,.08), inset 0 0 32px rgba(168,85,247,.035);
 }
 .storefront-shell .orbit-core {
-  border: 1px solid rgba(84,242,194,.28);
+  border: 1px solid rgba(168,85,247,.28);
   background:
-    radial-gradient(circle at 50% 0%, rgba(84,242,194,.13), transparent 58%),
+    radial-gradient(circle at 50% 0%, rgba(168,85,247,.13), transparent 58%),
     linear-gradient(145deg, rgba(13,27,48,.96), rgba(5,10,22,.98));
-  box-shadow: 0 0 65px rgba(77,229,255,.12), inset 0 0 40px rgba(84,242,194,.035);
+  box-shadow: 0 0 65px rgba(192,132,252,.12), inset 0 0 40px rgba(168,85,247,.035);
 }
 .storefront-shell .orbit-float,
 .storefront-shell .product-card,
@@ -815,36 +815,36 @@ a { color: inherit; text-decoration: none; }
 }
 .storefront-shell .product-card:hover,
 .storefront-shell .guide-card:hover {
-  border-color: rgba(84,242,194,.6);
-  box-shadow: 0 0 0 1px rgba(77,229,255,.12), 0 20px 55px rgba(0,0,0,.4), 0 0 34px rgba(84,242,194,.1);
+  border-color: rgba(168,85,247,.6);
+  box-shadow: 0 0 0 1px rgba(192,132,252,.12), 0 20px 55px rgba(0,0,0,.4), 0 0 34px rgba(168,85,247,.1);
   transform: translateY(-3px);
 }
 .storefront-shell .category-chip {
-  border: 1px solid rgba(77,229,255,.22);
-  background: rgba(77,229,255,.055);
+  border: 1px solid rgba(192,132,252,.22);
+  background: rgba(192,132,252,.055);
   color: #c8f7ff;
 }
 .storefront-shell .category-chip:hover {
-  border-color: rgba(84,242,194,.6);
-  background: rgba(84,242,194,.1);
-  box-shadow: 0 0 20px rgba(84,242,194,.08);
+  border-color: rgba(168,85,247,.6);
+  background: rgba(168,85,247,.1);
+  box-shadow: 0 0 20px rgba(168,85,247,.08);
 }
 .storefront-shell .eyebrow {
   color: #54f2c2;
-  text-shadow: 0 0 18px rgba(84,242,194,.18);
+  text-shadow: 0 0 18px rgba(168,85,247,.18);
 }
 .storefront-shell .stat-glow {
   background: linear-gradient(145deg, rgba(15,29,51,.94), rgba(7,13,27,.97));
 }
 .popup-holo-backdrop {
-  background-image: radial-gradient(ellipse at 50% 45%, rgba(77,229,255,.1), transparent 50%);
+  background-image: radial-gradient(ellipse at 50% 45%, rgba(192,132,252,.1), transparent 50%);
 }
 .popup-holo-panel {
   overflow: hidden;
   background:
-    radial-gradient(ellipse at 50% 0%, rgba(84,242,194,.1), transparent 48%),
+    radial-gradient(ellipse at 50% 0%, rgba(168,85,247,.1), transparent 48%),
     linear-gradient(145deg, rgba(13,24,43,.99), rgba(5,10,22,.99));
-  box-shadow: 0 0 0 1px rgba(77,229,255,.08), 0 0 85px rgba(77,229,255,.14), 0 25px 90px rgba(0,0,0,.6);
+  box-shadow: 0 0 0 1px rgba(192,132,252,.08), 0 0 85px rgba(192,132,252,.14), 0 25px 90px rgba(0,0,0,.6);
 }
 .popup-holo-panel::before {
   content: "";
@@ -852,7 +852,7 @@ a { color: inherit; text-decoration: none; }
   pointer-events: none;
   inset: 0 0 auto;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(84,242,194,.8), rgba(77,229,255,.8), rgba(165,139,255,.7), transparent);
+  background: linear-gradient(90deg, transparent, rgba(168,85,247,.8), rgba(192,132,252,.8), rgba(165,139,255,.7), transparent);
 }
 @media (prefers-reduced-motion: no-preference) {
   .storefront-shell .hero-glow,
@@ -862,3 +862,13 @@ a { color: inherit; text-decoration: none; }
     to { opacity: 1; filter: blur(30px); }
   }
 }
+
+/* 紫色主视觉补强：全站首页、商品与公告使用统一的紫罗兰能量色 */
+:root {
+  --glow-band: linear-gradient(120deg, var(--primary), oklch(0.76 0.16 310) 48%, var(--neon-violet));
+  --glow-band-soft: linear-gradient(120deg, oklch(0.68 0.19 288 / .5), oklch(0.76 0.16 310 / .35) 50%, oklch(0.68 0.19 288 / .4));
+}
+.home-primary-btn { box-shadow: 0 8px 28px oklch(0.68 0.19 288 / .22); }
+.home-primary-btn:hover { box-shadow: 0 10px 34px oklch(0.68 0.19 288 / .34); }
+.popup-holo-panel { border-color: rgba(168,85,247,.38) !important; box-shadow: 0 0 80px rgba(168,85,247,.2), 0 0 28px rgba(192,132,252,.13) !important; }
+.popup-holo-panel::before { background: linear-gradient(90deg, transparent, rgba(168,85,247,.9), rgba(192,132,252,.85), rgba(236,72,153,.65), transparent) !important; }
