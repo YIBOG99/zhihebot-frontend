@@ -13,17 +13,17 @@
   --muted: oklch(0.62 0.02 250);
   --muted-foreground: oklch(0.58 0.02 250);
 
-  /* 主色：翠绿 emerald（品牌识别保留） */
+  /* 主色：霓虹紫，品牌视觉统一以紫色为核心 */
   --primary: oklch(0.72 0.22 292);
   --primary-foreground: oklch(0.13 0.02 288);
   --primary-hover: oklch(0.65 0.23 292);
 
-  /* 霓虹辅助色对：能量青 + 紫罗兰（冷暖撞色制造科技张力） */
-  --neon-cyan: oklch(0.78 0.16 305);
+  /* 霓虹辅助色：蓝紫 + 紫罗兰，保持冷调科技层次 */
+  --neon-cyan: oklch(0.76 0.16 270);
   --neon-violet: oklch(0.72 0.22 292);
-  /* 渐变描边/光晕用的三色能量带 */
+  /* 渐变描边/光晕使用紫、蓝紫与薰衣草紫 */
   --glow-band: linear-gradient(120deg, var(--primary), var(--neon-cyan) 45%, var(--neon-violet));
-  --glow-band-soft: linear-gradient(120deg, oklch(0.75 0.17 288 / 0.5), oklch(0.8 0.13 200 / 0.35) 50%, oklch(0.68 0.19 288 / 0.4));
+  --glow-band-soft: linear-gradient(120deg, oklch(0.75 0.17 288 / 0.5), oklch(0.8 0.13 270 / 0.35) 50%, oklch(0.68 0.19 288 / 0.4));
 
   /* 辅助色 */
   --accent: oklch(0.75 0.17 288);
@@ -112,8 +112,8 @@ html { color-scheme: dark; }
 body {
   margin: 0;
   background:
-    /* 环境光斑：左上翠绿、右上青、下方紫罗兰，缓慢漂移 */
-    radial-gradient(1100px 620px at 88% -8%, oklch(0.8 0.13 200 / 0.09), transparent 60%),
+    /* 环境光斑：紫色与蓝紫色柔和叠加，营造深邃科技氛围 */
+    radial-gradient(1100px 620px at 88% -8%, oklch(0.8 0.13 270 / 0.09), transparent 60%),
     radial-gradient(900px 520px at -8% 12%, oklch(0.75 0.17 288 / 0.08), transparent 55%),
     radial-gradient(1000px 700px at 50% 115%, oklch(0.68 0.19 288 / 0.07), transparent 60%),
     var(--background);
@@ -131,7 +131,7 @@ body::before {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background-image: linear-gradient(to right, oklch(0.8 0.13 200 / 0.055) 1px, transparent 1px), linear-gradient(to bottom, oklch(0.8 0.13 200 / 0.055) 1px, transparent 1px);
+  background-image: linear-gradient(to right, oklch(0.8 0.13 270 / 0.055) 1px, transparent 1px), linear-gradient(to bottom, oklch(0.8 0.13 270 / 0.055) 1px, transparent 1px);
   background-size: 56px 56px;
   opacity: 0.05;
   mask-image: radial-gradient(1200px 800px at 50% 0%, black, transparent 85%);
@@ -226,8 +226,8 @@ a { color: inherit; text-decoration: none; }
   --input: oklch(0.97 0.005 250);
   --ring: oklch(0.62 0.17 288);
 
-  /* 白底专用高对比状态色 */
-  --success: oklch(0.58 0.16 155);
+  /* 白底专用高对比状态色：成功态也使用紫色系 */
+  --success: oklch(0.52 0.19 288);
   --warning: oklch(0.62 0.16 75);
   --danger: oklch(0.55 0.22 22);
   --info: oklch(0.55 0.19 255);
@@ -385,7 +385,7 @@ a { color: inherit; text-decoration: none; }
   transform: translateY(-4px);
   border-color: oklch(0.75 0.17 288 / 0.45);
   box-shadow:
-    0 0 0 1px oklch(0.8 0.13 200 / 0.12),
+    0 0 0 1px oklch(0.8 0.13 270 / 0.12),
     0 16px 44px oklch(0.75 0.17 288 / 0.16),
     0 4px 16px oklch(0 0 0 / 0.5);
 }
@@ -403,7 +403,7 @@ a { color: inherit; text-decoration: none; }
   left: -60%;
   width: 40%;
   z-index: 1;
-  background: linear-gradient(105deg, transparent, oklch(0.8 0.13 200 / 0.18), oklch(1 0 0 / 0.12), transparent);
+  background: linear-gradient(105deg, transparent, oklch(0.8 0.13 270 / 0.18), oklch(1 0 0 / 0.12), transparent);
   transform: skewX(-18deg);
   transition: left 0.6s ease;
   pointer-events: none;
@@ -498,24 +498,24 @@ a { color: inherit; text-decoration: none; }
   --foreground: #eef7ff;
   --muted: #8295b2;
   --muted-foreground: #9aabc4;
-  --primary: #54f2c2;
-  --primary-foreground: #04130f;
-  --primary-hover: #35dcae;
-  --neon-cyan: #4de5ff;
-  --neon-violet: #a58bff;
-  --glow-band: linear-gradient(110deg, #54f2c2, #4de5ff 48%, #a58bff);
+  --primary: #a855f7;
+  --primary-foreground: #ffffff;
+  --primary-hover: #9333ea;
+  --neon-cyan: #818cf8;
+  --neon-violet: #c084fc;
+  --glow-band: linear-gradient(110deg, #7c3aed, #818cf8 48%, #d8b4fe);
   --glow-band-soft: linear-gradient(110deg, rgba(168,85,247,.28), rgba(192,132,252,.18) 48%, rgba(165,139,255,.24));
-  --accent: #54f2c2;
-  --accent-foreground: #04130f;
+  --accent: #c084fc;
+  --accent-foreground: #ffffff;
   --secondary: #122039;
   --secondary-foreground: #e3efff;
-  --border: rgba(105, 180, 225, .2);
+  --border: rgba(168, 85, 247, .22);
   --input: #111e33;
-  --ring: #4de5ff;
-  --success: #54f2c2;
+  --ring: #a855f7;
+  --success: #c084fc;
   --warning: #ffd166;
   --danger: #ff718a;
-  --info: #65baff;
+  --info: #a5b4fc;
   --card: rgba(11, 19, 36, .88);
   --card-solid: #0b1324;
   --card-foreground: #eef7ff;
@@ -594,8 +594,8 @@ a { color: inherit; text-decoration: none; }
   width: 9px;
   height: 9px;
   border-radius: 50%;
-  background: #53d5a3;
-  box-shadow: 0 0 0 7px rgba(83,213,163,.10), 0 0 16px rgba(83,213,163,.32);
+  background: #c084fc;
+  box-shadow: 0 0 0 7px rgba(192,132,252,.10), 0 0 16px rgba(192,132,252,.32);
 }
 .storefront-shell .hero-gradient-text {
   background: linear-gradient(105deg, #6b59ef 8%, #875ef5 46%, #a05de8 88%);
@@ -685,7 +685,7 @@ a { color: inherit; text-decoration: none; }
 .storefront-shell .product-card .cover-shine { background: linear-gradient(105deg, transparent, rgba(255,255,255,.46), transparent); }
 .storefront-shell .price-tag { color: #6b57e9; text-shadow: none; }
 .storefront-shell .price-tag .original { color: #a2a5b1; }
-.storefront-shell .stock-badge.many { background: #edf9f4; color: #2c9e78; }
+.storefront-shell .stock-badge.many { background: rgba(168,85,247,.14); color: #d8b4fe; }
 .storefront-shell .stock-badge.some { background: #fbf6e8; color: #ad7a1c; }
 .storefront-shell .stock-badge.few { background: #faedf0; color: #ba485d; }
 .storefront-shell .prose-dark { color: var(--foreground); }
@@ -745,14 +745,14 @@ a { color: inherit; text-decoration: none; }
 .storefront-shell .orbit-float b { display: block; color: #28263f; font-size: 12px; }
 .storefront-shell .orbit-float small { display: block; margin-top: 3px; color: #85859b; font-size: 10px; }
 .storefront-shell .orbit-float-icon { display: grid; width: 36px; height: 36px; flex-shrink: 0; place-items: center; border-radius: 12px; color: #6d5be8; background: #f0edff; }
-.storefront-shell .orbit-float i { position: absolute; top: 13px; right: 13px; width: 6px; height: 6px; border-radius: 50%; background: #50d6a0; box-shadow: 0 0 0 4px rgba(80,214,160,.12); }
+.storefront-shell .orbit-float i { position: absolute; top: 13px; right: 13px; width: 6px; height: 6px; border-radius: 50%; background: #c084fc; box-shadow: 0 0 0 4px rgba(192,132,25260,.12); }
 .storefront-shell .orbit-float-top { top: 13%; left: -1%; }
 .storefront-shell .orbit-float-right { top: 43%; right: -2%; animation-delay: -2s; }
 .storefront-shell .orbit-float-bottom { bottom: 11%; left: 4%; animation-delay: -4s; }
 .storefront-shell .orbit-coordinate { position: absolute; color: #8c89b4; font-family: var(--font-mono); font-size: 9px; letter-spacing: .12em; }
 .storefront-shell .orbit-coordinate-a { top: 5%; right: 5%; }
 .storefront-shell .orbit-coordinate-b { bottom: 6%; right: 5%; display: flex; align-items: center; gap: 8px; }
-.storefront-shell .orbit-coordinate-b span { width: 6px; height: 6px; border-radius: 50%; background: #4dd6a0; box-shadow: 0 0 10px rgba(77,214,160,.6); }
+.storefront-shell .orbit-coordinate-b span { width: 6px; height: 6px; border-radius: 50%; background: #c084fc; box-shadow: 0 0 10px rgba(192,132,252,.6); }
 @keyframes orbit-hover { 0%,100% { translate: 0 0; } 50% { translate: 0 -7px; } }
 @media (prefers-reduced-motion: reduce) { .storefront-shell .orbit-float { animation: none; } }
 @media (max-width: 1023px) { .storefront-shell .hero-orbit-scene { display: none; } }
@@ -762,8 +762,8 @@ a { color: inherit; text-decoration: none; }
 .storefront-shell {
   background-color: #050914;
   background-image:
-    radial-gradient(ellipse at 12% 2%, rgba(57, 255, 203, .12), transparent 38%),
-    radial-gradient(ellipse at 88% 8%, rgba(48, 164, 255, .13), transparent 36%),
+    radial-gradient(ellipse at 12% 2%, rgba(168, 85, 247, .14), transparent 38%),
+    radial-gradient(ellipse at 88% 8%, rgba(129, 140, 248, .13), transparent 36%),
     radial-gradient(ellipse at 50% 55%, rgba(123, 91, 255, .055), transparent 55%);
 }
 .storefront-shell .hero-kicker {
@@ -772,7 +772,7 @@ a { color: inherit; text-decoration: none; }
   box-shadow: inset 0 0 18px rgba(168,85,247,.035), 0 0 24px rgba(168,85,247,.05);
 }
 .storefront-shell .hero-gradient-text {
-  background-image: linear-gradient(100deg, #f3fff9 0%, #54f2c2 30%, #4de5ff 65%, #b4a0ff 100%);
+  background-image: linear-gradient(100deg, #f5f3ff 0%, #c084fc 30%, #818cf8 65%, #e9d5ff 100%);
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
@@ -780,7 +780,7 @@ a { color: inherit; text-decoration: none; }
 }
 .storefront-shell .home-primary-btn {
   border: 1px solid rgba(168,85,247,.65);
-  background: linear-gradient(105deg, #54f2c2, #4de5ff);
+  background: linear-gradient(105deg, #7c3aed, #a855f7);
   color: #041018;
   box-shadow: 0 0 24px rgba(168,85,247,.22), inset 0 1px rgba(255,255,255,.55);
   transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
@@ -791,7 +791,7 @@ a { color: inherit; text-decoration: none; }
   box-shadow: 0 0 34px rgba(168,85,247,.35), 0 0 70px rgba(192,132,252,.12);
 }
 .storefront-shell .home-secondary-btn {
-  border: 1px solid rgba(105,180,225,.28);
+  border: 1px solid rgba(168,85,247,.28);
   background: rgba(10,20,38,.76);
   box-shadow: inset 0 0 18px rgba(192,132,252,.035);
 }
@@ -809,7 +809,7 @@ a { color: inherit; text-decoration: none; }
 .storefront-shell .orbit-float,
 .storefront-shell .product-card,
 .storefront-shell .guide-card {
-  border-color: rgba(105,180,225,.23);
+  border-color: rgba(168,85,247,.23);
   background: linear-gradient(145deg, rgba(15,29,51,.94), rgba(7,13,27,.97));
   box-shadow: inset 0 1px rgba(255,255,255,.035);
 }
@@ -822,7 +822,7 @@ a { color: inherit; text-decoration: none; }
 .storefront-shell .category-chip {
   border: 1px solid rgba(192,132,252,.22);
   background: rgba(192,132,252,.055);
-  color: #c8f7ff;
+  color: #e9d5ff;
 }
 .storefront-shell .category-chip:hover {
   border-color: rgba(168,85,247,.6);
@@ -830,7 +830,7 @@ a { color: inherit; text-decoration: none; }
   box-shadow: 0 0 20px rgba(168,85,247,.08);
 }
 .storefront-shell .eyebrow {
-  color: #54f2c2;
+  color: #c084fc;
   text-shadow: 0 0 18px rgba(168,85,247,.18);
 }
 .storefront-shell .stat-glow {
