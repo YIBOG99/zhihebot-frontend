@@ -10,6 +10,21 @@ interface Props {
 }
 
 const FALLBACK_NAME = '智核商店';
+// A logo can be replaced at the same public Storage URL. Browsers/CDNs may then
+// paint the old cached bytes for one frame even after site_settings is up to date.
+// Use a per-page cache key for remote logos so every page load requests the current asset.
+// Keep data/blob URLs untouched and preserve any existing signed URL parameters.
+const LOGO_CACHE_KEY = Date.now().toString(36);
+function currentLogoUrl(raw: string): string {
+  try {
+    const url = new URL(raw, window.location.href);
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return raw;
+    url.searchParams.set('_brand_v', LOGO_CACHE_KEY);
+    return url.toString();
+  } catch {
+    return raw;
+  }
+}
 
 export function BrandLogo({ size = 32, rounded = 'lg', className }: Props) {
   const { logo_url, name } = useBranding();
@@ -18,8 +33,9 @@ export function BrandLogo({ size = 32, rounded = 'lg', className }: Props) {
   const radius = rounded === 'full' ? 'rounded-full' : 'rounded-xl';
 
   if (logo_url?.trim() && !broken) {
+    const imageUrl = currentLogoUrl(logo_url.trim());
     return (
-      <img src={logo_url} alt={label} width={size} height={size}
+      <img key={imageUrl} src={imageUrl} alt={label} width={size} height={size}
         onError={() => setBroken(true)}
         style={{ width: size, height: size }}
         className={cn('shrink-0 object-cover', radius, className)} />
