@@ -166,6 +166,8 @@ export type LinkAction = 'url' | 'qq_group' | 'wechat' | 'tel' | 'mailto' | 'qrc
 /** 首页公告弹窗的单个渠道按钮 */
 export interface AnnouncementLink {
   label: string;
+  /** 按钮下方的简短说明；未配置外链时也用于解释缺少配置 */
+  description?: string;
   /** action='url' 时为跳转链接；其余动作可留空（作为降级跳转地址） */
   url: string;
   /** lucide 图标名，见 src/components/AnnouncementDialog 的 ICON_MAP；未知值一律回退 ExternalLink */
