@@ -502,7 +502,10 @@ export function useSiteSettings() {
         return DEMO_SITE_SETTINGS;
       }
     },
-    staleTime: 60_000,
+    // Branding is user-editable. Always refresh on mount so a persisted React Query
+    // snapshot cannot briefly paint an outdated logo before the current setting arrives.
+    staleTime: 0,
+    refetchOnMount: 'always',
   });
 }
 
@@ -538,7 +541,12 @@ export function useInvalidateSettings() {
 
 /** 全站品牌设置（LOGO/店名）。复用 site-settings 缓存，保存后一次 invalidate 即全站同步 */
 export function useBranding(): BrandingConfig {
-  const { data } = useSiteSettings();
+  const { data, isFetchedAfterMount, isFetching } = useSiteSettings();
+
+  // Do not render a potentially stale persisted logo during the first network refresh.
+  // Returning the empty branding state shows the built-in placeholder until the
+  // authoritative current setting has arrived, preventing the old-logo flash.
+  if (!isFetchedAfterMount && isFetching) return {};
   return data?.branding ?? {};
 }
 
