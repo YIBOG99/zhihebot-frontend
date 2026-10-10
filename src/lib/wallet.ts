@@ -51,12 +51,20 @@ export function useMyWallet(enabled = true) {
         console.error('[useMyWallet] rpc failed:', error.code, error.message);
         throw error;
       }
-      const raw = (data ?? {}) as Record<string, unknown>;
+      // PostgREST functions may return a row object or a one-row array.
+      const value = Array.isArray(data) ? data[0] : data;
+      const raw = value && typeof value === 'object'
+        ? value as Record<string, unknown>
+        : {};
+      const numeric = (v: unknown) => {
+        const n = Number(v ?? 0);
+        return Number.isFinite(n) ? n : 0;
+      };
       return {
-        available: Number(raw.available ?? 0),
-        frozen: Number(raw.frozen ?? 0),
-        total_recharged: Number(raw.total_recharged ?? 0),
-        total_spent: Number(raw.total_spent ?? 0),
+        available: numeric(raw.available ?? raw.balance ?? raw.wallet_balance),
+        frozen: numeric(raw.frozen ?? raw.frozen_amount),
+        total_recharged: numeric(raw.total_recharged ?? raw.recharged_total),
+        total_spent: numeric(raw.total_spent ?? raw.spent_total),
         transactions: Array.isArray(raw.transactions) ? raw.transactions : [],
       } as WalletInfo;
     },
