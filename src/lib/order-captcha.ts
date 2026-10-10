@@ -17,6 +17,8 @@ export async function requestCaptcha(): Promise<CaptchaChallenge | null> {
     headers: {
       'Content-Type': 'application/json',
       'apikey': supabaseAnonKey,
+      // Supabase Edge Function gateway expects the project key as both apikey and bearer auth.
+      'Authorization': `Bearer ${supabaseAnonKey}`,
       'OneDay-App-Id': projectUrlId,
     },
     body: '{}',
