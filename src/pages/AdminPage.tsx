@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/supabase/client';
 import { useIsAdmin } from '@/hooks/use-is-admin';
 import { StatsBoard, StatsSkeleton, StatsError } from '@/components/AdminStatsPanel';
+import { SystemHealthPanel } from '@/components/admin/SystemHealthPanel';
 import { ProductEditSheet } from '@/components/ProductEditSheet';
 import { WechatPayConfigCard } from '@/components/WechatPayConfigCard';
 import { AlipayQrPayConfigCard } from '@/components/AlipayQrPayConfigCard';
@@ -105,7 +106,7 @@ function OverviewTab() {
     const msg = dash.error instanceof Error ? dash.error.message : '管理员看板数据不可用';
     return <LoadFail msg={msg} onRetry={() => { void dash.refetch(); }} />;
   }
-  return <StatsBoard data={dash.data} />;
+  return <div className="space-y-6"><StatsBoard data={dash.data} /><SystemHealthPanel /></div>;
 }
 
 /* ── Orders ── */
