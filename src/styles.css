@@ -685,7 +685,7 @@ a { color: inherit; text-decoration: none; }
 .storefront-shell .product-card .cover-shine { background: linear-gradient(105deg, transparent, rgba(255,255,255,.46), transparent); }
 .storefront-shell .price-tag { color: #6b57e9; text-shadow: none; }
 .storefront-shell .price-tag .original { color: #a2a5b1; }
-.storefront-shell .stock-badge.many { background: #edf9f4; color: #2c9e78; }
+.storefront-shell .stock-badge.many { background: rgba(168,85,247,.14); color: #d8b4fe; }
 .storefront-shell .stock-badge.some { background: #fbf6e8; color: #ad7a1c; }
 .storefront-shell .stock-badge.few { background: #faedf0; color: #ba485d; }
 .storefront-shell .prose-dark { color: var(--foreground); }
