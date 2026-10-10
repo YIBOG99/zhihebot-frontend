@@ -56,3 +56,25 @@
     padding-bottom: .55rem;
   }
 }
+
+
+/* Explicitly override Tailwind's grid-cols-3 utility on the announcement channel list.
+   Keep this selector specific and use flex-column so the three channel cards are
+   stacked on every phone size, even if utility CSS ordering changes. */
+@media (max-width: 640px) {
+  .popup-holo-panel .mt-3.grid.grid-cols-3,
+  .popup-holo-panel .grid.grid-cols-3 {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    align-items: stretch !important;
+    width: 100% !important;
+  }
+
+  .popup-holo-panel .mt-3.grid.grid-cols-3 > *,
+  .popup-holo-panel .grid.grid-cols-3 > * {
+    width: 100% !important;
+    max-width: none !important;
+    flex: 0 0 auto !important;
+  }
+}
