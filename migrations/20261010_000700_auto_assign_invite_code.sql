@@ -31,9 +31,16 @@ BEGIN
 END;
 $$;
 
-DROP TRIGGER IF EXISTS profiles_assign_invite_code ON public.profiles;
-CREATE TRIGGER profiles_assign_invite_code
-  BEFORE INSERT OR UPDATE OF invite_code ON public.profiles
+DROP TRIGGER IF EXISTS profiles_assign_invite_code_insert ON public.profiles;
+CREATE TRIGGER profiles_assign_invite_code_insert
+  BEFORE INSERT ON public.profiles
+  FOR EACH ROW
+  WHEN (NEW.invite_code IS NULL OR btrim(NEW.invite_code) = '')
+  EXECUTE FUNCTION public.generate_profile_invite_code();
+
+DROP TRIGGER IF EXISTS profiles_assign_invite_code_update ON public.profiles;
+CREATE TRIGGER profiles_assign_invite_code_update
+  BEFORE UPDATE OF invite_code ON public.profiles
   FOR EACH ROW
   WHEN (NEW.invite_code IS NULL OR btrim(NEW.invite_code) = '')
   EXECUTE FUNCTION public.generate_profile_invite_code();
