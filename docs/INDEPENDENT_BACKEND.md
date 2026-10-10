@@ -48,7 +48,7 @@
 
 - `login-lookup`：新版用户名登录协议会在服务器验证密码并仅返回会话令牌，必须和前端版本同步部署；需要 `SUPABASE_URL`、`SUPABASE_SERVICE_ROLE_KEY`、`SUPABASE_ANON_KEY`。
 - `alipay-pay` 与 `alipay-sweep`：只有确认使用官方支付宝网关后才配置；需要商户 App ID、商户私钥、支付宝公钥以及 Supabase 服务端 secrets，并做验签、查单和重复通知测试。
-- `order-captcha`：需要对应的验证码表及站点设置数据。
+- `order-captcha`：需要对应的验证码表及站点设置数据。仓库已提供 `supabase/functions/order-captcha/index.ts` 和 `supabase/config.toml`，按项目根目录使用 `supabase functions deploy order-captcha --project-ref aqoryvygjavngcgkmuom` 部署；确认部署配置仅对该函数设置 `verify_jwt = false`（游客结算没有用户 JWT），其他函数仍保持 JWT 校验。函数内部使用服务端 `SUPABASE_SERVICE_ROLE_KEY`，该密钥只能保存在 Supabase Function secrets；部署后检查函数日志与 `order_captcha_challenges` 插入情况。
 - `boss-api`：需要 `BOSS_KEY`、`SUPABASE_URL`、`SUPABASE_SERVICE_ROLE_KEY`。service-role key 只能保存在 Supabase Function secrets 中。
 
 使用 Supabase CLI 登录并链接新项目后，根据 Supabase 当前 CLI 文档部署各函数；不要把 secrets 写入 Git、Cloudflare 的公开前端变量或提交到仓库。

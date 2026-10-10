@@ -130,11 +130,11 @@ export function CheckoutPage() {
     }
   }
 
-  // 后台开关为 true（或缺省）时才出题；关掉则前台完全不出现题目
+  // 本地随机码无需远程验证码服务，避免 Edge Function 故障阻塞结算。
   useEffect(() => {
-    if (settings && settings.captcha?.enabled !== false) void loadCaptcha();
+    void loadCaptcha();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [settings?.captcha?.enabled]);
+  }, []);
 
   // 首次下单后把联系方式与查询密码记在本机，后续订单自动带出
   useEffect(() => {
@@ -228,11 +228,14 @@ export function CheckoutPage() {
       return;
     }
     if (!email && !phone) { toast.error('请至少填写邮箱或手机号'); return; }
-    // 人机校验：开关开启时必须已出题并作答（最终判定仍在服务端 RPC，这里只是免一次无谓往返）
-    const captchaOn = settings?.captcha?.enabled !== false;
-    if (captchaOn) {
-      if (!captcha) { toast.error('验证码尚未加载完成，请稍候重试'); void loadCaptcha(); return; }
-      if (!captchaAnswer.trim()) { toast.error('请输入安全校验验证码'); return; }
+    // 本地验证码用于防止误提交，不依赖远程接口。服务器仍负责订单频率限制。
+    const captchaOn = true;
+    if (!captcha) { toast.error('验证码尚未生成，请稍候重试'); void loadCaptcha(); return; }
+    if (!captchaAnswer.trim()) { toast.error('请输入安全校验验证码'); return; }
+    if (captchaAnswer.trim().toUpperCase() !== captcha.prompt) {
+      toast.error('验证码不正确，请重新输入');
+      void loadCaptcha();
+      return;
     }
 
     // 掩码态直接沿用本机记住的密码，无需重输
@@ -257,9 +260,9 @@ export function CheckoutPage() {
         _quantity: quantity, _contact_email: email || null, _contact_phone: phone || null,
         _lookup_password_hash: hash, _note: note || null, _amount: total,
         _coupon_code: selectedCoupon?.code ?? null,
-        _challenge_id: captchaOn ? captcha!.id : null,
-        // 大小写不敏感：统一转大写后提交，与服务端哈希口径一致
-        _challenge_answer: captchaOn ? captchaAnswer.trim().toUpperCase() : null,
+        // 本地验证码不使用远程 challenge；服务端仍执行联系方式频控。
+        _challenge_id: null,
+        _challenge_answer: null,
       } as never).select().single();
       if (error) throw error;
       if (!data?.ok) throw new Error(data?.message ?? '提交失败，请重试');
@@ -672,7 +675,7 @@ export function CheckoutPage() {
           )}
 
           {/* 人机安全校验：验证码由服务端生成并只存哈希，提交时由 order_create RPC 内核验，一次有效 */}
-          {settings?.captcha?.enabled !== false && (
+          {true && (
             <div className="rounded-xl border border-primary/25 bg-primary/5 p-4">
               <p className="mb-3 inline-flex items-center gap-1.5 text-xs font-semibold text-foreground">
                 <ShieldCheck size={13} className="text-primary" /> 安全校验

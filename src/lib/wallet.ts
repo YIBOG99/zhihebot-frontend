@@ -44,6 +44,9 @@ export function useMyWallet(enabled = true) {
   return useQuery({
     queryKey: ['my-wallet'],
     enabled,
+    retry: 2,
+    retryDelay: (attempt) => Math.min(1_000 * 2 ** attempt, 5_000),
+    refetchOnWindowFocus: true,
     refetchInterval: 30_000,
     queryFn: async () => {
       const { data, error } = await supabase.rpc('my_wallet');
