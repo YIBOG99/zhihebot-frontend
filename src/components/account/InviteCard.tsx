@@ -30,7 +30,7 @@ async function copyText(value: string): Promise<boolean> {
 }
 
 export function InviteCard({ referral }: Props) {
-  const { inviteCode, stats, rewards, commissions, loading, refresh } = referral;
+  const { inviteCode, inviteCodeFailed, stats, rewards, commissions, loading, refresh } = referral;
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [inputCode, setInputCode] = useState('');
   const [binding, setBinding] = useState(false);
