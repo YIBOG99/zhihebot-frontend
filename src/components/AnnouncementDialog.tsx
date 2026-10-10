@@ -114,8 +114,13 @@ export function AnnouncementDialog() {
     <>
       {/* 自绘遮罩而非 shadcn Dialog：需要禁止点遮罩关闭，强制用户看清内容 */}
       {open && (
-        <div className="fixed inset-0 z-[100] flex items-end justify-center overflow-y-auto bg-black/80 p-0 backdrop-blur-sm sm:items-center sm:p-6" role="dialog" aria-modal="true" aria-label={cfg.title}>
-          <div className="max-h-[92vh] w-full max-w-md overflow-y-auto rounded-t-3xl border border-white/10 bg-surface p-6 shadow-[0_-10px_60px_-15px_oklch(0.6_0.15_160/0.35)] sm:rounded-3xl">
+        <div className="popup-holo-backdrop fixed inset-0 z-[100] flex items-end justify-center overflow-y-auto bg-[#02050d]/85 p-0 backdrop-blur-xl sm:items-center sm:p-6" role="dialog" aria-modal="true" aria-label={cfg.title}>
+          <div className="popup-holo-panel relative max-h-[92vh] w-full max-w-md overflow-y-auto rounded-t-3xl border border-primary/30 bg-surface p-6 shadow-[0_0_80px_rgba(77,229,255,.14),0_0_28px_rgba(84,242,194,.12)] sm:rounded-3xl">
+            <div className="mb-5 flex items-center justify-center gap-2">
+              <span className="h-px w-8 bg-gradient-to-r from-transparent to-primary/70" />
+              <span className="rounded-full border border-primary/30 bg-primary/[0.08] px-3 py-1 text-[9px] font-bold uppercase tracking-[0.24em] text-primary">ZHIHE // SYSTEM NOTICE</span>
+              <span className="h-px w-8 bg-gradient-to-l from-transparent to-primary/70" />
+            </div>
             {/* LOGO + 标题 */}
             <div className="flex flex-col items-center text-center">
               <div className="relative mb-4">
