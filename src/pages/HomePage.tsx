@@ -33,7 +33,7 @@ export function HomePage() {
   const { data: categories = [] } = useCategories();
 
   const hot = products.filter((p) => p.is_hot).slice(0, 3);
-  const newest = products.filter((p) => !p.is_hot).slice(0, 6);
+  const allProducts = products;
 
   return (
     <main className="min-h-screen bg-background">
@@ -143,7 +143,7 @@ export function HomePage() {
           </div>
           <Link to="/faq" className="hidden items-center gap-1 text-sm font-semibold text-primary sm:flex">购买前先看 FAQ <ChevronRight size={15} /></Link>
         </div>
-        {loadingProducts ? <ProductSkeleton /> : <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{newest.map((p) => <ProductCard key={p.id} product={p} />)}</div>}
+        {loadingProducts ? <ProductSkeleton /> : <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{allProducts.map((p) => <ProductCard key={p.id} product={p} />)}</div>}
       </section>
 
       <section className="border-t border-border bg-surface">
