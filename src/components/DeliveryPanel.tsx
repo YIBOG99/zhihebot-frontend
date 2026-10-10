@@ -38,7 +38,7 @@ async function copyText(text: string): Promise<boolean> {
 
 /** 触发浏览器下载（前端 Blob 生成，不经后端） */
 function downloadFile(filename: string, mime: string, content: string) {
-  const blob = new Blob(['\\uFEFF' + content], { type: `${mime};charset=utf-8` });
+  const blob = new Blob(['\uFEFF' + content], { type: `${mime};charset=utf-8` });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -54,7 +54,7 @@ const btnBase = 'inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs f
 export function DeliveryPanel({ orderId, cardSecret, redeemUrl }: Props) {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   // 一单多卡按换行拆分；当前自动发货为一单一卡，逻辑天然兼容未来扩展
-  const cards = cardSecret.split(/\\r?\\n/).map((s) => s.trim()).filter(Boolean);
+  const cards = cardSecret.split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
   const effectiveRedeemUrl = redeemUrl?.trim() || DEFAULT_REDEEM_URL;
 
   async function doCopy(key: string, text: string, label: string) {
@@ -68,7 +68,7 @@ export function DeliveryPanel({ orderId, cardSecret, redeemUrl }: Props) {
     }
   }
 
-  const allCards = cards.join('\\n');
+  const allCards = cards.join('\n');
 
   return (
     <div className="rounded-xl border border-primary/30 bg-card p-5">
@@ -81,11 +81,11 @@ export function DeliveryPanel({ orderId, cardSecret, redeemUrl }: Props) {
           {copiedKey === 'all' ? <Check size={14} /> : <Copy size={14} />}
           {copiedKey === 'all' ? '已复制' : '复制全部卡密'}
         </button>
-        <button onClick={() => downloadFile(`卡密_${orderId}.txt`, 'text/plain', `订单号：${orderId}\\n充值网址：${effectiveRedeemUrl}\\n卡密：\\n${allCards}\\n`)}
+        <button onClick={() => downloadFile(`卡密_${orderId}.txt`, 'text/plain', `订单号：${orderId}\n充值网址：${effectiveRedeemUrl}\n卡密：\n${allCards}\n`)}
           className={`${btnBase} border border-border bg-surface text-foreground hover:border-primary/40`}>
           <FileText size={14} /> 下载 TXT
         </button>
-        <button onClick={() => downloadFile(`卡密_${orderId}.csv`, 'text/csv', `订单号,充值网址,卡密\\n"${orderId}","${effectiveRedeemUrl}","${cards.join(' | ')}"\\n`)}
+        <button onClick={() => downloadFile(`卡密_${orderId}.csv`, 'text/csv', `订单号,充值网址,卡密\n"${orderId}","${effectiveRedeemUrl}","${cards.join(' | ')}"\n`)}
           className={`${btnBase} border border-border bg-surface text-foreground hover:border-primary/40`}>
           <Table2 size={14} /> 下载 CSV
         </button>
