@@ -1,4 +1,5 @@
-// 日活埋点：每浏览器生成持久 visitor_id，页面加载后静默上报一次（服务端按日去重）。
+// 日活埋点：每浏览器生成持久 visitor_id，服务端按上海时区日历日去重。
+// 只记录随机访客 ID 和已登录用户 ID，不收集 IP 或设备指纹。
 import { supabase } from '@/supabase/client';
 
 const KEY = 'zh_visitor_id';
@@ -12,20 +13,31 @@ function getVisitorId(): string {
     }
     return id;
   } catch {
-    // 隐私模式等拿不到 localStorage：用会话内随机 id，仍能贡献当日 DAU 近似值
+    // 隐私模式等拿不到 localStorage：使用会话内随机 ID，失败不影响页面。
     return `tmp${Date.now()}${Math.floor(Math.random() * 1e6)}`;
   }
 }
 
-let tracked = false;
+let initialized = false;
 
-/** fire-and-forget 上报访问；失败静默，绝不影响页面功能 */
+/** 静默上报访问；重复上报由数据库唯一键去重，不阻断页面功能。 */
 export function trackVisit(): void {
-  if (tracked) return;
-  tracked = true;
+  if (initialized) return;
+  initialized = true;
   const visitorId = getVisitorId();
-  supabase.rpc('stat_track_visit', { _visitor_id: visitorId }).then(({ error }) => {
-    if (error) console.warn('[track-visit] report failed:', error.message);
-    else console.log('[track-visit] reported visitor', visitorId.slice(0, 8));
+
+  const report = () => {
+    void supabase.rpc('stat_track_visit', { _visitor_id: visitorId }).then(({ error }) => {
+      if (error) console.warn('[track-visit] report failed:', error.message);
+    });
+  };
+
+  // 首次记访客；Auth 恢复/登录后再上报一次，让同一天的登录用户数也能正确去重。
+  report();
+  const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') report();
   });
+
+  // Root layout is mounted for the lifetime of the app; keep the subscription alive.
+  void subscription;
 }
