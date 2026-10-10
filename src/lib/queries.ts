@@ -503,6 +503,9 @@ export function useSiteSettings() {
       }
     },
     staleTime: 60_000,
+    // Branding can be changed in the admin; always revalidate on a fresh page load
+    // so a stale cached logo is not briefly shown before the latest setting arrives.
+    refetchOnMount: 'always',
   });
 }
 

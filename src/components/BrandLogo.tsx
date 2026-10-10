@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
-import { useBranding } from '@/lib/queries';
+import { useSiteSettings } from '@/lib/queries';
 import { APP_ICON } from '@/lib/assets';
 
 interface Props {
@@ -12,10 +12,19 @@ interface Props {
 const FALLBACK_NAME = '智核商店';
 
 export function BrandLogo({ size = 32, rounded = 'lg', className }: Props) {
-  const { logo_url, name } = useBranding();
+  const { data: settings, isFetchedAfterMount } = useSiteSettings();
+  const { logo_url, name } = settings?.branding ?? {};
   const [broken, setBroken] = useState(false);
+
+  // If the browser has stale query state, don't paint its previous logo while the
+  // latest branding setting is being revalidated after a page reload.
+  useEffect(() => { setBroken(false); }, [logo_url]);
   const label = (name || FALLBACK_NAME).trim();
   const radius = rounded === 'full' ? 'rounded-full' : 'rounded-xl';
+
+  if (!isFetchedAfterMount) {
+    return <span aria-hidden="true" style={{ width: size, height: size }} className={cn('shrink-0 rounded-xl bg-[#101528]/70', radius, className)} />;
+  }
 
   if (logo_url?.trim() && !broken) {
     return (
