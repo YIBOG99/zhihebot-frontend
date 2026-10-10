@@ -1,5 +1,5 @@
 import { Link, useParams } from '@tanstack/react-router';
-import { ChevronRight, ShoppingCart, ShieldCheck, Clock, Zap } from 'lucide-react';
+import { ChevronRight, ShoppingCart, ShieldCheck, Clock, Zap, MousePointerClick, ClipboardCheck, CreditCard, PackageCheck, ArrowRight } from 'lucide-react';
 import { useProduct, useCategories, useProducts } from '@/lib/queries';
 import { ClauseBlocks } from '@/components/ClauseBlocks';
 import { ProductCard } from '@/components/ProductCard';
@@ -55,6 +55,7 @@ export function ProductDetailPage() {
             <div className="glow-frame overflow-hidden rounded-2xl border border-border bg-surface-2">
               <img src={product.cover_url || PRODUCT_PLACEHOLDER} alt={product.title} className="w-full aspect-[16/9] object-cover" />
             </div>
+            <OrderFlowPanel />
             {/* Trust strip */}
             <div className="mt-4 grid grid-cols-3 gap-3">
               {[
@@ -139,5 +140,36 @@ function RelatedProducts({ categorySlug, excludeId }: { categorySlug: string; ex
         <ProductCard key={p.id} product={p} />
       ))}
     </div>
+  );
+}
+
+function OrderFlowPanel() {
+  const steps = [
+    { icon: MousePointerClick, number: '01', title: '选择商品', detail: '确认商品与价格' },
+    { icon: ClipboardCheck, number: '02', title: '提交订单', detail: '填写必要信息' },
+    { icon: CreditCard, number: '03', title: '完成支付', detail: '选择可用支付方式' },
+    { icon: PackageCheck, number: '04', title: '获取商品', detail: '按商品说明交付' },
+  ];
+  return (
+    <section className="order-flow-panel mt-5 rounded-2xl border border-primary/25 p-4 sm:p-5" aria-label="下单流程">
+      <div className="order-flow-orbit" aria-hidden="true" />
+      <div className="relative z-10">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div><div className="order-flow-kicker mb-1 text-[10px] font-bold uppercase tracking-[.24em]">ZHIHE // ORDER PROTOCOL</div>
+          <h2 className="text-base font-bold text-foreground sm:text-lg">下单流程 <span className="text-primary">·</span> 简单四步</h2></div>
+          <span className="order-flow-live inline-flex items-center gap-2 rounded-full border border-primary/25 px-2.5 py-1 text-[10px] text-primary"><span className="order-flow-live-dot" /> 流程指引</span>
+        </div>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-2.5">
+          {steps.map(({ icon: Icon, number, title, detail }, index) => (
+            <div className="order-flow-step group relative rounded-xl border border-white/[.07] bg-white/[.025] p-3" key={number} style={{ animationDelay: String(index * 90) + 'ms' }}>
+              <div className="mb-3 flex items-center justify-between"><span className="order-flow-icon flex h-9 w-9 items-center justify-center rounded-xl border border-primary/25 bg-primary/10 text-primary"><Icon size={17} strokeWidth={1.8} /></span><span className="font-mono text-[10px] tracking-widest text-primary/65">{number}</span></div>
+              <div className="text-sm font-semibold text-foreground">{title}</div><div className="mt-1 text-[11px] leading-relaxed text-muted-foreground">{detail}</div>
+              {index < steps.length - 1 && <ArrowRight className="order-flow-arrow absolute -right-[9px] top-7 z-20 hidden text-primary/60 sm:block" size={16} />}
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">请在提交前核对商品说明；实际交付时间与售后范围以商品详情和订单状态为准。</p>
+      </div>
+    </section>
   );
 }
