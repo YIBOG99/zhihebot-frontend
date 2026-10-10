@@ -2,15 +2,17 @@ import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { QrCode, Loader2, AlertCircle } from 'lucide-react';
 import { QrSourceField } from '@/components/QrSourceField';
+import { isAlipayPayLink } from '@/lib/alipay-deeplink';
 import { readSiteSetting, patchSiteSetting, useInvalidateSettings } from '@/lib/queries';
 
-interface AlipayQrCfg { qr_url?: string; name?: string; note?: string }
+interface AlipayQrCfg { qr_url?: string; pay_url?: string; name?: string; note?: string }
 
 /** 后台「站点设置」里的支付宝扫码转账（个人经营码）配置卡。
  *  写入 site_settings.payment.alipay_qr，浅合并不动 alipay / wechat / usdt 子对象。 */
 export function AlipayQrPayConfigCard() {
   const [qrUrl, setQrUrl] = useState('');
   const [qrSourceValid, setQrSourceValid] = useState(true);
+  const [payUrl, setPayUrl] = useState('');
   const [name, setName] = useState('');
   const [note, setNote] = useState('');
   const [loading, setLoading] = useState(true);
@@ -25,6 +27,7 @@ export function AlipayQrPayConfigCard() {
         if (!alive) return;
         const c = payment?.alipay_qr ?? {};
         setQrUrl(c.qr_url || '/payment-codes/payment-qr-2.png');
+        setPayUrl(c.pay_url || '');
         setName(c.name || '支付宝2');
         setNote(c.note ?? '');
       } catch (e) {
@@ -44,7 +47,11 @@ export function AlipayQrPayConfigCard() {
     }
     setSaving(true);
     try {
-      await patchSiteSetting('payment', { alipay_qr: { qr_url: qrUrl.trim(), name: name.trim(), note: note.trim() } });
+      if (payUrl.trim() && !isAlipayPayLink(payUrl.trim())) {
+      toast.error('支付宝付款链接必须是有效的支付宝收款链接；普通网页地址不能用于深链唤起。');
+      return;
+    }
+    await patchSiteSetting('payment', { alipay_qr: { qr_url: qrUrl.trim(), pay_url: payUrl.trim(), name: name.trim(), note: note.trim() } });
       invalidate();
       toast.success('支付宝扫码转账设置已保存，前台立即生效');
     } catch (e) {
@@ -81,6 +88,16 @@ export function AlipayQrPayConfigCard() {
           <p className="text-[11px] leading-relaxed text-warning">尚未上传收款码，前台该通道会提示顾客改用其它支付方式。</p>
         </div>
       )}
+
+      <div className="mt-4">
+        <label className="mb-1.5 block text-xs font-semibold text-muted-foreground">支付宝2付款链接（选填，手机端一键唤起）</label>
+        <input value={payUrl} onChange={(e) => setPayUrl(e.target.value)} placeholder="https://qr.alipay.com/..."
+          inputMode="url" autoComplete="url" spellCheck={false}
+          className="w-full rounded-lg border border-border bg-input px-3.5 py-2.5 font-mono text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary" />
+        <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground">
+          与支付宝1相同：可填写真实的支付宝收款链接；若只上传图片，前台会尝试在本机识别二维码，识别失败时仍可用支付宝扫一扫。
+        </p>
+      </div>
 
       <div className="mt-4">
         <label className="mb-1.5 block text-xs font-semibold text-muted-foreground">收款方名称（显示在二维码下方，便于顾客核对）</label>
