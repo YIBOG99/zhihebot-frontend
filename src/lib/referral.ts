@@ -81,13 +81,26 @@ function firstRow<T>(data: unknown): T | null {
 /** 取（必要时生成）我的专属邀请码 */
 export async function fetchMyInviteCode(): Promise<{ code: string | null; failed: boolean }> {
   const { data, error } = await supabase.rpc('my_invite_code');
-  if (error) {
-    console.error('[referral] my_invite_code 失败:', error.code, error.message);
+  if (!error) {
+    const row = firstRow<{ ok?: boolean; code?: string | null }>(data);
+    if (row?.code) return { code: row.code, failed: false };
+  } else {
+    console.error('[referral] my_invite_code RPC failed:', error.code, error.message);
+  }
+
+  // Fallback for environments where the RPC migration is not deployed yet.
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+  if (authError || !authData.user) return { code: null, failed: true };
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('invite_code')
+    .eq('id', authData.user.id)
+    .maybeSingle();
+  if (profileError) {
+    console.error('[referral] profile invite-code fallback failed:', profileError.code, profileError.message);
     return { code: null, failed: true };
   }
-  const row = firstRow<{ ok?: boolean; code?: string | null }>(data);
-  if (row?.ok === false) return { code: null, failed: false };
-  return { code: row?.code ?? null, failed: false };
+  return { code: profile?.invite_code ?? null, failed: !profile?.invite_code };
 }
 
 /** 把本机暂存的推荐人邀请码绑到当前账号并发奖 */
