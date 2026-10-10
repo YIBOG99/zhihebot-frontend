@@ -38,8 +38,7 @@ const CLOSE_LABEL: Record<string, string> = {
 
 /**
  * 待付款订单的操作行：继续支付 + 取消订单。
- * 取消采用行内两段式确认（首次点击进入待确认态、3 秒自动还原，二次点击才执行）——
- * 微信内置浏览器里任何浮层按钮都点不动，这是本项目红线。
+ * 取消采用单击直接执行，避免移动端二次确认状态不明显导致用户误以为按钮失效。
  */
 function PendingActions({ order, onCancelled }: { order: OrderRow; onCancelled: (orderId: string) => void }) {
   const [busy, setBusy] = useState(false);
@@ -70,11 +69,7 @@ function PendingActions({ order, onCancelled }: { order: OrderRow; onCancelled: 
         <CreditCard size={13} /> 继续支付
       </Link>
       <button type="button" onClick={() => void handleCancel()} disabled={busy}
-        className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2 text-xs font-semibold transition-colors ${
-          armed
-            ? 'border-danger bg-danger/10 text-danger'
-            : 'border-border text-muted-foreground hover:border-danger/40 hover:text-danger'
-        }`}>
+        className="inline-flex items-center gap-1.5 rounded-lg border border-border px-4 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:border-danger/40 hover:text-danger disabled:opacity-60"
         <X size={13} /> {busy ? '取消中…' : '取消订单'}
       </button>
     </div>
