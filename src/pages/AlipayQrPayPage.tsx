@@ -7,6 +7,7 @@ import { ExactAmountNotice } from '@/components/ExactAmountNotice';
 import { QrExpiryFrame } from '@/components/QrExpiryFrame';
 import { CashierHeader, CashierAmount, CashierCountdown } from '@/components/CashierChrome';
 import { isAlipayPayLink, jumpToAlipayApp } from '@/lib/alipay-deeplink';
+import { decodeQrFromImage } from '@/lib/qr-decode';
 
 /** mm:ss 文本，超过一小时按分钟累计显示 */
 function fmtRemain(ms: number): string {
@@ -46,6 +47,8 @@ export function AlipayQrPayPage() {
   const [expired, setExpired] = useState(false);
   /** 剩余毫秒（本页自绘大号倒计时用，以服务端时刻算差值，不受本机时钟影响） */
   const [remain, setRemain] = useState(0);
+  /** 若后台只上传了纯二维码图片，尝试在本机浏览器解码其真实收款链接，避免深链指向别的默认收款人。 */
+  const [decodedPayLink, setDecodedPayLink] = useState('');
 
   const primaryChannel = search.channel === 'alipay';
   const alipayQr = primaryChannel
@@ -58,10 +61,37 @@ export function AlipayQrPayPage() {
   /** 配置值是收款链接时才能一键唤起支付宝 App；图片形式只能扫码 */
   const qrValue = alipayQr?.qr_url ?? '';
   const configuredPayUrl = primaryChannel ? (settings?.payment?.alipay_primary?.pay_url ?? '') : '';
-  const paymentLink = configuredPayUrl.trim() || qrValue;
+  // 优先使用从用户已上传二维码本身解出的链接；只有无法解码时才回退到后台单独填写的付款链接。
+  // 这样可避免纯码与历史默认 pay_url 不一致时，把顾客带到错误收款方。
+  const paymentLink = decodedPayLink || configuredPayUrl.trim() || qrValue;
   const displayQrValue = qrValue.trim() || (isAlipayPayLink(paymentLink) ? paymentLink : '');
   const canJump = isAlipayPayLink(paymentLink);
   const [jumpNotice, setJumpNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!primaryChannel || !qrValue.trim()) {
+      setDecodedPayLink('');
+      return;
+    }
+    let alive = true;
+    setDecodedPayLink('');
+    (async () => {
+      try {
+        // 如果 qr_url 本身就是官方收款链接，直接采用；若是图片则在本地尝试识别，不上传图片。
+        const decoded = isAlipayPayLink(qrValue)
+          ? qrValue.trim()
+          : await decodeQrFromImage(qrValue.trim());
+        if (alive && decoded && isAlipayPayLink(decoded)) {
+          setDecodedPayLink(decoded);
+          console.log('[AlipayQrPay] decoded payment link from uploaded QR');
+        }
+      } catch (e) {
+        // 跨域图片未开放 CORS 时可能无法读取；这时仍可使用后台单独配置的有效 pay_url。
+        console.info('[AlipayQrPay] automatic QR decode unavailable; using configured payment link', e);
+      }
+    })();
+    return () => { alive = false; };
+  }, [primaryChannel, qrValue]);
 
   function handleJump() {
     const r = jumpToAlipayApp(paymentLink);
