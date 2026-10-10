@@ -70,6 +70,7 @@ function PendingActions({ order, onCancelled }: { order: OrderRow; onCancelled: 
       </Link>
       <button type="button" onClick={() => void handleCancel()} disabled={busy}
         className="inline-flex items-center gap-1.5 rounded-lg border border-border px-4 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:border-danger/40 hover:text-danger disabled:opacity-60"
+      >
         <X size={13} /> {busy ? '取消中…' : '取消订单'}
       </button>
     </div>
