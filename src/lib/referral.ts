@@ -79,15 +79,15 @@ function firstRow<T>(data: unknown): T | null {
 }
 
 /** 取（必要时生成）我的专属邀请码 */
-export async function fetchMyInviteCode(): Promise<string | null> {
+export async function fetchMyInviteCode(): Promise<{ code: string | null; failed: boolean }> {
   const { data, error } = await supabase.rpc('my_invite_code');
   if (error) {
     console.error('[referral] my_invite_code 失败:', error.code, error.message);
-    return null;
+    return { code: null, failed: true };
   }
   const row = firstRow<{ ok?: boolean; code?: string | null }>(data);
-  if (row?.ok === false) return null;
-  return row?.code ?? null;
+  if (row?.ok === false) return { code: null, failed: false };
+  return { code: row?.code ?? null, failed: false };
 }
 
 /** 把本机暂存的推荐人邀请码绑到当前账号并发奖 */
@@ -121,6 +121,7 @@ export async function bindReferralCode(code: string): Promise<{ bound: boolean; 
 
 export interface UseReferral {
   inviteCode: string | null;
+  inviteCodeFailed: boolean;
   stats: ReferralStats | null;
   rewards: ReferralReward[];
   commissions: CommissionRecord[];
@@ -131,6 +132,7 @@ export interface UseReferral {
 /** 个人中心的邀请数据：邀请码 + 统计 + 我的券列表 + 返佣明细 */
 export function useReferral(userId: string | null): UseReferral {
   const [inviteCode, setInviteCode] = useState<string | null>(null);
+  const [inviteCodeFailed, setInviteCodeFailed] = useState(false);
   const [stats, setStats] = useState<ReferralStats | null>(null);
   const [rewards, setRewards] = useState<ReferralReward[]>([]);
   const [commissions, setCommissions] = useState<CommissionRecord[]>([]);
@@ -139,13 +141,14 @@ export function useReferral(userId: string | null): UseReferral {
   const refresh = useCallback(() => setNonce((n) => n + 1), []);
 
   useEffect(() => {
-    if (!userId) { setInviteCode(null); setStats(null); setRewards([]); setCommissions([]); return; }
+    if (!userId) { setInviteCode(null); setInviteCodeFailed(false); setStats(null); setRewards([]); setCommissions([]); setLoading(false); return; }
     let alive = true;
     setLoading(true);
     void (async () => {
-      const code = await fetchMyInviteCode();
+      const inviteResult = await fetchMyInviteCode();
       if (!alive) return;
-      setInviteCode(code);
+      setInviteCode(inviteResult.code);
+      setInviteCodeFailed(inviteResult.failed);
 
       const [{ data: sd, error: se }, { data: rd, error: re }, { data: cd, error: ce }] = await Promise.all([
         supabase.rpc('my_referral_stats'),
@@ -174,7 +177,7 @@ export function useReferral(userId: string | null): UseReferral {
     return () => { alive = false; };
   }, [userId, nonce]);
 
-  return { inviteCode, stats, rewards, commissions, loading, refresh };
+  return { inviteCode, inviteCodeFailed, stats, rewards, commissions, loading, refresh };
 }
 
 /** 分享链接：带 ?ref= 的首页地址，新用户打开即被归因 */
