@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from '@tanstack/react-router';
 import { Bell, MessageSquare, Send, AtSign, Mail, Phone, Users, Globe, ShieldCheck, Lock, Info, Check, ExternalLink, Link2, QrCode, type LucideIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSiteSettings, useBranding } from '@/lib/queries';
@@ -70,19 +71,20 @@ function LinkButton({ link, onQr }: { link: AnnouncementLink; onQr: (l: Announce
 /** 全站首页公告弹窗：内容全部来自 site_settings.announcement，店主后台可随时改 */
 export function AnnouncementDialog() {
   const { data, isPending } = useSiteSettings();
+  const pathname = useLocation({ select: (location) => location.pathname });
   const [open, setOpen] = useState(false);
   const [snooze, setSnoozeChecked] = useState(false);
   const [qrLink, setQrLink] = useState<AnnouncementLink | null>(null);
 
   // 设置到位后判定一次是否该弹；关闭弹窗不重置，避免同会话内反复打扰
   useEffect(() => {
+    if (pathname !== '/') { setOpen(false); return; }
     if (isPending || !data) return;
     const cfg = data.announcement;
-    if (!cfg) return;
-    if (cfg.enabled === false) return;
-    if (isSnoozed()) return;
-    setOpen(true);
-  }, [isPending, data]);
+    if (!cfg || cfg.enabled === false || isSnoozed()) return;
+    const timer = window.setTimeout(() => setOpen(true), 1800);
+    return () => window.clearTimeout(timer);
+  }, [isPending, data, pathname]);
 
   // 自绘遮罩没有 Radix 的 RemoveScroll，必须自己锁背景：
   // 否则顾客在弹窗里滑动会滚到公告背后的页面，关掉后停在莫名位置。
