@@ -41,23 +41,24 @@ const CLOSE_LABEL: Record<string, string> = {
  * 取消采用行内两段式确认（首次点击进入待确认态、3 秒自动还原，二次点击才执行）——
  * 微信内置浏览器里任何浮层按钮都点不动，这是本项目红线。
  */
-function PendingActions({ order }: { order: OrderRow }) {
-  const [armed, setArmed] = useState(false);
+function PendingActions({ order, onCancelled }: { order: OrderRow; onCancelled: (orderId: string) => void }) {
   const [busy, setBusy] = useState(false);
 
   async function handleCancel() {
-    if (!armed) {
-      setArmed(true);
-      setTimeout(() => setArmed(false), 3000);
-      return;
-    }
+    if (busy) return;
     setBusy(true);
     try {
       const r = await callOrderRpc('order_customer_cancel', order.id);
-      if (r.ok) toast.success('订单已取消');
-      else toast.error(r.message);
+      if (r.ok) {
+        onCancelled(order.id);
+        toast.success('订单已取消');
+      } else {
+        toast.error(r.message || '取消失败，请刷新后重试');
+      }
+    } catch (error) {
+      console.error('[MyOrdersPanel] cancel order failed:', error);
+      toast.error(error instanceof Error ? error.message : '取消失败，请稍后重试');
     } finally {
-      setArmed(false);
       setBusy(false);
     }
   }
@@ -74,7 +75,7 @@ function PendingActions({ order }: { order: OrderRow }) {
             ? 'border-danger bg-danger/10 text-danger'
             : 'border-border text-muted-foreground hover:border-danger/40 hover:text-danger'
         }`}>
-        <X size={13} /> {busy ? '取消中…' : armed ? '再点一次确认取消' : '取消订单'}
+        <X size={13} /> {busy ? '取消中…' : '取消订单'}
       </button>
     </div>
   );
@@ -82,8 +83,11 @@ function PendingActions({ order }: { order: OrderRow }) {
 
 export function MyOrdersPanel({ orders, loading, err }: Props) {
   const [filter, setFilter] = useState<Filter>('all');
+  // RPC 成功后立即在界面反映关闭状态，不要求用户手动刷新个人中心。
+  const [locallyClosed, setLocallyClosed] = useState<Record<string, boolean>>({});
 
-  const list = orders.filter((o) =>
+  const displayOrders = orders.map((o) => locallyClosed[o.id] ? { ...o, status: 'closed', close_reason: 'customer_cancel' } as OrderRow : o);
+  const list = displayOrders.filter((o) =>
     filter === 'all' ? true
       : filter === 'pending' ? (o.status === 'pending_payment' || o.status === 'pay_processing')
       : o.status === 'completed',
@@ -145,7 +149,7 @@ export function MyOrdersPanel({ orders, loading, err }: Props) {
                 {/* 待付款 / 支付中且仍在时限内：给出续付与主动取消入口 */}
                 {(o.status === 'pending_payment' || o.status === 'pay_processing')
                   && (!o.expires_at || new Date(o.expires_at) > new Date()) && (
-                  <PendingActions order={o} />
+                  <PendingActions order={o} onCancelled={(orderId) => setLocallyClosed((prev) => ({ ...prev, [orderId]: true }))} />
                 )}
                 {o.status === 'completed' && o.card_secret && (
                   <div className="mt-3">
