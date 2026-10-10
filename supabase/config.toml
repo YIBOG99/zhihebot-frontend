@@ -1,0 +1,7 @@
+project_id = "aqoryvygjavngcgkmuom"
+
+# Guest checkout requests do not have a Supabase user JWT. The function uses
+# its own service-role client internally and validates/rate-limits its request.
+# Keep this setting scoped to order-captcha; do not disable JWT verification globally.
+[functions.order-captcha]
+verify_jwt = false
