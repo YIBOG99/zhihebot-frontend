@@ -756,3 +756,109 @@ a { color: inherit; text-decoration: none; }
 @keyframes orbit-hover { 0%,100% { translate: 0 0; } 50% { translate: 0 -7px; } }
 @media (prefers-reduced-motion: reduce) { .storefront-shell .orbit-float { animation: none; } }
 @media (max-width: 1023px) { .storefront-shell .hero-orbit-scene { display: none; } }
+
+
+/* ── NEON SYSTEM LAYER: higher-contrast cyber storefront ───────────── */
+.storefront-shell {
+  background-color: #050914;
+  background-image:
+    radial-gradient(ellipse at 12% 2%, rgba(57, 255, 203, .12), transparent 38%),
+    radial-gradient(ellipse at 88% 8%, rgba(48, 164, 255, .13), transparent 36%),
+    radial-gradient(ellipse at 50% 55%, rgba(123, 91, 255, .055), transparent 55%);
+}
+.storefront-shell .hero-kicker {
+  border: 1px solid rgba(84, 242, 194, .3);
+  background: linear-gradient(100deg, rgba(84,242,194,.1), rgba(77,229,255,.055));
+  box-shadow: inset 0 0 18px rgba(84,242,194,.035), 0 0 24px rgba(84,242,194,.05);
+}
+.storefront-shell .hero-gradient-text {
+  background-image: linear-gradient(100deg, #f3fff9 0%, #54f2c2 30%, #4de5ff 65%, #b4a0ff 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 24px rgba(77,229,255,.12));
+}
+.storefront-shell .home-primary-btn {
+  border: 1px solid rgba(84,242,194,.65);
+  background: linear-gradient(105deg, #54f2c2, #4de5ff);
+  color: #041018;
+  box-shadow: 0 0 24px rgba(84,242,194,.22), inset 0 1px rgba(255,255,255,.55);
+  transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
+}
+.storefront-shell .home-primary-btn:hover {
+  transform: translateY(-2px);
+  filter: saturate(1.15);
+  box-shadow: 0 0 34px rgba(84,242,194,.35), 0 0 70px rgba(77,229,255,.12);
+}
+.storefront-shell .home-secondary-btn {
+  border: 1px solid rgba(105,180,225,.28);
+  background: rgba(10,20,38,.76);
+  box-shadow: inset 0 0 18px rgba(77,229,255,.035);
+}
+.storefront-shell .orbit-ring {
+  border-color: rgba(77,229,255,.22);
+  box-shadow: 0 0 32px rgba(77,229,255,.08), inset 0 0 32px rgba(84,242,194,.035);
+}
+.storefront-shell .orbit-core {
+  border: 1px solid rgba(84,242,194,.28);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(84,242,194,.13), transparent 58%),
+    linear-gradient(145deg, rgba(13,27,48,.96), rgba(5,10,22,.98));
+  box-shadow: 0 0 65px rgba(77,229,255,.12), inset 0 0 40px rgba(84,242,194,.035);
+}
+.storefront-shell .orbit-float,
+.storefront-shell .product-card,
+.storefront-shell .guide-card {
+  border-color: rgba(105,180,225,.23);
+  background: linear-gradient(145deg, rgba(15,29,51,.94), rgba(7,13,27,.97));
+  box-shadow: inset 0 1px rgba(255,255,255,.035);
+}
+.storefront-shell .product-card:hover,
+.storefront-shell .guide-card:hover {
+  border-color: rgba(84,242,194,.6);
+  box-shadow: 0 0 0 1px rgba(77,229,255,.12), 0 20px 55px rgba(0,0,0,.4), 0 0 34px rgba(84,242,194,.1);
+  transform: translateY(-3px);
+}
+.storefront-shell .category-chip {
+  border: 1px solid rgba(77,229,255,.22);
+  background: rgba(77,229,255,.055);
+  color: #c8f7ff;
+}
+.storefront-shell .category-chip:hover {
+  border-color: rgba(84,242,194,.6);
+  background: rgba(84,242,194,.1);
+  box-shadow: 0 0 20px rgba(84,242,194,.08);
+}
+.storefront-shell .eyebrow {
+  color: #54f2c2;
+  text-shadow: 0 0 18px rgba(84,242,194,.18);
+}
+.storefront-shell .stat-glow {
+  background: linear-gradient(145deg, rgba(15,29,51,.94), rgba(7,13,27,.97));
+}
+.popup-holo-backdrop {
+  background-image: radial-gradient(ellipse at 50% 45%, rgba(77,229,255,.1), transparent 50%);
+}
+.popup-holo-panel {
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(84,242,194,.1), transparent 48%),
+    linear-gradient(145deg, rgba(13,24,43,.99), rgba(5,10,22,.99));
+  box-shadow: 0 0 0 1px rgba(77,229,255,.08), 0 0 85px rgba(77,229,255,.14), 0 25px 90px rgba(0,0,0,.6);
+}
+.popup-holo-panel::before {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  inset: 0 0 auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(84,242,194,.8), rgba(77,229,255,.8), rgba(165,139,255,.7), transparent);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .storefront-shell .hero-glow,
+  .storefront-shell .home-glow { animation: neon-breathe 8s ease-in-out infinite alternate; }
+  @keyframes neon-breathe {
+    from { opacity: .55; filter: blur(20px); }
+    to { opacity: 1; filter: blur(30px); }
+  }
+}
