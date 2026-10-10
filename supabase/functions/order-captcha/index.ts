@@ -25,8 +25,35 @@ async function sha256Hex(text: string): Promise<string> {
 }
 
 function randInt(min: number, max: number): number {
-  // 含两端
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+  // Use Web Crypto rather than Math.random for challenge generation.
+  const range = max - min + 1;
+  const limit = Math.floor(0x1_0000_0000 / range) * range;
+  const value = new Uint32Array(1);
+  do { crypto.getRandomValues(value); } while (value[0] >= limit);
+  return min + (value[0] % range);
+}
+
+// Best-effort per-isolate rate limit. Supabase gateway limits and monitoring should
+// also be enabled in production; this only reduces accidental rapid challenge churn.
+const attempts = new Map<string, { startedAt: number; count: number }>();
+const RATE_WINDOW_MS = 60_000;
+const RATE_MAX = 30;
+function rateLimited(ip: string): boolean {
+  if (!ip) return false;
+  const now = Date.now();
+  const current = attempts.get(ip);
+  if (!current || now - current.startedAt >= RATE_WINDOW_MS) {
+    attempts.set(ip, { startedAt: now, count: 1 });
+  } else {
+    current.count += 1;
+    if (current.count > RATE_MAX) return true;
+  }
+  if (attempts.size > 2_000) {
+    for (const [key, value] of attempts) {
+      if (now - value.startedAt >= RATE_WINDOW_MS) attempts.delete(key);
+    }
+  }
+  return false;
 }
 
 /**
@@ -48,6 +75,16 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ ok: false, message: '不支持的请求方式' }), {
       status: 405,
       headers: { ...corsHeaders, 'Allow': 'POST, OPTIONS' },
+    });
+  }
+  const ip = req.headers.get('cf-connecting-ip')
+    ?? req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    ?? req.headers.get('x-real-ip')
+    ?? '';
+  if (rateLimited(ip)) {
+    return new Response(JSON.stringify({ ok: false, message: '请求过于频繁，请稍后重试' }), {
+      status: 429,
+      headers: { ...corsHeaders, 'Retry-After': '60' },
     });
   }
   try {
