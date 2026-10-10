@@ -3,10 +3,10 @@
 /* ── 智核 · 纯深色科技风设计系统 ─────────────────────── */
 :root {
   /* 背景层：更深的墨蓝黑，带一点冷调 */
-  --background: oklch(0.12 0.014 255);
-  --surface: oklch(0.165 0.017 255);
-  --surface-2: oklch(0.205 0.02 255);
-  --surface-3: oklch(0.26 0.022 255);
+  --background: oklch(0.105 0.025 290);
+  --surface: oklch(0.145 0.028 290);
+  --surface-2: oklch(0.19 0.035 290);
+  --surface-3: oklch(0.24 0.04 290);
 
   /* 前景 */
   --foreground: oklch(0.945 0.01 250);
@@ -14,13 +14,13 @@
   --muted-foreground: oklch(0.58 0.02 250);
 
   /* 主色：翠绿 emerald（品牌识别保留） */
-  --primary: oklch(0.75 0.17 288);
+  --primary: oklch(0.72 0.22 292);
   --primary-foreground: oklch(0.13 0.02 288);
-  --primary-hover: oklch(0.68 0.16 288);
+  --primary-hover: oklch(0.65 0.23 292);
 
   /* 霓虹辅助色对：能量青 + 紫罗兰（冷暖撞色制造科技张力） */
-  --neon-cyan: oklch(0.8 0.13 200);
-  --neon-violet: oklch(0.68 0.19 288);
+  --neon-cyan: oklch(0.78 0.16 305);
+  --neon-violet: oklch(0.72 0.22 292);
   /* 渐变描边/光晕用的三色能量带 */
   --glow-band: linear-gradient(120deg, var(--primary), var(--neon-cyan) 45%, var(--neon-violet));
   --glow-band-soft: linear-gradient(120deg, oklch(0.75 0.17 288 / 0.5), oklch(0.8 0.13 200 / 0.35) 50%, oklch(0.68 0.19 288 / 0.4));
@@ -32,9 +32,9 @@
   --secondary-foreground: oklch(0.9 0.01 250);
 
   /* 边框/输入：边框带一点冷光感 */
-  --border: oklch(0.29 0.02 255);
-  --input: oklch(0.22 0.018 255);
-  --ring: oklch(0.75 0.17 288);
+  --border: oklch(0.32 0.06 292);
+  --input: oklch(0.2 0.04 292);
+  --ring: oklch(0.72 0.22 292);
 
   /* 状态色 */
   --success: oklch(0.75 0.17 288);
@@ -43,10 +43,10 @@
   --info: oklch(0.72 0.14 230);
 
   /* 卡片：玻璃拟态底 */
-  --card: oklch(0.165 0.017 255 / 0.85);
-  --card-solid: oklch(0.165 0.017 255);
+  --card: oklch(0.145 0.028 290 / 0.92);
+  --card-solid: oklch(0.145 0.028 290);
   --card-foreground: oklch(0.945 0.01 250);
-  --popover: oklch(0.17 0.018 255);
+  --popover: oklch(0.15 0.03 290);
   --popover-foreground: oklch(0.945 0.01 250);
 
   /* 圆角 */
@@ -872,3 +872,62 @@ a { color: inherit; text-decoration: none; }
 .home-primary-btn:hover { box-shadow: 0 10px 34px oklch(0.68 0.19 288 / .34); }
 .popup-holo-panel { border-color: rgba(168,85,247,.38) !important; box-shadow: 0 0 80px rgba(168,85,247,.2), 0 0 28px rgba(192,132,252,.13) !important; }
 .popup-holo-panel::before { background: linear-gradient(90deg, transparent, rgba(168,85,247,.9), rgba(192,132,252,.85), rgba(236,72,153,.65), transparent) !important; }
+
+
+/* ZHIHE // cyberpunk violet storefront */
+body {
+  background:
+    radial-gradient(ellipse at 50% -15%, rgba(126, 34, 206, .22), transparent 48%),
+    radial-gradient(ellipse at 0% 45%, rgba(88, 28, 135, .10), transparent 36%),
+    #090612;
+}
+.storefront-shell, main.min-h-screen {
+  background-image:
+    linear-gradient(rgba(168, 85, 247, .035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(168, 85, 247, .035) 1px, transparent 1px);
+  background-size: 44px 44px;
+  background-position: center top;
+}
+.hero-kicker {
+  border-color: rgba(192,132,252,.28) !important;
+  background: rgba(126,34,206,.12) !important;
+  box-shadow: inset 0 0 18px rgba(168,85,247,.06), 0 0 26px rgba(168,85,247,.06);
+}
+.hero-kicker-dot { background: #c084fc !important; box-shadow: 0 0 12px #c084fc !important; }
+.hero-gradient-text {
+  background: linear-gradient(100deg,#f5d0fe 0%,#c084fc 34%,#a78bfa 68%,#f0abfc 100%) !important;
+  -webkit-background-clip: text !important; background-clip: text !important; color: transparent !important;
+  filter: drop-shadow(0 0 24px rgba(168,85,247,.18));
+}
+.home-glow-a, .home-glow-b {
+  background: radial-gradient(ellipse, rgba(147,51,234,.24), rgba(88,28,135,.08) 42%, transparent 72%) !important;
+}
+.home-primary-btn {
+  background: linear-gradient(110deg,#7e22ce,#a855f7 52%,#c084fc) !important;
+  border: 1px solid rgba(233,213,255,.32) !important;
+  box-shadow: 0 0 28px rgba(168,85,247,.24), inset 0 1px 0 rgba(255,255,255,.18) !important;
+}
+.home-secondary-btn, .category-chip {
+  border-color: rgba(192,132,252,.25) !important;
+  background: rgba(88,28,135,.12) !important;
+}
+.product-card, .guide-card {
+  border-color: rgba(168,85,247,.2) !important;
+  background: linear-gradient(145deg,rgba(30,17,49,.94),rgba(13,8,24,.96)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.035), 0 8px 28px rgba(0,0,0,.16);
+  transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease;
+}
+.product-card:hover, .guide-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(192,132,252,.58) !important;
+  box-shadow: 0 12px 38px rgba(126,34,206,.17), inset 0 1px 0 rgba(255,255,255,.06);
+}
+.orbit-ring { border-color: rgba(192,132,252,.28) !important; box-shadow: 0 0 28px rgba(168,85,247,.08) !important; }
+.orbit-core { border-color: rgba(192,132,252,.38) !important; background: radial-gradient(circle,rgba(88,28,135,.42),rgba(17,10,30,.96) 70%) !important; box-shadow: 0 0 60px rgba(126,34,206,.22), inset 0 0 35px rgba(168,85,247,.1) !important; }
+.orbit-float { border-color: rgba(192,132,252,.28) !important; background: rgba(17,10,30,.9) !important; box-shadow: 0 8px 30px rgba(0,0,0,.3), 0 0 20px rgba(126,34,206,.08) !important; }
+.popup-holo-backdrop { background-color: rgba(5,2,12,.88) !important; }
+.popup-holo-panel { background: linear-gradient(145deg,rgba(27,13,45,.99),rgba(9,5,18,.99)) !important; border-color: rgba(192,132,252,.4) !important; box-shadow: 0 0 90px rgba(126,34,206,.24),0 25px 90px rgba(0,0,0,.6) !important; }
+.popup-holo-panel::before { background: linear-gradient(90deg,transparent,rgba(168,85,247,.9),rgba(216,180,254,.8),rgba(236,72,153,.7),transparent) !important; }
+@media (prefers-reduced-motion: no-preference) {
+  .product-card:hover, .guide-card:hover { transition-duration: .22s; }
+}
