@@ -3,14 +3,14 @@ import { Activity, AlertTriangle, CheckCircle2, Cloud, Database, ExternalLink, H
 import { supabase, supabaseUrl } from '@/supabase/client';
 
 type Check = { label: string; ok: boolean; detail: string };
-type Counts = { orders: number | null; products: number | null; profiles: number | null; users: number | null; cardSecrets: number | null };
+type Counts = { orders: number | null; products: number | null; profiles: number | null; cardSecrets: number | null };
 const numberFmt = (n: number | null) => n === null ? '不可读取' : n.toLocaleString('zh-CN');
 
 export function SystemHealthPanel() {
   const [loading, setLoading] = useState(true);
   const [lastChecked, setLastChecked] = useState<Date | null>(null);
   const [checks, setChecks] = useState<Check[]>([]);
-  const [counts, setCounts] = useState<Counts>({ orders: null, products: null, profiles: null, users: null, cardSecrets: null });
+  const [counts, setCounts] = useState<Counts>({ orders: null, products: null, profiles: null, cardSecrets: null });
   const [errors, setErrors] = useState<string[]>([]);
 
   const refresh = useCallback(async () => {
@@ -19,10 +19,9 @@ export function SystemHealthPanel() {
       ['orders', 'orders'],
       ['products', 'products'],
       ['profiles', 'profiles'],
-      ['users', 'users'],
       ['card_secrets', 'cardSecrets'],
     ] as const;
-    const next: Counts = { orders: null, products: null, profiles: null, users: null, cardSecrets: null };
+    const next: Counts = { orders: null, products: null, profiles: null, cardSecrets: null };
     const nextChecks: Check[] = [];
     const nextErrors: string[] = [];
     for (const [table, key] of names) {
@@ -47,7 +46,7 @@ export function SystemHealthPanel() {
   useEffect(() => { void refresh(); }, [refresh]);
 
   const cards = [
-    { label: '今日订单总量', value: numberFmt(counts.orders), sub: '当前订单表累计记录 · 非今日统计', icon: ShoppingCart },
+    { label: '订单总量', value: numberFmt(counts.orders), sub: '当前订单表累计记录（非今日统计）', icon: ShoppingCart },
     { label: '商品记录', value: numberFmt(counts.products), sub: '商品表可读取记录数', icon: HardDrive },
     { label: '用户资料', value: numberFmt(counts.profiles), sub: 'profiles 表记录数（若存在）', icon: Users },
     { label: '卡密记录', value: numberFmt(counts.cardSecrets), sub: '卡密表可读取记录数', icon: ShieldCheck },
