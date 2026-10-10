@@ -1042,3 +1042,34 @@ body {
   }
   .popup-holo-panel .popup-holo-panel-content { gap: .5rem; }
 }
+
+
+/* Performance pass: keep the neon aesthetic while avoiding expensive effects on small/touch devices. */
+@media (max-width: 767px), (hover: none) {
+  body { background-attachment: scroll; }
+  .product-card,
+  .product-card .cover-img,
+  .product-card .cover-shine,
+  .glow-frame::before,
+  .clause-block {
+    transition-duration: 0.16s;
+  }
+  .product-card:hover {
+    transform: none;
+    box-shadow: none;
+  }
+  .product-card:hover .cover-img { transform: none; }
+  .product-card .cover-shine { display: none; }
+  .clause-block {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

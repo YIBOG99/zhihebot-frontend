@@ -10,11 +10,8 @@ const STOCK_LABEL: Record<string, string> = { many: '库存充足，可立即发
 
 export function ProductDetailPage() {
   const { id } = useParams({ strict: false }) as { id: string };
-  const { data: product, isLoading, error } = useProduct(id);
+  const { data: product, isLoading } = useProduct(id);
   const { data: categories = [] } = useCategories();
-
-  // 诊断日志：确认路由参数与数据加载结果（排查"点商品没反应"）
-  console.log('[ProductDetail] id =', id, '| loading =', isLoading, '| error =', error?.message ?? null, '| found =', !!product);
 
   if (isLoading) return (
     <div className="mx-auto max-w-7xl px-4 py-20">
@@ -28,8 +25,6 @@ export function ProductDetailPage() {
   );
 
   const category = categories.find((c) => c.slug === product.category_slug);
-  // 价格展示取证：确认小数未被取整（修复 .toFixed(0) 导致 138.99 显示成 138）
-  console.log('[ProductDetail] price display:', { id: product.id, raw: product.price, shown: formatYuan(product.price), original: formatYuan(product.original_price ?? 0) });
   const discount = product.original_price && Number(product.original_price) > Number(product.price)
     ? Math.round((1 - Number(product.price) / Number(product.original_price)) * 100) : null;
 
@@ -53,7 +48,7 @@ export function ProductDetailPage() {
           {/* Left: cover */}
           <div className="reveal-left">
             <div className="glow-frame overflow-hidden rounded-2xl border border-border bg-surface-2">
-              <img src={product.cover_url || PRODUCT_PLACEHOLDER} alt={product.title} className="w-full aspect-[16/9] object-cover" />
+              <img src={product.cover_url || PRODUCT_PLACEHOLDER} alt={product.title} fetchPriority="high" decoding="async" className="w-full aspect-[16/9] object-cover" />
             </div>
             <OrderFlowPanel />
             {/* Trust strip */}

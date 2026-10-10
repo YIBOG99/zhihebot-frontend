@@ -11,11 +11,8 @@ export function ProductCard({ product }: { product: Product }) {
     ? Math.round((1 - product.price / product.original_price) * 100)
     : null;
 
-  // 价格展示取证：确认小数未被取整（修复 .toFixed(0) 导致 138.99 显示成 138）
-  console.log('[ProductCard] price display:', { id: product.id, raw: product.price, shown: formatYuan(product.price) });
-
   return (
-    <Link to="/product/$id" params={{ id: product.id }}
+    <Link to="/product/$id" params={{ id: product.id }} preload="intent"
       className="product-card group flex flex-col overflow-hidden rounded-xl border border-border bg-card/80 backdrop-blur-sm">
       {/* Cover */}
       <div className="relative aspect-[16/9] overflow-hidden bg-surface-2">
