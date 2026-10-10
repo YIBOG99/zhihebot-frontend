@@ -396,21 +396,32 @@ export function useProducts(categorySlug?: string) {
 }
 
 export function useProduct(id: string) {
+  const queryClient = useQueryClient();
+
+  // Reuse the catalog already rendered on the previous page. This makes the
+  // detail view paint immediately while React Query refreshes stale data in the background.
+  const cachedProduct = queryClient.getQueriesData<Product[]>({ queryKey: ['products'] })
+    .map(([, products]) => products?.find((product) => product.id === id))
+    .find((product): product is Product => Boolean(product));
+  const localProduct = DEMO_PRODUCTS.find((product) => product.id === id);
+  const initialProduct = cachedProduct ?? localProduct;
+
   return useQuery({
     queryKey: ['product', id],
     queryFn: async () => {
-      const local = DEMO_PRODUCTS.find((p) => p.id === id);
-      if (PUBLIC_SNAPSHOT_MODE || !supabaseConfigured) return local;
+      if (PUBLIC_SNAPSHOT_MODE || !supabaseConfigured) return localProduct;
       try {
         const { data, error } = await supabase.from('products').select('*').eq('id', id).single();
         if (error) throw error;
         return data as unknown as Product;
       } catch (error) {
-        console.warn(`[useProduct] remote failed for ${id}, falling back to exported snapshot:`, error);
-        return local;
+        console.warn(`[useProduct] remote failed for ${id}, using cached product when available:`, error);
+        return initialProduct;
       }
     },
     enabled: !!id,
+    initialData: initialProduct,
+    initialDataUpdatedAt: cachedProduct ? Date.now() : undefined,
     staleTime: 60_000,
   });
 }
