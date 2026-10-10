@@ -151,7 +151,7 @@ export interface PaymentChannels {
   usdt?: { network?: string; address?: string; note?: string };
   wechat?: { qr_url?: string; account_name?: string; note?: string };
   /** 支付宝个人经营码通道：钱直接进店主个人账户，无自动对账，靠人工核账发卡 */
-  alipay_qr?: { qr_url?: string; name?: string; note?: string };
+  alipay_qr?: { qr_url?: string; pay_url?: string; name?: string; note?: string };
 }
 /** 全站品牌设置（存于 site_settings key='branding'），顶栏/页脚/登录页/公告弹窗/标签页图标共用 */
 export interface BrandingConfig {
