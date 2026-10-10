@@ -52,15 +52,15 @@ export function AlipayQrPayPage() {
 
   const primaryChannel = search.channel === 'alipay';
   const alipayQr = primaryChannel
-    ? { ...settings?.payment?.alipay_primary, qr_url: settings?.payment?.alipay_primary?.qr_url || '/payment-codes/payment-qr-1.png', pay_url: settings?.payment?.alipay_primary?.pay_url || 'https://qr.alipay.com/fkx1539453hgmrbkkrl0e84' }
-    : { ...settings?.payment?.alipay_qr, qr_url: settings?.payment?.alipay_qr?.qr_url || '/payment-codes/payment-qr-2.png' };
+    ? { ...settings?.payment?.alipay_primary, qr_url: settings?.payment?.alipay_primary?.qr_url || '/payment-codes/payment-qr-1.png', pay_url: settings?.payment?.alipay_primary?.pay_url || '' }
+    : { ...settings?.payment?.alipay_qr, qr_url: settings?.payment?.alipay_qr?.qr_url || '/payment-codes/payment-qr-2.png', pay_url: settings?.payment?.alipay_qr?.pay_url || '' };
   const channelTitle = primaryChannel ? '支付宝1' : '支付宝2';
   const orderNo = search.order ?? '';
   const amount = Number(search.amount) || 0;
   const remainText = fmtRemain(remain);
   /** 配置值是收款链接时才能一键唤起支付宝 App；图片形式只能扫码 */
   const qrValue = alipayQr?.qr_url ?? '';
-  const configuredPayUrl = primaryChannel ? (settings?.payment?.alipay_primary?.pay_url ?? '') : '';
+  const configuredPayUrl = (alipayQr?.pay_url ?? '').trim();
   // 优先使用从用户已上传二维码本身解出的链接；只有无法解码时才回退到后台单独填写的付款链接。
   // 这样可避免纯码与历史默认 pay_url 不一致时，把顾客带到错误收款方。
   const paymentLink = decodedPayLink || configuredPayUrl.trim() || qrValue;
@@ -69,7 +69,7 @@ export function AlipayQrPayPage() {
   const [jumpNotice, setJumpNotice] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!primaryChannel || !qrValue.trim()) {
+    if (!qrValue.trim()) {
       setDecodedPayLink('');
       return;
     }
@@ -96,7 +96,7 @@ export function AlipayQrPayPage() {
   async function handleJump() {
     // 点击时再尝试一次本地二维码识别，避免首次加载时图片尚未就绪/CORS 暂时失败而没有深链。
     let target = paymentLink;
-    if (!isAlipayPayLink(target) && primaryChannel && qrValue.trim()) {
+    if (!isAlipayPayLink(target) && qrValue.trim()) {
       try {
         const decoded = await decodeQrFromImage(qrValue.trim());
         if (decoded && isAlipayPayLink(decoded)) {
@@ -212,7 +212,7 @@ export function AlipayQrPayPage() {
         <CashierAmount amount={amount} label={search.product} />
 
         {/* 一键跳转引导：放在金额下方最显眼处，顾客一进页面就知道该点按钮而不是自己找扫码 */}
-        {!expired && primaryChannel && (
+        {!expired && (
           <div className="mt-5 flex items-center justify-center gap-2 rounded-xl border border-info/30 bg-info/10 px-4 py-3">
             <ExternalLink size={15} className="shrink-0 text-info" />
             <p className="text-sm font-semibold leading-snug text-info">点击下方按钮尝试打开支付宝付款页</p>
@@ -251,14 +251,14 @@ export function AlipayQrPayPage() {
               <QrExpiryFrame
                 src={displayQrValue}
                 alt={`${channelTitle}收款码`}
-                caption={primaryChannel ? (canJump ? '扫码或点击下方按钮，尝试直接打开支付宝付款' : '可尝试一键识别并打开支付宝；若二维码无法解码，请使用支付宝扫一扫') : '请使用支付宝扫描二维码完成支付'}
+                caption={canJump ? '扫码或点击下方按钮，尝试直接打开支付宝付款' : '可尝试一键识别并打开支付宝；若二维码无法解码，请使用支付宝扫一扫'}
                 footer={
                   <p className="mt-4 text-center text-sm text-foreground">
                     收款方：<span className="font-semibold">{alipayQr!.name || '店主'}</span>
                   </p>
                 }
               />
-              {primaryChannel && !expired && (
+              {!expired && (
                 <div className="mt-5">
                   <button type="button" onClick={handleJump}
                     className="btn-sheen flex w-full items-center justify-center gap-2 rounded-xl bg-info py-3.5 text-sm font-bold text-white shadow-md shadow-info/25 transition-colors hover:bg-info/90 active:scale-[0.99]">
@@ -286,9 +286,9 @@ export function AlipayQrPayPage() {
         </div>
 
         {/* 图片形式的收款码：无一键跳转能力，给店主一个可感知的说明（仅展示，不阻断） */}
-        {!expired && hasQr && !canJump && !primaryChannel && (
+        {!expired && hasQr && !canJump && (
           <p className="mt-4 rounded-lg border border-border bg-surface p-3 text-center text-[11px] leading-relaxed text-muted-foreground">
-            当前收款码为图片形式，仅支持扫码付款。店主在后台把收款码换成「收款链接」后，本页会出现一键打开支付宝的按钮。
+            当前收款码为图片形式；上方仍可尝试一键识别，若识别失败，请使用支付宝扫一扫。店主也可在后台单独填写有效的支付宝收款链接。
           </p>
         )}
 
