@@ -543,10 +543,11 @@ export function useInvalidateSettings() {
 export function useBranding(): BrandingConfig {
   const { data, isFetchedAfterMount, isFetching } = useSiteSettings();
 
-  // Do not render a potentially stale persisted logo during the first network refresh.
-  // Returning the empty branding state shows the built-in placeholder until the
-  // authoritative current setting has arrived, preventing the old-logo flash.
-  if (!isFetchedAfterMount && isFetching) return {};
+  // A cached site-settings value may be available for the very first render
+  // before React Query has started its mount refetch (when isFetching is still false).
+  // Hide cached branding unconditionally until this mounted observer has completed
+  // a fetch, so an outdated logo can never flash before the current setting arrives.
+  if (!isFetchedAfterMount) return {};
   return data?.branding ?? {};
 }
 
