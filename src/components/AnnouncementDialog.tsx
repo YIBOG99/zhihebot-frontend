@@ -41,15 +41,18 @@ function withDefaults(cfg: AnnouncementConfig | undefined, brandName?: string): 
 function LinkButton({ link, onQr }: { link: AnnouncementLink; onQr: (l: AnnouncementLink) => void }) {
   const Icon = iconOf(link);
   const action = link.action ?? 'url';
-  const cls = 'flex w-full items-center justify-center gap-2.5 rounded-xl border border-white/12 bg-white/[0.03] px-4 py-3.5 text-sm font-medium text-foreground transition-all hover:border-primary/50 hover:bg-primary/[0.07] active:scale-[0.98]';
+  const cls = 'group flex min-h-[104px] w-full flex-col items-center justify-center gap-2 rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/[0.11] via-white/[0.025] to-fuchsia-500/[0.06] px-3 py-4 text-center text-sm font-semibold text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,.04)] transition-all hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-[0_8px_28px_rgba(139,92,246,.16)] active:scale-[0.98]';
 
-  // 普通外链且没填地址：按钮照常展示（保持版式完整），点击不跳转
+  // 未配置的外链仍显示为入口卡片，点击时明确提示缺少链接。
   if (action === 'url' && !link.url.trim()) {
     return (
-      <span className={`${cls} cursor-default opacity-80`} title="店主尚未配置该渠道链接">
-        <Icon size={16} className="shrink-0 text-primary" />
+      <button type="button" onClick={() => toast(link.description || '该渠道链接尚未配置')} className={cls}>
+        <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.12] text-primary transition-transform group-hover:scale-105">
+          <Icon size={20} />
+        </span>
         <span className="truncate">{link.label}</span>
-      </span>
+        {link.description && <span className="text-[11px] font-normal leading-4 text-muted-foreground">{link.description}</span>}
+      </button>
     );
   }
 
@@ -62,8 +65,11 @@ function LinkButton({ link, onQr }: { link: AnnouncementLink; onQr: (l: Announce
 
   return (
     <button type="button" onClick={click} className={cls}>
-      <Icon size={16} className="shrink-0 text-primary" />
+      <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.12] text-primary transition-transform group-hover:scale-105">
+        <Icon size={20} />
+      </span>
       <span className="truncate">{link.label}</span>
+      {link.description && <span className="text-[11px] font-normal leading-4 text-muted-foreground">{link.description}</span>}
     </button>
   );
 }
