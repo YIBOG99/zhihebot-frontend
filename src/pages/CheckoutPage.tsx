@@ -116,6 +116,8 @@ export function CheckoutPage() {
   /** 申请一道新题（进页面、提交失败后、手动换题都走这里） */
   async function loadCaptcha() {
     setCaptchaLoading(true);
+    setCaptcha(null);
+    setCaptchaAnswer('');
     try {
       const c = await requestCaptcha();
       setCaptcha(c);
