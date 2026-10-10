@@ -1,4 +1,4 @@
-// 订单交付内容面板：复制全部卡密 / 下载 TXT / 下载 CSV / 充值网址 / 保管警示
+// 订单交付内容面板：卡密、醒目的自助充值网站入口、下载与保管提示
 // 查单页与个人中心「我的订单」共用，纯行内交互，不使用任何浮层弹窗。
 import { useState } from 'react';
 import { Link } from '@tanstack/react-router';
@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 interface Props {
   orderId: string;
   cardSecret: string;
-  /** 商品配置的兑换网址（来自订单快照 redeem_url）；未配置时使用本站默认充值网址 */
+  /** 保留旧订单快照参数兼容性；自助充值入口统一指向官方指定网址 */
   redeemUrl?: string | null;
 }
 
@@ -55,7 +55,8 @@ export function DeliveryPanel({ orderId, cardSecret, redeemUrl }: Props) {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   // 一单多卡按换行拆分；当前自动发货为一单一卡，逻辑天然兼容未来扩展
   const cards = cardSecret.split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
-  const effectiveRedeemUrl = redeemUrl?.trim() || DEFAULT_REDEEM_URL;
+  // 商家指定的统一自助充值网站，确保每笔订单都显示同一个明确入口。
+  const effectiveRedeemUrl = DEFAULT_REDEEM_URL;
 
   async function doCopy(key: string, text: string, label: string) {
     const ok = await copyText(text);
@@ -106,9 +107,10 @@ export function DeliveryPanel({ orderId, cardSecret, redeemUrl }: Props) {
         ))}
       </div>
 
-      {/* 充值/兑换网址：放在卡密下方；优先使用商品快照配置，否则使用默认网址 */}
-      <div className="mt-4 rounded-lg border border-primary/25 bg-primary/5 p-3.5">
-        <p className="mb-1 text-xs font-semibold text-muted-foreground">充值网址 / 兑换网址</p>
+      {/* 自助充值网站：固定放在卡密下方，使用醒目的整行主按钮 */}
+      <div className="mt-5 rounded-xl border border-primary/40 bg-primary/10 p-4 shadow-sm shadow-primary/10">
+        <p className="mb-1.5 text-sm font-bold text-foreground">自助充值网站</p>
+        <p className="mb-3 text-xs text-muted-foreground">复制上方卡密后，打开网站完成自助充值。</p>
         <a
           href={effectiveRedeemUrl}
           target="_blank"
@@ -117,21 +119,21 @@ export function DeliveryPanel({ orderId, cardSecret, redeemUrl }: Props) {
         >
           {effectiveRedeemUrl}
         </a>
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
           <a
             href={effectiveRedeemUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className={`${btnBase} bg-primary text-primary-foreground shadow-sm shadow-primary/20 hover:bg-primary-hover`}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 text-sm font-bold text-primary-foreground shadow-md shadow-primary/20 transition-colors hover:bg-primary-hover active:scale-[0.99]"
           >
-            <ExternalLink size={14} /> 打开充值网址
+            <ExternalLink size={16} /> 打开自助充值网站
           </a>
           <button
-            onClick={() => doCopy('url', effectiveRedeemUrl, '充值网址')}
-            className={`${btnBase} border border-primary/40 text-primary hover:bg-primary/10`}
+            onClick={() => doCopy('url', effectiveRedeemUrl, '自助充值网站网址')}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-primary/40 px-4 py-3 text-sm font-bold text-primary transition-colors hover:bg-primary/10"
           >
             {copiedKey === 'url' ? <Check size={14} /> : <Copy size={14} />}
-            {copiedKey === 'url' ? '已复制' : '复制网址'}
+            {copiedKey === 'url' ? '已复制' : '复制网站地址'}
           </button>
         </div>
       </div>
@@ -139,7 +141,7 @@ export function DeliveryPanel({ orderId, cardSecret, redeemUrl }: Props) {
       {/* 保管警示 */}
       <p className="mt-3 flex items-center gap-1.5 text-xs font-medium text-danger">
         <ShieldAlert size={14} className="shrink-0" />
-        充值网址 / 卡密 · 请妥善保管，避免泄露。
+        自助充值网站与卡密 · 请妥善保管，避免泄露。
       </p>
       <Link to="/tutorials" className="mt-2 inline-block text-xs text-primary hover:underline">不知道怎么用？查看激活教程 →</Link>
     </div>
