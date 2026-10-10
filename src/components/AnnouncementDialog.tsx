@@ -41,13 +41,13 @@ function withDefaults(cfg: AnnouncementConfig | undefined, brandName?: string): 
 function LinkButton({ link, onQr }: { link: AnnouncementLink; onQr: (l: AnnouncementLink) => void }) {
   const Icon = iconOf(link);
   const action = link.action ?? 'url';
-  const cls = 'group flex min-h-[104px] w-full flex-col items-center justify-center gap-2 rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/[0.11] via-white/[0.025] to-fuchsia-500/[0.06] px-3 py-4 text-center text-sm font-semibold text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,.04)] transition-all hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-[0_8px_28px_rgba(139,92,246,.16)] active:scale-[0.98]';
+  const cls = 'group flex min-h-[78px] w-full flex-col items-center justify-center gap-1.5 rounded-xl border border-primary/25 bg-gradient-to-br from-primary/[0.11] via-white/[0.025] to-fuchsia-500/[0.06] px-2 py-2.5 text-center text-xs font-semibold text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,.04)] transition-all hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-[0_8px_28px_rgba(139,92,246,.16)] active:scale-[0.98] sm:min-h-[104px] sm:gap-2 sm:rounded-2xl sm:px-3 sm:py-4 sm:text-sm';
 
   // 未配置的外链仍显示为入口卡片，点击时明确提示缺少链接。
   if (action === 'url' && !link.url.trim()) {
     return (
       <button type="button" onClick={() => toast(link.description || '该渠道链接尚未配置')} className={cls}>
-        <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.12] text-primary transition-transform group-hover:scale-105">
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-primary/25 bg-primary/[0.12] text-primary transition-transform group-hover:scale-105 sm:h-10 sm:w-10 sm:rounded-xl">
           <Icon size={20} />
         </span>
         <span className="truncate">{link.label}</span>
@@ -131,26 +131,27 @@ export function AnnouncementDialog() {
     <>
       {/* 自绘遮罩而非 shadcn Dialog：需要禁止点遮罩关闭，强制用户看清内容 */}
       {open && (
-        <div className="popup-holo-backdrop fixed inset-0 z-[100] flex items-start justify-center overflow-x-hidden overflow-y-auto overscroll-contain bg-[#02050d]/85 p-0 backdrop-blur-xl sm:items-center sm:p-6" role="dialog" aria-modal="true" aria-label={cfg.title}>
-          <div className="popup-holo-panel relative my-0 max-h-[100dvh] w-full max-w-md shrink-0 overflow-x-hidden overflow-y-auto rounded-t-3xl border border-primary/30 bg-surface p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] shadow-[0_0_80px_rgba(168,85,247,.18),0_0_28px_rgba(192,132,252,.12)] sm:my-auto sm:max-h-[92dvh] sm:rounded-3xl" tabIndex={-1}>
-            <div className="mb-5 flex items-center justify-center gap-2">
+        <div className="popup-holo-backdrop fixed inset-0 z-[100] flex items-center justify-center overflow-x-hidden overflow-y-auto overscroll-contain bg-[#02050d]/85 p-3 backdrop-blur-xl sm:p-6" role="dialog" aria-modal="true" aria-label={cfg.title}>
+          <div className="popup-holo-panel relative my-auto max-h-[88dvh] w-[92vw] max-w-md shrink-0 overflow-x-hidden overflow-y-auto rounded-2xl border border-primary/30 bg-surface p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-[0_0_80px_rgba(168,85,247,.18),0_0_28px_rgba(192,132,252,.12)] sm:max-h-[92dvh] sm:w-full sm:rounded-3xl sm:p-6 sm:pb-[calc(1.5rem+env(safe-area-inset-bottom))]" tabIndex={-1}>
+            <div className="mb-3 flex items-center justify-center gap-2 sm:mb-5">
               <span className="h-px w-8 bg-gradient-to-r from-transparent to-primary/70" />
               <span className="rounded-full border border-primary/30 bg-primary/[0.08] px-3 py-1 text-[9px] font-bold uppercase tracking-[0.24em] text-primary">ZHIHE // SYSTEM NOTICE</span>
               <span className="h-px w-8 bg-gradient-to-l from-transparent to-primary/70" />
             </div>
             {/* LOGO + 标题 */}
             <div className="flex flex-col items-center text-center">
-              <div className="relative mb-4">
+              <div className="relative mb-2 sm:mb-4">
                 <span className="absolute -inset-3 rounded-full bg-gradient-to-tr from-primary/40 via-sky-500/30 to-fuchsia-500/40 blur-md" />
-                <BrandLogo size={64} rounded="full" className="relative" />
+                <BrandLogo size={48} rounded="full" className="relative sm:hidden" />
+                <BrandLogo size={64} rounded="full" className="relative hidden sm:block" />
               </div>
-              <h2 className="text-2xl font-bold tracking-tight text-foreground">{cfg.title}</h2>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{cfg.subtitle}</p>
+              <h2 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">{cfg.title}</h2>
+              <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground sm:mt-2 sm:text-sm">{cfg.subtitle}</p>
             </div>
 
             {/* 蓝色提示条：官方地址 + 防骗 */}
             {hasBlue && (
-              <div className="mt-6 space-y-2.5 rounded-2xl border-l-[3px] border-primary bg-primary/[0.06] p-4">
+              <div className="mt-3 space-y-2 rounded-xl border-l-[3px] border-primary bg-primary/[0.06] p-3 sm:mt-6 sm:space-y-2.5 sm:rounded-2xl sm:p-4">
                 {cfg.official_url?.trim() && (
                   <p className="flex items-start gap-2.5 text-sm leading-relaxed">
                     <ShieldCheck size={16} className="mt-0.5 shrink-0 text-primary" />
@@ -168,7 +169,7 @@ export function AnnouncementDialog() {
 
             {/* 粉色警示条 */}
             {hasWarn && (
-              <div className="mt-4 rounded-2xl border-l-[3px] border-danger bg-danger/[0.07] p-4">
+              <div className="mt-3 rounded-xl border-l-[3px] border-danger bg-danger/[0.07] p-3 sm:mt-4 sm:rounded-2xl sm:p-4">
                 <p className="flex items-start gap-2.5 text-sm font-medium leading-relaxed text-danger">
                   <Info size={16} className="mt-0.5 shrink-0" />
                   <span>{cfg.warning_note}</span>
@@ -178,18 +179,18 @@ export function AnnouncementDialog() {
 
             {/* 渠道按钮 */}
             {links.length > 0 && (
-              <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="mt-3 grid grid-cols-3 gap-2 sm:mt-5 sm:gap-3">
                 {links.map((l, i) => <LinkButton key={`${l.label}-${i}`} link={l} onQr={setQrLink} />)}
               </div>
             )}
 
             {/* 确认 */}
             <button onClick={confirm}
-              className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3.5 text-sm font-semibold text-primary-foreground transition-all hover:bg-primary-hover active:scale-[0.98]">
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-all hover:bg-primary-hover active:scale-[0.98] sm:mt-6 sm:px-5 sm:py-3.5">
               <Check size={16} /> {cfg.cta_label}
             </button>
 
-            <label className="mt-3 flex w-full cursor-pointer items-center justify-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3 text-sm text-muted-foreground transition-colors hover:text-foreground">
+            <label className="mt-2 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5 text-xs text-muted-foreground transition-colors hover:text-foreground sm:mt-3 sm:gap-2.5 sm:px-4 sm:py-3 sm:text-sm">
               <input type="checkbox" checked={snooze} onChange={(e) => setSnoozeChecked(e.target.checked)}
                 className="h-4 w-4 shrink-0 accent-[oklch(0.72_0.22_292)]" />
               {cfg.snooze_label}
