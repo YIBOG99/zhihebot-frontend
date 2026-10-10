@@ -101,7 +101,7 @@ export function AnnouncementDialog() {
     if (isPending || !data) return;
     const cfg = data.announcement;
     if (!cfg || cfg.enabled === false || isSnoozed()) return;
-    const timer = window.setTimeout(() => setOpen(true), 1800);
+    const timer = window.setTimeout(() => setOpen(true), 450);
     return () => window.clearTimeout(timer);
   }, [isPending, data, pathname]);
 
@@ -111,10 +111,8 @@ export function AnnouncementDialog() {
     if (!open && !qrLink) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    console.log('[Announcement] body scroll locked', { open, qr: Boolean(qrLink) });
     return () => {
       document.body.style.overflow = prev;
-      console.log('[Announcement] body scroll released');
     };
   }, [open, qrLink]);
 
