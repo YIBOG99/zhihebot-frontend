@@ -93,13 +93,26 @@ export function AlipayQrPayPage() {
     return () => { alive = false; };
   }, [primaryChannel, qrValue]);
 
-  function handleJump() {
-    const r = jumpToAlipayApp(paymentLink);
+  async function handleJump() {
+    // 点击时再尝试一次本地二维码识别，避免首次加载时图片尚未就绪/CORS 暂时失败而没有深链。
+    let target = paymentLink;
+    if (!isAlipayPayLink(target) && primaryChannel && qrValue.trim()) {
+      try {
+        const decoded = await decodeQrFromImage(qrValue.trim());
+        if (decoded && isAlipayPayLink(decoded)) {
+          setDecodedPayLink(decoded);
+          target = decoded;
+        }
+      } catch (e) {
+        console.info('[AlipayQrPay] click-time QR decode unavailable', e);
+      }
+    }
+    const r = jumpToAlipayApp(target);
     if (r.notice) {
       setJumpNotice(r.notice);
       setTimeout(() => setJumpNotice(null), 6000);
     }
-    if (!r.handled) console.log('[AlipayQrPay] jump not handled', { canJump });
+    if (!r.handled) console.log('[AlipayQrPay] jump not handled', { canJump: isAlipayPayLink(target), primaryChannel });
   }
 
   // 按订单号回读时限与状态：查不到订单时保持不显示倒计时，绝不留白屏
@@ -199,10 +212,10 @@ export function AlipayQrPayPage() {
         <CashierAmount amount={amount} label={search.product} />
 
         {/* 一键跳转引导：放在金额下方最显眼处，顾客一进页面就知道该点按钮而不是自己找扫码 */}
-        {!expired && canJump && (
+        {!expired && primaryChannel && (
           <div className="mt-5 flex items-center justify-center gap-2 rounded-xl border border-info/30 bg-info/10 px-4 py-3">
             <ExternalLink size={15} className="shrink-0 text-info" />
-            <p className="text-sm font-semibold leading-snug text-info">请点击下方按钮跳转支付宝付款</p>
+            <p className="text-sm font-semibold leading-snug text-info">点击下方按钮尝试打开支付宝付款页</p>
           </div>
         )}
 
@@ -238,14 +251,14 @@ export function AlipayQrPayPage() {
               <QrExpiryFrame
                 src={displayQrValue}
                 alt={`${channelTitle}收款码`}
-                caption={canJump ? '扫码或点击下方按钮，尝试直接打开支付宝付款' : '请使用支付宝扫描二维码完成支付'}
+                caption={primaryChannel ? (canJump ? '扫码或点击下方按钮，尝试直接打开支付宝付款' : '可尝试一键识别并打开支付宝；若二维码无法解码，请使用支付宝扫一扫') : '请使用支付宝扫描二维码完成支付'}
                 footer={
                   <p className="mt-4 text-center text-sm text-foreground">
                     收款方：<span className="font-semibold">{alipayQr!.name || '店主'}</span>
                   </p>
                 }
               />
-              {canJump && !expired && (
+              {primaryChannel && !expired && (
                 <div className="mt-5">
                   <button type="button" onClick={handleJump}
                     className="btn-sheen flex w-full items-center justify-center gap-2 rounded-xl bg-info py-3.5 text-sm font-bold text-white shadow-md shadow-info/25 transition-colors hover:bg-info/90 active:scale-[0.99]">
@@ -273,7 +286,7 @@ export function AlipayQrPayPage() {
         </div>
 
         {/* 图片形式的收款码：无一键跳转能力，给店主一个可感知的说明（仅展示，不阻断） */}
-        {!expired && hasQr && !canJump && (
+        {!expired && hasQr && !canJump && !primaryChannel && (
           <p className="mt-4 rounded-lg border border-border bg-surface p-3 text-center text-[11px] leading-relaxed text-muted-foreground">
             当前收款码为图片形式，仅支持扫码付款。店主在后台把收款码换成「收款链接」后，本页会出现一键打开支付宝的按钮。
           </p>
