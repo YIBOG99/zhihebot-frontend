@@ -11,13 +11,13 @@ BEGIN
   until_day := current_date + 1;
   SELECT jsonb_build_object(
     'series', COALESCE((
-      SELECT jsonb_agg(jsonb_build_object('day', d.day::text, 'revenue', COALESCE(x.revenue, 0), 'visits', 0) ORDER BY d.day)
+      SELECT jsonb_agg(jsonb_build_object('day', d.day::date::text, 'revenue', COALESCE(x.revenue, 0), 'visits', 0) ORDER BY d.day)
       FROM generate_series(from_day, current_date, interval '1 day') AS d(day)
       LEFT JOIN (
         SELECT paid_at::date AS day, SUM(amount)::numeric AS revenue
         FROM public.orders WHERE paid_at >= from_day::timestamptz AND paid_at < until_day::timestamptz
         GROUP BY paid_at::date
-      ) x ON x.day = d.day
+      ) x ON x.day = d.day::date
     ), '[]'::jsonb),
     'today', jsonb_build_object(
       'visits', 0,
