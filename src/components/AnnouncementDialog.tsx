@@ -133,8 +133,8 @@ export function AnnouncementDialog() {
     <>
       {/* 自绘遮罩而非 shadcn Dialog：需要禁止点遮罩关闭，强制用户看清内容 */}
       {open && (
-        <div className="popup-holo-backdrop fixed inset-0 z-[100] flex items-end justify-center overflow-y-auto bg-[#02050d]/85 p-0 backdrop-blur-xl sm:items-center sm:p-6" role="dialog" aria-modal="true" aria-label={cfg.title}>
-          <div className="popup-holo-panel relative max-h-[92vh] w-full max-w-md overflow-y-auto rounded-t-3xl border border-primary/30 bg-surface p-6 shadow-[0_0_80px_rgba(77,229,255,.14),0_0_28px_rgba(84,242,194,.12)] sm:rounded-3xl">
+        <div className="popup-holo-backdrop fixed inset-0 z-[100] flex items-start justify-center overflow-x-hidden overflow-y-auto overscroll-contain bg-[#02050d]/85 p-0 backdrop-blur-xl sm:items-center sm:p-6" role="dialog" aria-modal="true" aria-label={cfg.title}>
+          <div className="popup-holo-panel relative my-0 max-h-[100dvh] w-full max-w-md shrink-0 overflow-x-hidden overflow-y-auto rounded-t-3xl border border-primary/30 bg-surface p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] shadow-[0_0_80px_rgba(168,85,247,.18),0_0_28px_rgba(192,132,252,.12)] sm:my-auto sm:max-h-[92dvh] sm:rounded-3xl" tabIndex={-1}>
             <div className="mb-5 flex items-center justify-center gap-2">
               <span className="h-px w-8 bg-gradient-to-r from-transparent to-primary/70" />
               <span className="rounded-full border border-primary/30 bg-primary/[0.08] px-3 py-1 text-[9px] font-bold uppercase tracking-[0.24em] text-primary">ZHIHE // SYSTEM NOTICE</span>
@@ -193,7 +193,7 @@ export function AnnouncementDialog() {
 
             <label className="mt-3 flex w-full cursor-pointer items-center justify-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3 text-sm text-muted-foreground transition-colors hover:text-foreground">
               <input type="checkbox" checked={snooze} onChange={(e) => setSnoozeChecked(e.target.checked)}
-                className="h-4 w-4 shrink-0 accent-[oklch(0.7_0.15_160)]" />
+                className="h-4 w-4 shrink-0 accent-[oklch(0.72_0.22_292)]" />
               {cfg.snooze_label}
             </label>
           </div>
