@@ -19,7 +19,7 @@ const STYLE_ID = "reveal-engine-style";
 const ENGINE_CSS = `
 html.${READY_CLASS} :is(${REVEAL_SELECTOR}) {
   opacity: 0;
-  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+  transition: opacity 0.32s ease-out, transform 0.32s ease-out;
   transition-delay: var(--reveal-delay, 0ms);
 }
 html.${READY_CLASS} :is(.reveal, .reveal-up, .animate-on-scroll, [data-reveal]:not([class*="reveal-"])) { transform: translateY(24px); }
@@ -96,7 +96,8 @@ function startEngine(): void {
         if (node instanceof Element) scan(node);
       }
       if (mutation.type === "attributes" && mutation.target instanceof Element) {
-        scan(mutation.target);
+        // Register only the changed element; avoid rescanning its whole subtree on every React class update.
+        if (mutation.target.matches(REVEAL_SELECTOR)) observeElement(mutation.target);
       }
     }
   });
