@@ -1030,3 +1030,15 @@ body {
 @keyframes order-flow-step-in{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
 @keyframes order-flow-arrow{0%,100%{opacity:.45;transform:translateX(0)}50%{opacity:1;transform:translateX(2px)}}
 @media (prefers-reduced-motion:reduce){.order-flow-panel::before,.order-flow-orbit,.order-flow-live-dot,.order-flow-step,.order-flow-arrow{animation:none!important}.order-flow-panel,.order-flow-step,.order-flow-icon{transition:none!important}}
+
+/* Compact announcement dialog on phones; keep a scroll fallback for unusually long notices. */
+@media (max-width: 640px) {
+  .popup-holo-panel {
+    width: 92vw;
+    max-height: 88dvh;
+    padding: 1rem;
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+    border-radius: 1rem;
+  }
+  .popup-holo-panel .popup-holo-panel-content { gap: .5rem; }
+}
