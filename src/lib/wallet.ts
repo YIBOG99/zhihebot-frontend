@@ -50,15 +50,30 @@ export function useMyWallet(enabled = true) {
     refetchInterval: 30_000,
     queryFn: async () => {
       const { data, error } = await supabase.rpc('my_wallet');
-      if (error) {
-        console.error('[useMyWallet] rpc failed:', error.code, error.message);
-        throw error;
+      let raw: Record<string, unknown> = {};
+      if (!error) {
+        // PostgREST functions may return a row object or a one-row array.
+        const value = Array.isArray(data) ? data[0] : data;
+        raw = value && typeof value === 'object' ? value as Record<string, unknown> : {};
+      } else {
+        console.error('[useMyWallet] RPC failed; falling back to own wallet rows:', error.code, error.message);
+        const { data: authData, error: authError } = await supabase.auth.getUser();
+        if (authError || !authData.user) throw error;
+        const uid = authData.user.id;
+        const [walletResult, txResult] = await Promise.all([
+          supabase.from('user_wallets').select('available_balance,frozen_amount,total_recharged,total_spent').eq('user_id', uid).maybeSingle(),
+          supabase.from('wallet_transactions').select('id,kind,amount,balance_after,order_id,note,created_at').eq('user_id', uid).order('created_at', { ascending: false }).limit(20),
+        ]);
+        if (walletResult.error) throw walletResult.error;
+        if (txResult.error) throw txResult.error;
+        raw = {
+          available: walletResult.data?.available_balance ?? 0,
+          frozen: walletResult.data?.frozen_amount ?? 0,
+          total_recharged: walletResult.data?.total_recharged ?? 0,
+          total_spent: walletResult.data?.total_spent ?? 0,
+          transactions: txResult.data ?? [],
+        };
       }
-      // PostgREST functions may return a row object or a one-row array.
-      const value = Array.isArray(data) ? data[0] : data;
-      const raw = value && typeof value === 'object'
-        ? value as Record<string, unknown>
-        : {};
       const numeric = (v: unknown) => {
         const n = Number(v ?? 0);
         return Number.isFinite(n) ? n : 0;
