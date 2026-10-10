@@ -49,9 +49,20 @@ export function launchChannel(link: AnnouncementLink): LaunchResult {
       // join_key 是群主在 qun.qq.com/join.html 生成的加群密钥（iPhone/Android 代码里同一串 key，通用）；
       // account_id 存的是 QQ 群号，仅用于展示与复制。腾讯不支持仅凭群号免密加群。
       const key = (link.join_key ?? '').replace(/\s/g, '');
+      // 腾讯 universal-share 是用户提供的完整加群链接；优先交给手机系统处理 Universal Link，
+      // 让已安装 QQ 的设备尽可能直接进入对应群聊/加群页面。
+      const shareUrl = (link.url ?? '').trim();
+      if (!key && shareUrl.startsWith('https://qun.qq.com/universal-share/')) {
+        if (mobile) {
+          jumpScheme(shareUrl);
+          return { handled: true, notice: '正在打开 QQ 加群页面…' };
+        }
+        window.open(shareUrl, '_blank', 'noopener');
+        return { handled: true };
+      }
       if (!key) {
         console.log('[channel-launch] qq_group 未配置加群 key，走二维码兜底');
-        return { handled: false, notice: '尚未配置加群密钥，请先长按二维码加群' };
+        return { handled: false, notice: '尚未配置加群链接，请联系店主' };
       }
       if (mobile) {
         // iOS 用 mqqapi://、Android 用 mqqopensdkapi://，均带 key 直达「申请加群」页
