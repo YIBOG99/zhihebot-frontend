@@ -145,34 +145,43 @@ export function useReferral(userId: string | null): UseReferral {
     let alive = true;
     setLoading(true);
     void (async () => {
-      const inviteResult = await fetchMyInviteCode();
-      if (!alive) return;
-      setInviteCode(inviteResult.code);
-      setInviteCodeFailed(inviteResult.failed);
+      try {
+        const inviteResult = await fetchMyInviteCode();
+        if (!alive) return;
+        setInviteCode(inviteResult.code);
+        setInviteCodeFailed(inviteResult.failed);
 
-      const [{ data: sd, error: se }, { data: rd, error: re }, { data: cd, error: ce }] = await Promise.all([
-        supabase.rpc('my_referral_stats'),
-        supabase.from('referral_rewards').select('*').eq('inviter_id', userId).order('created_at', { ascending: false }),
-        supabase.rpc('my_commission_records'),
-      ]);
-      if (!alive) return;
-      if (se) console.error('[referral] my_referral_stats 失败:', se.code, se.message);
-      else {
-        const r = firstRow<{ invite_count?: number | string; available_count?: number | string; available_amount?: number | string; used_count?: number | string; total_commission?: number | string; commission_count?: number | string }>(sd);
-        setStats({
-          inviteCount: Number(r?.invite_count ?? 0),
-          availableCount: Number(r?.available_count ?? 0),
-          availableAmount: Number(r?.available_amount ?? 0),
-          usedCount: Number(r?.used_count ?? 0),
-          totalCommission: Number(r?.total_commission ?? 0),
-          commissionCount: Number(r?.commission_count ?? 0),
-        });
+        const [{ data: sd, error: se }, { data: rd, error: re }, { data: cd, error: ce }] = await Promise.all([
+          supabase.rpc('my_referral_stats'),
+          supabase.from('referral_rewards').select('*').eq('inviter_id', userId).order('created_at', { ascending: false }),
+          supabase.rpc('my_commission_records'),
+        ]);
+        if (!alive) return;
+        if (se) console.error('[referral] my_referral_stats 失败:', se.code, se.message);
+        else {
+          const r = firstRow<{ invite_count?: number | string; available_count?: number | string; available_amount?: number | string; used_count?: number | string; total_commission?: number | string; commission_count?: number | string }>(sd);
+          const numberOrZero = (value: number | string | null | undefined) => {
+            const n = Number(value ?? 0);
+            return Number.isFinite(n) ? n : 0;
+          };
+          setStats({
+            inviteCount: numberOrZero(r?.invite_count),
+            availableCount: numberOrZero(r?.available_count),
+            availableAmount: numberOrZero(r?.available_amount),
+            usedCount: numberOrZero(r?.used_count),
+            totalCommission: numberOrZero(r?.total_commission),
+            commissionCount: numberOrZero(r?.commission_count),
+          });
+        }
+        if (re) console.error('[referral] 读取券列表失败:', re.code, re.message);
+        else setRewards((rd ?? []) as ReferralReward[]);
+        if (ce) console.error('[referral] my_commission_records 失败:', ce.code, ce.message);
+        else setCommissions(((Array.isArray(cd) ? cd : []) as unknown[]).filter((x) => (x as { ok?: boolean })?.ok !== false) as CommissionRecord[]);
+      } catch (err) {
+        console.error('[referral] 加载邀请数据时发生异常:', err);
+      } finally {
+        if (alive) setLoading(false);
       }
-      if (re) console.error('[referral] 读取券列表失败:', re.code, re.message);
-      else setRewards((rd ?? []) as ReferralReward[]);
-      if (ce) console.error('[referral] my_commission_records 失败:', ce.code, ce.message);
-      else setCommissions(((Array.isArray(cd) ? cd : []) as unknown[]).filter((x) => (x as { ok?: boolean })?.ok !== false) as CommissionRecord[]);
-      setLoading(false);
     })();
     return () => { alive = false; };
   }, [userId, nonce]);
