@@ -120,7 +120,7 @@ export function RegisterPage() {
 
   async function handleVerify(e: React.FormEvent) {
     e.preventDefault();
-    if (code.trim().length < 6) { toast.error('请输入 6 位验证码'); return; }
+    if (code.trim().length !== 8) { toast.error('请输入完整的 8 位验证码'); return; }
     setLoading(true);
     try {
       const mail = email.trim().toLowerCase();
@@ -177,7 +177,7 @@ export function RegisterPage() {
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
             {step === 'form'
               ? <>注册{brandName}会员，订单与卡密永久可查</>
-              : <>我们已向 <span className="font-mono text-foreground">{email.trim().toLowerCase()}</span> 发送 6 位验证码，5 分钟内有效。</>}
+              : <>我们已向 <span className="font-mono text-foreground">{email.trim().toLowerCase()}</span> 发送 8 位验证码，5 分钟内有效。</>}
           </p>
         </div>
 
@@ -226,7 +226,7 @@ export function RegisterPage() {
               <div className="relative">
                 <KeyRound size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <input inputMode="numeric" pattern="[0-9]*" maxLength={8} value={code}
-                  onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} placeholder="6 位数字"
+                  onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} placeholder="8 位数字"
                   autoFocus autoComplete="one-time-code" className={`${inputCls} tracking-[0.3em] font-mono`} />
               </div>
             </div>
