@@ -50,7 +50,6 @@ export function BrandLogo({ size = 32, rounded = 'lg', className }: Props) {
       {APP_ICON ? (
         <img src={APP_ICON} alt="" onError={(e) => { e.currentTarget.style.display = 'none'; }} style={{ width: size * 0.82, height: size * 0.82 }} className="object-contain" />
       ) : null}
-      <span className="absolute font-black text-xl">知</span>
     </span>
   );
 }

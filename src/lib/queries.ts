@@ -541,13 +541,11 @@ export function useInvalidateSettings() {
 
 /** 全站品牌设置（LOGO/店名）。复用 site-settings 缓存，保存后一次 invalidate 即全站同步 */
 export function useBranding(): BrandingConfig {
-  const { data, isFetchedAfterMount, isFetching } = useSiteSettings();
+  const { data } = useSiteSettings();
 
-  // A cached site-settings value may be available for the very first render
-  // before React Query has started its mount refetch (when isFetching is still false).
-  // Hide cached branding unconditionally until this mounted observer has completed
-  // a fetch, so an outdated logo can never flash before the current setting arrives.
-  if (!isFetchedAfterMount) return {};
+  // Render cached branding immediately. Hiding it until the mount refetch finishes
+  // forces BrandLogo to show its fallback icon/text first, causing a logo flash on
+  // every refresh. React Query still refreshes settings in the background.
   return data?.branding ?? {};
 }
 
