@@ -3,8 +3,8 @@
 /** 首页主视觉背景（16:9 深色赛博网格光斑） */
 export const HERO_BG = 'https://g.cdn.meoo.host/s5lynl8068w5/ai-images/hero.png?auth_key=9cb2637e6e5e8c886ab3d8a00519badc5ba9313ebe0705b8c08ed3bda761306b';
 
-/** 应用图标（六边形能量核心，透明底抠图版） */
-export const APP_ICON = 'https://g.cdn.meoo.host/s5lynl8068w5/ai-images/app-icon-nobg.png?auth_key=9811c63f35c46d4e1cf59f9f12da290e6ba1473c9ee4329a6dc96ffc3e298463';
+/** 全站默认 Logo / 应用图标（网站自有静态资源，供品牌回退与标签页图标共用） */
+export const APP_ICON = '/brand-logo.svg';
 
 /** 商品封面占位图（霓虹闪电，1:1） */
 export const PRODUCT_PLACEHOLDER = 'https://g.cdn.meoo.host/s5lynl8068w5/ai-images/product-placeholder.png?auth_key=b9045e512e0a3d6164c976a768bea11d43b6d51d65d893b04bb703be160beb6a';
